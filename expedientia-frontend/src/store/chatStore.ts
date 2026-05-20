@@ -20,10 +20,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   isLoading: false,
   addMessage: (msg) =>
     set((state) => ({
-      messages: [
-        ...state.messages,
-        { ...msg, id: crypto.randomUUID(), timestamp: new Date() },
-      ],
+      messages: [...state.messages, { ...msg, id: crypto.randomUUID(), timestamp: new Date() }],
     })),
   setLoading: (v) => set({ isLoading: v }),
   clear: () => set({ messages: [], isLoading: false }),

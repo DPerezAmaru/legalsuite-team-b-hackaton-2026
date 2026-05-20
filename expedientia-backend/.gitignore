@@ -1,0 +1,47 @@
+# ── Compilados y empaquetados ──────────────────────────────────────────────────
+target/
+*.jar
+*.war
+*.ear
+*.class
+
+# ── Variables de entorno y secretos ───────────────────────────────────────────
+.env
+.env.*
+*.env
+application-local.properties
+application-local.yml
+application-secret.properties
+application-secret.yml
+**/secrets/
+credentials.json
+service-account*.json
+
+# ── Spring Boot devtools ───────────────────────────────────────────────────────
+spring-devtools.properties
+
+# ── IDEs ───────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.project
+*.classpath
+.settings/
+.factorypath
+
+# ── Maven ─────────────────────────────────────────────────────────────────────
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker override local ─────────────────────────────────────────────────────
+docker-compose.override.yml

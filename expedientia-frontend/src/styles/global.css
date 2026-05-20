@@ -1,0 +1,65 @@
+@import './fonts.css';
+@import 'tailwindcss';
+
+/* ─── TIPOGRAFÍA ─── */
+@theme {
+  --font-sans: 'Geist', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+}
+
+/* ─── ESCALA INK ─── */
+@theme {
+  --color-ink-0:  #ffffff;
+  --color-ink-1:  #fafaf9;
+  --color-ink-2:  #f4f4f2;
+  --color-ink-3:  #e8e8e5;
+  --color-ink-4:  #d1d1cd;
+  --color-ink-5:  #a1a19c;
+  --color-ink-6:  #6b6b66;
+  --color-ink-7:  #3c3c38;
+  --color-ink-8:  #1f2937;
+  --color-ink-9:  #0f172a;
+  --color-ink-10: #060b14;
+}
+
+/* ─── TOKENS SEMÁNTICOS ─── */
+@theme inline {
+  /* Fondos */
+  --color-bg-base:   var(--color-ink-0);
+  --color-bg-subtle: var(--color-ink-1);
+  --color-bg-muted:  var(--color-ink-2);
+
+  /* Bordes */
+  --color-border:        var(--color-ink-3);
+  --color-border-strong: var(--color-ink-4);
+
+  /* Texto */
+  --color-fg-primary:   var(--color-ink-9);
+  --color-fg-body:      var(--color-ink-7);
+  --color-fg-secondary: var(--color-ink-6);
+  --color-fg-tertiary:  var(--color-ink-5);
+  --color-fg-inverse:   var(--color-ink-0);
+
+  /* Sidebar */
+  --color-sidebar-bg: var(--color-ink-9);
+
+  /* CTA */
+  --color-cta-bg:    var(--color-ink-8);
+  --color-cta-hover: var(--color-ink-9);
+  --color-cta-text:  var(--color-ink-0);
+
+  /* Superficies IA */
+  --color-ai-tint:   var(--color-ink-2);
+  --color-ai-border: var(--color-ink-4);
+  --color-ai-text:   var(--color-ink-7);
+}
+
+/* ─── VALORES NO TEORIZABLES (rgba, gradientes) ─── */
+:root {
+  --sidebar-active:      rgba(255, 255, 255, 0.10);
+  --sidebar-text:        rgba(255, 255, 255, 0.65);
+  --sidebar-text-active: #ffffff;
+  --ai-orb-from:         #1f2937;
+  --ai-orb-to:           #0f172a;
+  --accent-strip:        linear-gradient(90deg, #334155, #1f2937, #0f172a);
+}

@@ -159,7 +159,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 ```yaml
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_DB: expedientia
       POSTGRES_USER: expedientia

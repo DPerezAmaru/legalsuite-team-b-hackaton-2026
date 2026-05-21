@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { AssistantPage } from '../components/assistant/AssistantPage'
 
 export const Route = createFileRoute('/')({
-  component: () => <div className='text-fg-primary'>Dashboard</div>,
+  component: AssistantPage,
 })

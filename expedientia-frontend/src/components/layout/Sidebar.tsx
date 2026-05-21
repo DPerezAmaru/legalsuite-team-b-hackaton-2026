@@ -1,4 +1,4 @@
-import { Bot, Folder, ListTodo, History, FileText, Search, PanelLeftClose, X } from 'lucide-react'
+import { House, Folder, ListTodo, History, FileText, Search, PanelLeftClose, X } from 'lucide-react'
 import { SidebarNavItem } from './SidebarNavItem'
 import { useSidebar } from '../../hooks/useSidebar'
 
@@ -51,7 +51,7 @@ export function Sidebar() {
 
       {/* Nav principal */}
       <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
-        <SidebarNavItem to="/" icon={<Bot size={15} />} label="Nuevo expediente" exact />
+        <SidebarNavItem to="/" icon={<House size={15} />} label="Asistente" exact />
         <SidebarNavItem to="/expedientes" icon={<Folder size={15} />} label="Expedientes" />
         <SidebarNavItem to="/tareas" icon={<ListTodo size={15} />} label="Tareas" />
         <SidebarNavItem to="/historial" icon={<History size={15} />} label="Historial" />

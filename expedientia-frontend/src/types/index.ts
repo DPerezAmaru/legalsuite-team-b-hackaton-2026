@@ -87,3 +87,30 @@ export type Expediente = z.infer<typeof ExpedienteSchema>
 export type ExpedienteDetalle = z.infer<typeof ExpedienteDetalleSchema>
 export type TareaSugerida = z.infer<typeof TareaSugeridaSchema>
 export type DocumentoExtraido = z.infer<typeof DocumentoExtraidoSchema>
+
+// ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
+
+export type AssistantTab = 'asistente' | 'borrador'
+
+export const ConsultaTipoSchema = z.enum(['Resumen', 'Consulta', 'Borrador', 'Informe'])
+export type ConsultaTipo = z.infer<typeof ConsultaTipoSchema>
+
+export const ConsultaRecienteSchema = z.object({
+  id: z.string(),
+  titulo: z.string(),
+  tipo: ConsultaTipoSchema,
+  timestamp: z.string(),
+})
+export type ConsultaReciente = z.infer<typeof ConsultaRecienteSchema>
+
+export const EstadoDisplaySchema = z.enum(['Activo', 'En revisión', 'Vence pronto'])
+export type EstadoDisplay = z.infer<typeof EstadoDisplaySchema>
+
+export const ExpedienteRecienteSchema = z.object({
+  id: z.string(),
+  nombre: z.string(),
+  especialidad: EspecialidadSchema,
+  estadoDisplay: EstadoDisplaySchema,
+  timestamp: z.string(),
+})
+export type ExpedienteReciente = z.infer<typeof ExpedienteRecienteSchema>

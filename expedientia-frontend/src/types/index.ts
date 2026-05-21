@@ -54,24 +54,20 @@ export const ExpedienteDetalleSchema = ExpedienteSchema.extend({
 
 // Documento extraído (respuesta de /api/documentos/procesar)
 
-export const TareaSugeridaSchema = z.object({
-  titulo: z.string(),
-  prioridad: PrioridadSchema,
-})
+// tareasSugeridas viene como array de strings desde el backend
+export const TareaSugeridaSchema = z.string()
 
+// Estructura plana — coincide con DocumentoExtraidoDTO de Spring
 export const DocumentoExtraidoSchema = z.object({
   documentoId: z.number(),
-  nombreArchivo: z.string(),
-  camposExtraidos: z.object({
-    radicado: z.string(),
-    titulo: z.string(),
-    especialidad: EspecialidadSchema,
-    // IA puede no extraerlos — normalizar a string vacío
-    despacho: z.string().nullish().transform(v => v ?? ''),
-    ciudad: z.string().nullish().transform(v => v ?? ''),
-    fechaInicio: z.string().optional(),
-    partes: z.array(ParteSchema).default([]),
-  }),
+  nombreArchivo: z.string().optional(),
+  radicado: z.string().nullish().transform(v => v ?? ''),
+  titulo: z.string().nullish().transform(v => v ?? ''),
+  especialidad: EspecialidadSchema.nullish().transform(v => v ?? 'CIVIL'),
+  despacho: z.string().nullish().transform(v => v ?? ''),
+  ciudad: z.string().nullish().transform(v => v ?? ''),
+  resumen: z.string().optional(),
+  partes: z.array(ParteSchema).default([]),
   tareasSugeridas: z.array(TareaSugeridaSchema).default([]),
 })
 

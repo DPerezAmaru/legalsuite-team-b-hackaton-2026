@@ -16,13 +16,12 @@ type PageState =
 function toFormState(doc: DocumentoExtraido): DocumentoFormState {
   return {
     documentoId: doc.documentoId,
-    radicado: doc.camposExtraidos.radicado,
-    titulo: doc.camposExtraidos.titulo,
-    especialidad: doc.camposExtraidos.especialidad,
-    despacho: doc.camposExtraidos.despacho,
-    ciudad: doc.camposExtraidos.ciudad,
-    fechaInicio: doc.camposExtraidos.fechaInicio,
-    partes: doc.camposExtraidos.partes,
+    radicado: doc.radicado,
+    titulo: doc.titulo || doc.nombreArchivo?.replace(/\.pdf$/i, '') || '',
+    especialidad: doc.especialidad,
+    despacho: doc.despacho,
+    ciudad: doc.ciudad,
+    partes: doc.partes,
   }
 }
 

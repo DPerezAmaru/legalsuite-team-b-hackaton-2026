@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import type { AssistantTab, ConsultaReciente, ExpedienteReciente } from '../../types'
+import { useState, useCallback } from 'react'
+import type { AssistantTab, ChatMessage, ConsultaReciente, ExpedienteReciente } from '../../types'
 import { AssistantTabs } from './AssistantTabs'
 import { AssistantInput } from './AssistantInput'
 import { AssistantSuggestions } from './AssistantSuggestions'
 import { RecentConsultations } from './RecentConsultations'
 import { RecentExpedientes } from './RecentExpedientes'
+import { ChatMessages } from './ChatMessages'
+import { useAssistenteChat } from '../../hooks/useAssistenteChat'
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -29,17 +31,82 @@ const EXPEDIENTES_MOCK: ExpedienteReciente[] = [
 export function AssistantPage() {
   const [activeTab, setActiveTab] = useState<AssistantTab>('asistente')
   const [inputValue, setInputValue] = useState('')
+  const [attachedFile, setAttachedFile] = useState<File | null>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
 
-  const handleSubmit = () => {
-    if (!inputValue.trim()) return
-    // TODO: conectar con AI API
+  const { mutateAsync: sendChat, isPending } = useAssistenteChat()
+
+  const handleSubmit = useCallback(async () => {
+    if (!inputValue.trim() && !attachedFile) return
+
+    const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: inputValue,
+      attachmentName: attachedFile?.name,
+      timestamp: new Date(),
+    }
+
+    setMessages((prev) => [...prev, userMsg])
+    const prompt = inputValue
+    const file = attachedFile
+    setInputValue('')
+    setAttachedFile(null)
+
+    try {
+      const response = await sendChat({ prompt, file })
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: 'assistant', content: response, timestamp: new Date() },
+      ])
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: 'Lo siento, no pude procesar tu consulta en este momento. Intentá de nuevo.',
+          timestamp: new Date(),
+        },
+      ])
+    }
+  }, [inputValue, attachedFile, sendChat])
+
+  const isChat = messages.length > 0
+
+  if (isChat) {
+    return (
+      <div className="flex flex-col h-full">
+        {/* Mensajes */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
+            <ChatMessages messages={messages} isLoading={isPending} />
+          </div>
+        </div>
+
+        {/* Input fijo abajo */}
+        <div className="border-t border-border bg-bg-base">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">
+            <AssistantTabs active={activeTab} onChange={setActiveTab} />
+            <AssistantInput
+              value={inputValue}
+              onChange={setInputValue}
+              onSubmit={handleSubmit}
+              tab={activeTab}
+              attachedFile={attachedFile}
+              onAttach={setAttachedFile}
+              isLoading={isPending}
+            />
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
 
-        {/* Greeting */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-fg-primary">
             {getGreeting()}, Juan.
@@ -49,7 +116,6 @@ export function AssistantPage() {
           </p>
         </div>
 
-        {/* Input card */}
         <div className="space-y-3">
           <AssistantTabs active={activeTab} onChange={setActiveTab} />
           <AssistantInput
@@ -57,11 +123,13 @@ export function AssistantPage() {
             onChange={setInputValue}
             onSubmit={handleSubmit}
             tab={activeTab}
+            attachedFile={attachedFile}
+            onAttach={setAttachedFile}
+            isLoading={isPending}
           />
           <AssistantSuggestions onSelect={setInputValue} />
         </div>
 
-        {/* Recent sections */}
         <RecentConsultations items={CONSULTAS_MOCK} />
         <RecentExpedientes   items={EXPEDIENTES_MOCK} />
 

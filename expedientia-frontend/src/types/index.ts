@@ -89,6 +89,18 @@ export type ExpedienteDetalle = z.infer<typeof ExpedienteDetalleSchema>
 export type TareaSugerida = z.infer<typeof TareaSugeridaSchema>
 export type DocumentoExtraido = z.infer<typeof DocumentoExtraidoSchema>
 
+// ─── ASSISTANT CHAT ───────────────────────────────────────────────────────────
+
+export type ChatRole = 'user' | 'assistant'
+
+export interface ChatMessage {
+  id: string
+  role: ChatRole
+  content: string
+  attachmentName?: string
+  timestamp: Date
+}
+
 // ─── DOCUMENTOS / CREAR EXPEDIENTE ────────────────────────────────────────────
 
 export const CreateExpedientePayloadSchema = z.object({

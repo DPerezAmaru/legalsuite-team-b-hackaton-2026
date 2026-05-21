@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { DocumentosPage } from '../../components/documentos/DocumentosPage'
 
 export const Route = createFileRoute('/documentos/')({
-  component: () => <div className="p-6 text-fg-primary capitalize">documentos</div>,
+  component: DocumentosPage,
 })

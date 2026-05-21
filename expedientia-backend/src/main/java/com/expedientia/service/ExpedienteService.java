@@ -4,6 +4,7 @@ import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.ExpedienteDTO;
 import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Parte;
+import com.expedientia.exception.AppException;
 import com.expedientia.exception.ResourceNotFoundException;
 import com.expedientia.repository.ExpedienteRepository;
 import com.expedientia.repository.ParteRepository;
@@ -21,21 +22,13 @@ public class ExpedienteService {
     private final ExpedienteRepository expedienteRepo;
     private final ParteRepository parteRepo;
     private final UsuarioRepository usuarioRepo;
-    private final AIService aiService;
 
     public ExpedienteService(ExpedienteRepository expedienteRepo,
                              ParteRepository parteRepo,
-                             UsuarioRepository usuarioRepo,
-                             AIService aiService) {
+                             UsuarioRepository usuarioRepo) {
         this.expedienteRepo = expedienteRepo;
         this.parteRepo = parteRepo;
         this.usuarioRepo = usuarioRepo;
-        this.aiService = aiService;
-    }
-
-    public ExpedienteDTO crearDesdeChat(String prompt, Long usuarioId) {
-        CreateExpedienteRequest req = aiService.interpretarDesdeChat(prompt);
-        return crear(req, usuarioId);
     }
 
     public ExpedienteDTO crear(CreateExpedienteRequest req, Long usuarioId) {
@@ -52,6 +45,11 @@ public class ExpedienteService {
 
         if (usuarioId != null) {
             usuarioRepo.findById(usuarioId).ifPresent(exp::setCreadoPor);
+        }
+
+        // Check duplicate radicado
+        if (expedienteRepo.findByRadicado(exp.getRadicado()).isPresent()) {
+            throw new AppException(AppException.Code.DUPLICATE_RADICADO, "Ya existe un expediente con el radicado: " + exp.getRadicado());
         }
 
         Expediente saved = expedienteRepo.save(exp);
@@ -78,6 +76,12 @@ public class ExpedienteService {
     @Transactional(readOnly = true)
     public ExpedienteDTO obtener(Long id) {
         return toDTO(findById(id));
+    }
+
+    @Transactional(readOnly = true)
+    public ExpedienteDTO obtenerPorRadicado(String radicado) {
+        return toDTO(expedienteRepo.findByRadicado(radicado)
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente", 0L)));
     }
 
     public ExpedienteDTO actualizar(Long id, CreateExpedienteRequest req) {

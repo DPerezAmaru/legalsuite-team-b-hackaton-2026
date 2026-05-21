@@ -1,22 +1,35 @@
 import { useRef, useEffect } from 'react'
-import type { KeyboardEvent, ReactNode } from 'react'
+import type { KeyboardEvent } from 'react'
 import { Paperclip, Folder, Scale, ArrowRight } from 'lucide-react'
 import type { AssistantTab } from '../../types'
+import { FileChip } from './FileChip'
 
 interface AssistantInputProps {
   value: string
   onChange: (value: string) => void
   onSubmit: () => void
   tab: AssistantTab
+  attachedFile?: File | null
+  onAttach?: (file: File | null) => void
+  isLoading?: boolean
 }
 
 const PLACEHOLDER: Record<AssistantTab, string> = {
   asistente: 'Pregunte, suba un documento o genere un borrador.',
-  borrador:  'Describa el documento que necesita redactar.',
+  borrador: 'Describa el documento que necesita redactar.',
 }
 
-export function AssistantInput({ value, onChange, onSubmit, tab }: AssistantInputProps) {
+export function AssistantInput({
+  value,
+  onChange,
+  onSubmit,
+  tab,
+  attachedFile,
+  onAttach,
+  isLoading = false,
+}: AssistantInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const el = textareaRef.current
@@ -32,8 +45,23 @@ export function AssistantInput({ value, onChange, onSubmit, tab }: AssistantInpu
     }
   }
 
+  const handleFileChange = () => {
+    const file = fileInputRef.current?.files?.[0]
+    if (file) onAttach?.(file)
+    // reset para permitir seleccionar el mismo archivo de nuevo
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const canSubmit = (value.trim().length > 0 || !!attachedFile) && !isLoading
+
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-bg-muted">
+      {attachedFile && onAttach && (
+        <div className="px-3 pt-3">
+          <FileChip file={attachedFile} onRemove={() => onAttach(null)} />
+        </div>
+      )}
+
       <textarea
         ref={textareaRef}
         value={value}
@@ -41,32 +69,48 @@ export function AssistantInput({ value, onChange, onSubmit, tab }: AssistantInpu
         onKeyDown={handleKeyDown}
         placeholder={PLACEHOLDER[tab]}
         rows={3}
-        className="w-full px-4 pt-4 pb-2 text-sm text-fg-primary placeholder:text-fg-tertiary resize-none outline-none bg-transparent font-sans"
+        disabled={isLoading}
+        className="w-full px-4 pt-4 pb-2 text-sm text-fg-primary placeholder:text-fg-tertiary resize-none outline-none bg-transparent font-sans disabled:opacity-60"
         style={{ minHeight: '84px' }}
       />
 
       <div className="flex items-center justify-between px-3 pb-3 pt-1 border-t border-border bg-bg-muted">
         <div className="flex items-center gap-0.5">
-          <InputAction icon={<Paperclip size={13} />} label="Adjuntar" />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-fg-secondary hover:text-fg-body hover:bg-bg-muted transition-colors"
+          >
+            <Paperclip size={13} />
+            <span className="hidden sm:inline">Adjuntar</span>
+          </button>
           <InputAction icon={<Folder size={13} />} label="Expediente" />
           <InputAction icon={<Scale size={13} />} label="Base normativa" />
         </div>
         <button
           type="button"
           onClick={onSubmit}
-          disabled={!value.trim()}
+          disabled={!canSubmit}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Consultar
           <ArrowRight size={12} />
         </button>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </div>
   )
 }
 
 interface InputActionProps {
-  icon: ReactNode
+  icon: React.ReactNode
   label: string
 }
 

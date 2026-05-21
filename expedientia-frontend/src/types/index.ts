@@ -66,12 +66,13 @@ export const DocumentoExtraidoSchema = z.object({
     radicado: z.string(),
     titulo: z.string(),
     especialidad: EspecialidadSchema,
-    despacho: z.string(),
-    ciudad: z.string(),
+    // IA puede no extraerlos — normalizar a string vacío
+    despacho: z.string().nullish().transform(v => v ?? ''),
+    ciudad: z.string().nullish().transform(v => v ?? ''),
     fechaInicio: z.string().optional(),
-    partes: z.array(ParteSchema),
+    partes: z.array(ParteSchema).default([]),
   }),
-  tareasSugeridas: z.array(TareaSugeridaSchema),
+  tareasSugeridas: z.array(TareaSugeridaSchema).default([]),
 })
 
 // Tipos inferidos
@@ -87,6 +88,46 @@ export type Expediente = z.infer<typeof ExpedienteSchema>
 export type ExpedienteDetalle = z.infer<typeof ExpedienteDetalleSchema>
 export type TareaSugerida = z.infer<typeof TareaSugeridaSchema>
 export type DocumentoExtraido = z.infer<typeof DocumentoExtraidoSchema>
+
+// ─── ASSISTANT CHAT ───────────────────────────────────────────────────────────
+
+export type ChatRole = 'user' | 'assistant'
+
+export interface ChatMessage {
+  id: string
+  role: ChatRole
+  content: string
+  attachmentName?: string
+  timestamp: Date
+}
+
+// ─── DOCUMENTOS / CREAR EXPEDIENTE ────────────────────────────────────────────
+
+export const CreateExpedientePayloadSchema = z.object({
+  radicado: z.string(),
+  titulo: z.string(),
+  especialidad: EspecialidadSchema,
+  despacho: z.string().optional(),
+  ciudad: z.string().optional(),
+  estado: EstadoExpedienteSchema.optional(),
+  resumen: z.string().optional(),
+  fechaInicio: z.string().optional(),
+  documentoOrigenId: z.number().optional(),
+  partes: z.array(ParteSchema).optional(),
+})
+export type CreateExpedientePayload = z.infer<typeof CreateExpedientePayloadSchema>
+
+export const DocumentoFormStateSchema = z.object({
+  documentoId: z.number(),
+  radicado: z.string(),
+  titulo: z.string(),
+  especialidad: EspecialidadSchema,
+  despacho: z.string(),
+  ciudad: z.string(),
+  fechaInicio: z.string().optional(),
+  partes: z.array(ParteSchema),
+})
+export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 

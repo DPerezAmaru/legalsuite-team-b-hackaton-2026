@@ -22,6 +22,14 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
     }
 
+    @ExceptionHandler(AppException.class)
+    public ProblemDetail handleApp(AppException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(ex.getCode().status, ex.getDetail());
+        pd.setTitle(ex.getCode().title);
+        pd.setProperty("code", ex.getCode().name());
+        return pd;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());

@@ -85,6 +85,25 @@ export type ExpedienteDetalle = z.infer<typeof ExpedienteDetalleSchema>
 export type TareaSugerida = z.infer<typeof TareaSugeridaSchema>
 export type DocumentoExtraido = z.infer<typeof DocumentoExtraidoSchema>
 
+// ─── CHAT API (respuesta de /api/expedientes/chat) ────────────────────────────
+
+export const ChatApiResponseSchema = z.object({
+  accion: z.string(),
+  mensaje: z.string(),
+  datos: z
+    .object({
+      id: z.number(),
+      radicado: z.string(),
+      titulo: z.string(),
+      especialidad: EspecialidadSchema,
+      estado: EstadoExpedienteSchema,
+    })
+    .passthrough()
+    .nullable()
+    .optional(),
+})
+export type ChatApiResponse = z.infer<typeof ChatApiResponseSchema>
+
 // ─── ASSISTANT CHAT ───────────────────────────────────────────────────────────
 
 export type ChatRole = 'user' | 'assistant'
@@ -127,7 +146,7 @@ export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 
-export type AssistantTab = 'asistente' | 'borrador'
+export type AssistantTab = 'asistente'
 
 export const ConsultaTipoSchema = z.enum(['Resumen', 'Consulta', 'Borrador', 'Informe'])
 export type ConsultaTipo = z.infer<typeof ConsultaTipoSchema>

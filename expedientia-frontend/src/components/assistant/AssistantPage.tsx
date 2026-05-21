@@ -29,7 +29,7 @@ const EXPEDIENTES_MOCK: ExpedienteReciente[] = [
 ]
 
 export function AssistantPage() {
-  const [activeTab, setActiveTab] = useState<AssistantTab>('asistente')
+  const activeTab: AssistantTab = 'asistente'
   const [inputValue, setInputValue] = useState('')
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -87,7 +87,7 @@ export function AssistantPage() {
         {/* Input fijo abajo */}
         <div className="border-t border-border bg-bg-base">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">
-            <AssistantTabs active={activeTab} onChange={setActiveTab} />
+            <AssistantTabs />
             <AssistantInput
               value={inputValue}
               onChange={setInputValue}
@@ -117,7 +117,7 @@ export function AssistantPage() {
         </div>
 
         <div className="space-y-3">
-          <AssistantTabs active={activeTab} onChange={setActiveTab} />
+          <AssistantTabs />
           <AssistantInput
             value={inputValue}
             onChange={setInputValue}

@@ -10,16 +10,16 @@
 /* ─── ESCALA INK ─── */
 @theme {
   --color-ink-0:  #ffffff;
-  --color-ink-1:  #fafaf9;
-  --color-ink-2:  #f4f4f2;
-  --color-ink-3:  #e8e8e5;
-  --color-ink-4:  #d1d1cd;
-  --color-ink-5:  #a1a19c;
-  --color-ink-6:  #6b6b66;
+  --color-ink-1:  #fafaf8;
+  --color-ink-2:  #f4f4f1;
+  --color-ink-3:  #eaeae6;
+  --color-ink-4:  #d1d1cc;
+  --color-ink-5:  #9e9e98;
+  --color-ink-6:  #6b6b65;
   --color-ink-7:  #3c3c38;
-  --color-ink-8:  #1f2937;
-  --color-ink-9:  #0f172a;
-  --color-ink-10: #060b14;
+  --color-ink-8:  #232320;
+  --color-ink-9:  #18181a;
+  --color-ink-10: #0c0c0d;
 }
 
 /* ─── TOKENS SEMÁNTICOS ─── */
@@ -40,26 +40,34 @@
   --color-fg-tertiary:  var(--color-ink-5);
   --color-fg-inverse:   var(--color-ink-0);
 
-  /* Sidebar */
-  --color-sidebar-bg: var(--color-ink-9);
+  /* Sidebar — ahora claro */
+  --color-sidebar-bg: var(--color-ink-1);
 
-  /* CTA */
-  --color-cta-bg:    var(--color-ink-8);
-  --color-cta-hover: var(--color-ink-9);
+  /* CTA / Botón primario */
+  --color-cta-bg:    var(--color-ink-9);
+  --color-cta-hover: var(--color-ink-8);
   --color-cta-text:  var(--color-ink-0);
 
   /* Superficies IA */
   --color-ai-tint:   var(--color-ink-2);
   --color-ai-border: var(--color-ink-4);
   --color-ai-text:   var(--color-ink-7);
+
+  /* Status badges */
+  --color-status-active-text:  #15803d;
+  --color-status-active-bg:    #dcfce7;
+  --color-status-review-text:  #c2410c;
+  --color-status-review-bg:    #ffedd5;
+  --color-status-urgent-text:  #b91c1c;
+  --color-status-urgent-bg:    #fee2e2;
 }
 
 /* ─── VALORES NO TEORIZABLES (rgba, gradientes) ─── */
 :root {
-  --sidebar-active:      rgba(255, 255, 255, 0.10);
-  --sidebar-text:        rgba(255, 255, 255, 0.65);
+  /* Sidebar claro con active oscuro invertido */
+  --sidebar-active:      #1a1a1a;
+  --sidebar-hover:       rgba(0, 0, 0, 0.05);
+  --sidebar-text:        rgba(0, 0, 0, 0.50);
   --sidebar-text-active: #ffffff;
-  --ai-orb-from:         #1f2937;
-  --ai-orb-to:           #0f172a;
-  --accent-strip:        linear-gradient(90deg, #334155, #1f2937, #0f172a);
+  --sidebar-border:      rgba(0, 0, 0, 0.07);
 }

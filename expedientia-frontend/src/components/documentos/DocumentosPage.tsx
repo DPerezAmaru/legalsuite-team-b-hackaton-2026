@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
 import { UploadZone } from './UploadZone'
@@ -11,7 +11,7 @@ import type { DocumentoFormState, DocumentoExtraido } from '../../types'
 type PageState =
   | { stage: 'idle' }
   | { stage: 'processing'; file: File }
-  | { stage: 'review'; file: File; fileUrl: string; form: DocumentoFormState }
+  | { stage: 'review'; file: File; form: DocumentoFormState }
 
 function toFormState(doc: DocumentoExtraido): DocumentoFormState {
   return {
@@ -46,14 +46,12 @@ export function DocumentosPage() {
 
   const handleFile = useCallback(
     async (file: File) => {
-      const fileUrl = URL.createObjectURL(file)
       setState({ stage: 'processing', file })
       try {
         const doc = await procesarDocumento(file)
-        setState({ stage: 'review', file, fileUrl, form: toFormState(doc) })
+        setState({ stage: 'review', file, form: toFormState(doc) })
       } catch {
-        // Backend endpoint no disponible aún — pasar a revisión manual
-        setState({ stage: 'review', file, fileUrl, form: emptyForm(file) })
+        setState({ stage: 'review', file, form: emptyForm(file) })
       }
     },
     [procesarDocumento],
@@ -86,8 +84,21 @@ export function DocumentosPage() {
   }, [state, crearExpediente, navigate])
 
   const handleReplace = useCallback(() => {
-    if (state.stage === 'review') URL.revokeObjectURL(state.fileUrl)
     setState({ stage: 'idle' })
+  }, [])
+
+  // Valores a resaltar en el PDF — mínimo 4 chars para evitar falsos positivos
+  const highlightValues = useMemo(() => {
+    if (state.stage !== 'review') return []
+    const { form } = state
+    return [
+      form.radicado,
+      form.despacho,
+      form.ciudad,
+      form.fechaInicio,
+      ...form.partes.map((p) => p.nombre),
+      ...form.partes.map((p) => p.identificacion ?? ''),
+    ].filter((v): v is string => typeof v === 'string' && v.trim().length >= 4)
   }, [state])
 
   if (state.stage === 'idle') {
@@ -122,8 +133,8 @@ export function DocumentosPage() {
         <div className="flex-1 min-w-0">
           <PdfViewer
             file={state.file}
-            fileUrl={state.fileUrl}
             onReplace={handleReplace}
+            highlightValues={highlightValues}
           />
         </div>
         <div className="w-96 shrink-0">

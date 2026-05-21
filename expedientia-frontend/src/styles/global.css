@@ -62,6 +62,14 @@
   --color-status-urgent-bg:    #fee2e2;
 }
 
+/* ─── PDF TEXT LAYER HIGHLIGHT ─── */
+.react-pdf__Page__textContent mark {
+  background: rgba(250, 204, 21, 0.40);
+  border-radius: 2px;
+  color: transparent;
+  padding: 0 1px;
+}
+
 /* ─── VALORES NO TEORIZABLES (rgba, gradientes) ─── */
 :root {
   /* Sidebar claro con active oscuro invertido */

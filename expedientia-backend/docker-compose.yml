@@ -23,7 +23,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/expedientia
       SPRING_DATASOURCE_USERNAME: expedientia
       SPRING_DATASOURCE_PASSWORD: expedientia
-      SPRING_AI_GOOGLE_GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     depends_on:
       db:
         condition: service_healthy

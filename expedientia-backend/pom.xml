@@ -20,7 +20,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.0</spring-ai.version>
+        <spring-ai.version>1.1.5</spring-ai.version>
     </properties>
 
     <dependencyManagement>
@@ -61,10 +61,9 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Spring AI - Google Gemini -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-google-genai-spring-boot-starter</artifactId>
+            <artifactId>spring-ai-google-genai-starter</artifactId>
         </dependency>
 
         <!-- PDFBox - extracción de texto desde PDF -->

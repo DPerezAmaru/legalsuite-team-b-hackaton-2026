@@ -1,5 +1,12 @@
-FROM eclipse-temurin:21-jdk-alpine
+FROM maven:3.9-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
-COPY target/*.jar app.jar
+COPY pom.xml .
+RUN mvn -B dependency:resolve -q
+COPY src ./src
+RUN mvn package -DskipTests -q
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=builder /app/target/expedientia-backend-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Menu, PanelLeftOpen } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import { CommandBar } from './CommandBar'
 import { useSidebar } from '../../hooks/useSidebar'
 
 interface AppShellProps {
@@ -53,6 +54,8 @@ export function AppShell({ children }: AppShellProps) {
 
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+
+      <CommandBar />
     </div>
   )
 }

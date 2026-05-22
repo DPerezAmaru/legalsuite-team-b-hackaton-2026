@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router'
 import type { Expediente } from '../../types'
-import { ExpedienteAvatar } from './ExpedienteAvatar'
 import { EstadoBadge } from './EstadoBadge'
 
 function demandante(expediente: Expediente): string {
@@ -16,7 +15,11 @@ function formatRelative(iso: string): string {
   if (hours < 24) return `hace ${hours}h`
   const days = Math.floor(hours / 24)
   if (days < 30) return `hace ${days}d`
-  return new Date(iso).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('es', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 function capitalize(s: string): string {
@@ -30,29 +33,29 @@ interface ExpedienteRowProps {
 export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
   const nombre = demandante(expediente)
 
+  const metadata = [capitalize(expediente.especialidad), expediente.radicado]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
     <Link
       to="/expedientes/$expedienteId"
       params={{ expedienteId: String(expediente.id) }}
-      className="flex items-center gap-4 px-6 py-4 hover:bg-bg-subtle transition-colors cursor-pointer"
+      className="group block -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 hover:bg-bg-subtle transition-colors"
     >
-      <ExpedienteAvatar name={nombre} />
-
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-fg-primary truncate">{nombre}</p>
-        <p className="text-xs text-fg-tertiary">{expediente.radicado}</p>
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="text-[15px] font-medium text-fg-primary truncate group-hover:text-fg-primary">
+          {nombre}
+        </h3>
+        <span className="text-xs text-fg-tertiary shrink-0 tabular-nums">
+          {formatRelative(expediente.createdAt)}
+        </span>
       </div>
 
-      <div className="w-28 hidden sm:block">
-        <span className="text-sm text-fg-body">{capitalize(expediente.especialidad)}</span>
-      </div>
-
-      <div className="w-24">
+      <div className="flex items-center gap-2 mt-1">
+        <p className="text-xs text-fg-secondary truncate">{metadata}</p>
+        <span className="text-fg-tertiary text-xs">·</span>
         <EstadoBadge estado={expediente.estado} />
-      </div>
-
-      <div className="w-20 text-right hidden md:block">
-        <span className="text-xs text-fg-tertiary">{formatRelative(expediente.createdAt)}</span>
       </div>
     </Link>
   )

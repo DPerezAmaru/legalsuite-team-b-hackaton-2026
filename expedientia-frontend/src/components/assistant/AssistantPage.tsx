@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { AssistantTab, ChatMessage, ConsultaReciente, ExpedienteReciente } from '../../types'
 import { AssistantTabs } from './AssistantTabs'
 import { AssistantInput } from './AssistantInput'
@@ -7,6 +7,7 @@ import { RecentConsultations } from './RecentConsultations'
 import { RecentExpedientes } from './RecentExpedientes'
 import { ChatMessages } from './ChatMessages'
 import { useAssistenteChat } from '../../hooks/useAssistenteChat'
+import { useCommandBar } from '../../store/commandBarStore'
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -35,42 +36,61 @@ export function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
 
   const { mutateAsync: sendChat, isPending } = useAssistenteChat()
+  const consumePendingPrompt = useCommandBar(s => s.consumePendingPrompt)
+
+  const sendPrompt = useCallback(
+    async (prompt: string, file: File | null) => {
+      if (!prompt.trim() && !file) return
+
+      const userMsg: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: prompt,
+        attachmentName: file?.name,
+        timestamp: new Date(),
+      }
+
+      setMessages(prev => [...prev, userMsg])
+
+      try {
+        const response = await sendChat({ prompt, file })
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content: response,
+            timestamp: new Date(),
+          },
+        ])
+      } catch {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            content:
+              'Lo siento, no pude procesar tu consulta en este momento. Intentá de nuevo.',
+            timestamp: new Date(),
+          },
+        ])
+      }
+    },
+    [sendChat],
+  )
 
   const handleSubmit = useCallback(async () => {
-    if (!inputValue.trim() && !attachedFile) return
-
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: inputValue,
-      attachmentName: attachedFile?.name,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMsg])
     const prompt = inputValue
     const file = attachedFile
     setInputValue('')
     setAttachedFile(null)
+    await sendPrompt(prompt, file)
+  }, [inputValue, attachedFile, sendPrompt])
 
-    try {
-      const response = await sendChat({ prompt, file })
-      setMessages((prev) => [
-        ...prev,
-        { id: crypto.randomUUID(), role: 'assistant', content: response, timestamp: new Date() },
-      ])
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: 'Lo siento, no pude procesar tu consulta en este momento. Intentá de nuevo.',
-          timestamp: new Date(),
-        },
-      ])
-    }
-  }, [inputValue, attachedFile, sendChat])
+  useEffect(() => {
+    const pending = consumePendingPrompt()
+    if (pending) sendPrompt(pending, null)
+  }, [consumePendingPrompt, sendPrompt])
 
   const isChat = messages.length > 0
 

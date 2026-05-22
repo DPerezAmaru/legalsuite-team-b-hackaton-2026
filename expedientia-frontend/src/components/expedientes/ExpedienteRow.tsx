@@ -33,7 +33,6 @@ export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
   const demandado = findParte(expediente.partes, 'DEMANDADO')
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
-    // Dejar que el browser maneje cmd/ctrl/shift/middle click → abre standalone
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return
     e.preventDefault()
     navigate({ to: '/expedientes', search: { caso: expediente.id } })
@@ -56,15 +55,19 @@ export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
         </div>
       </div>
 
-      <div className="hidden md:block w-44 text-fg-body truncate">{demandante}</div>
+      <div className="hidden @2xl/table:block w-44 text-fg-body truncate">
+        {demandante}
+      </div>
 
-      <div className="hidden md:block w-44 text-fg-body truncate">{demandado}</div>
+      <div className="hidden @3xl/table:block w-44 text-fg-body truncate">
+        {demandado}
+      </div>
 
-      <div className="hidden sm:block w-24 text-fg-body">
+      <div className="hidden @lg/table:block w-24 text-fg-body">
         {capitalize(expediente.especialidad)}
       </div>
 
-      <div className="hidden lg:block w-44 text-xs text-fg-tertiary truncate">
+      <div className="hidden @5xl/table:block w-44 text-xs text-fg-tertiary truncate">
         {expediente.despacho ?? '—'}
       </div>
 

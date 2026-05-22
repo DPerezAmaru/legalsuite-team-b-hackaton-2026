@@ -1,9 +1,16 @@
-import { House, Folder, ListTodo, History, FileText, Search, PanelLeftClose, X } from 'lucide-react'
+import { House, Folder, ListTodo, History, FileText, Sparkles, PanelLeftClose, X } from 'lucide-react'
 import { SidebarNavItem } from './SidebarNavItem'
 import { useSidebar } from '../../hooks/useSidebar'
+import { useCommandBar } from '../../store/commandBarStore'
+
+function modKey(): string {
+  if (typeof navigator === 'undefined') return 'Ctrl'
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl'
+}
 
 export function Sidebar() {
   const { isOpen, close, toggle } = useSidebar()
+  const openCommandBar = useCommandBar(s => s.open)
 
   return (
     <aside
@@ -19,14 +26,6 @@ export function Sidebar() {
       <div className="px-3 pt-4 pb-3 flex items-center justify-between">
         <span className="font-semibold text-sm text-fg-primary tracking-tight">ExpedientiA</span>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            className="p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
-            aria-label="Buscar"
-          >
-            <Search size={14} />
-          </button>
-
           {/* Desktop: colapsa el sidebar */}
           <button
             type="button"
@@ -47,6 +46,22 @@ export function Sidebar() {
             <X size={14} />
           </button>
         </div>
+      </div>
+
+      {/* Ask Anywhere — disparador del CommandBar (Cmd/Ctrl+K) */}
+      <div className="px-2 pb-2">
+        <button
+          type="button"
+          onClick={openCommandBar}
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-(--sidebar-text) bg-(--sidebar-hover) hover:bg-(--sidebar-hover) hover:text-fg-primary transition-colors"
+          aria-label="Abrir asistente"
+        >
+          <Sparkles size={13} />
+          <span className="truncate">Preguntá al asistente</span>
+          <span className="ml-auto font-mono text-[10px] tracking-wide opacity-70">
+            {modKey()}K
+          </span>
+        </button>
       </div>
 
       {/* Nav principal */}

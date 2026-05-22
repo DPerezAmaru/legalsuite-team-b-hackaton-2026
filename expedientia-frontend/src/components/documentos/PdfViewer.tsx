@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
-import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +57,10 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
   const [numPages, setNumPages] = useState<number>(0)
   const [page, setPage] = useState(1)
   const [width, setWidth] = useState(0)
+  const [zoom, setZoom] = useState(1)
+
+  const zoomIn  = () => setZoom((z) => Math.min(2, +(z + 0.25).toFixed(2)))
+  const zoomOut = () => setZoom((z) => Math.max(0.5, +(z - 0.25).toFixed(2)))
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -109,7 +113,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
           >
             <Page
               pageNumber={page}
-              width={width - 32}
+              width={Math.round((width - 32) * zoom)}
               renderTextLayer
               renderAnnotationLayer={false}
               customTextRenderer={customTextRenderer}
@@ -120,29 +124,55 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
       </div>
 
       {/* Paginación */}
-      {numPages > 1 && (
-        <div className="flex items-center justify-center gap-3 px-4 py-2.5 border-t border-border shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-border shrink-0">
+        {/* Paginación */}
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
+            disabled={page <= 1 || numPages === 0}
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
           >
             <ChevronLeft size={15} />
           </button>
-          <span className="text-xs text-fg-secondary tabular-nums">
-            Página {page} de {numPages}
+          <span className="text-xs text-fg-secondary tabular-nums px-1">
+            {numPages > 0 ? `${page} / ${numPages}` : '—'}
           </span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(numPages, p + 1))}
-            disabled={page >= numPages}
+            disabled={page >= numPages || numPages === 0}
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
           >
             <ChevronRight size={15} />
           </button>
         </div>
-      )}
+
+        {/* Zoom */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={zoomOut}
+            disabled={zoom <= 0.5}
+            className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
+            aria-label="Reducir zoom"
+          >
+            <ZoomOut size={14} />
+          </button>
+          <span className="text-xs text-fg-secondary tabular-nums w-10 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={zoomIn}
+            disabled={zoom >= 2}
+            className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
+            aria-label="Aumentar zoom"
+          >
+            <ZoomIn size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -11,8 +11,9 @@ export const PrioridadSchema = z.enum(['ALTA', 'MEDIA', 'BAJA'])
 // Parte
 
 export const ParteSchema = z.object({
+  id: z.number().optional(),
   nombre: z.string(),
-  identificacion: z.string().optional(),
+  identificacion: z.string().nullable().optional(),
   tipoParticipacion: TipoParticipacionSchema,
 })
 
@@ -29,27 +30,22 @@ export const TareaSchema = z.object({
   createdAt: z.string(),
 })
 
-// Expediente (listado)
+// Expediente
 
 export const ExpedienteSchema = z.object({
   id: z.number(),
   radicado: z.string(),
   titulo: z.string(),
   especialidad: EspecialidadSchema,
+  despacho: z.string().nullable().optional(),
+  ciudad: z.string().nullable().optional(),
   estado: EstadoExpedienteSchema,
-  tareasPendientes: z.number(),
+  resumen: z.string().nullable().optional(),
+  fechaInicio: z.string().nullable().optional(),
   createdAt: z.string(),
-})
-
-// Expediente (detalle)
-
-export const ExpedienteDetalleSchema = ExpedienteSchema.extend({
-  despacho: z.string(),
-  ciudad: z.string(),
-  resumen: z.string().optional(),
-  fechaInicio: z.string().optional(),
-  partes: z.array(ParteSchema),
-  tareas: z.array(TareaSchema),
+  creadoPorId: z.number().nullable().optional(),
+  documentoOrigenId: z.number().nullable().optional(),
+  partes: z.array(ParteSchema).default([]),
 })
 
 // Documento extraído (respuesta de /api/documentos/procesar)
@@ -81,9 +77,27 @@ export type Prioridad = z.infer<typeof PrioridadSchema>
 export type Parte = z.infer<typeof ParteSchema>
 export type Tarea = z.infer<typeof TareaSchema>
 export type Expediente = z.infer<typeof ExpedienteSchema>
-export type ExpedienteDetalle = z.infer<typeof ExpedienteDetalleSchema>
 export type TareaSugerida = z.infer<typeof TareaSugeridaSchema>
 export type DocumentoExtraido = z.infer<typeof DocumentoExtraidoSchema>
+
+// ─── CHAT API (respuesta de /api/expedientes/chat) ────────────────────────────
+
+export const ChatApiResponseSchema = z.object({
+  accion: z.string(),
+  mensaje: z.string(),
+  datos: z
+    .object({
+      id: z.number(),
+      radicado: z.string(),
+      titulo: z.string(),
+      especialidad: EspecialidadSchema,
+      estado: EstadoExpedienteSchema,
+    })
+    .passthrough()
+    .nullable()
+    .optional(),
+})
+export type ChatApiResponse = z.infer<typeof ChatApiResponseSchema>
 
 // ─── ASSISTANT CHAT ───────────────────────────────────────────────────────────
 
@@ -127,7 +141,7 @@ export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 
-export type AssistantTab = 'asistente' | 'borrador'
+export type AssistantTab = 'asistente'
 
 export const ConsultaTipoSchema = z.enum(['Resumen', 'Consulta', 'Borrador', 'Informe'])
 export type ConsultaTipo = z.infer<typeof ConsultaTipoSchema>

@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: process.env.API_URL ?? 'https://legalsuite-team-b-hackaton-2026-production.up.railway.app',
         changeOrigin: true,
       },
     },

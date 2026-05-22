@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Paperclip, Folder, Scale, ArrowRight } from 'lucide-react'
+import { Paperclip, Folder, ArrowRight } from 'lucide-react'
 import type { AssistantTab } from '../../types'
 import { FileChip } from './FileChip'
 
@@ -85,16 +85,15 @@ export function AssistantInput({
             <span className="hidden sm:inline">Adjuntar</span>
           </button>
           <InputAction icon={<Folder size={13} />} label="Expediente" />
-          <InputAction icon={<Scale size={13} />} label="Base normativa" />
         </div>
         <button
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          aria-label="Consultar"
         >
-          Consultar
-          <ArrowRight size={12} />
+          <ArrowRight size={14} />
         </button>
       </div>
 

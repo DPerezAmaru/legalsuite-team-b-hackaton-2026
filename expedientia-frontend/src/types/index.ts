@@ -48,23 +48,23 @@ export const ExpedienteSchema = z.object({
   partes: z.array(ParteSchema).default([]),
 })
 
-// Documento extraído (respuesta de /api/documentos/procesar)
+// Procesar documento (respuesta de POST /api/documentos/procesar)
 
-// tareasSugeridas viene como array de strings desde el backend
-export const TareaSugeridaSchema = z.string()
-
-// Estructura plana — coincide con DocumentoExtraidoDTO de Spring
-export const DocumentoExtraidoSchema = z.object({
-  documentoId: z.number(),
-  nombreArchivo: z.string().optional(),
+export const ProcesoSugeridoSchema = z.object({
+  numero: z.number(),
   radicado: z.string().nullish().transform(v => v ?? ''),
-  titulo: z.string().nullish().transform(v => v ?? ''),
   especialidad: EspecialidadSchema.nullish().transform(v => v ?? 'CIVIL'),
+  estado: EstadoExpedienteSchema.nullish().transform(v => v ?? 'ACTIVO'),
   despacho: z.string().nullish().transform(v => v ?? ''),
   ciudad: z.string().nullish().transform(v => v ?? ''),
-  resumen: z.string().optional(),
+  resumen: z.string().nullish().transform(v => v ?? ''),
   partes: z.array(ParteSchema).default([]),
-  tareasSugeridas: z.array(TareaSugeridaSchema).default([]),
+})
+
+export const ProcesarDocumentoResponseSchema = z.object({
+  esDocumentoJudicial: z.boolean(),
+  sugerenciaTexto: z.string().nullish().transform(v => v ?? ''),
+  procesos: z.array(ProcesoSugeridoSchema).default([]),
 })
 
 // Tipos inferidos
@@ -77,8 +77,8 @@ export type Prioridad = z.infer<typeof PrioridadSchema>
 export type Parte = z.infer<typeof ParteSchema>
 export type Tarea = z.infer<typeof TareaSchema>
 export type Expediente = z.infer<typeof ExpedienteSchema>
-export type TareaSugerida = z.infer<typeof TareaSugeridaSchema>
-export type DocumentoExtraido = z.infer<typeof DocumentoExtraidoSchema>
+export type ProcesoSugerido = z.infer<typeof ProcesoSugeridoSchema>
+export type ProcesarDocumentoResponse = z.infer<typeof ProcesarDocumentoResponseSchema>
 
 // ─── CHAT API (respuesta de /api/expedientes/chat) ────────────────────────────
 
@@ -128,12 +128,14 @@ export const CreateExpedientePayloadSchema = z.object({
 export type CreateExpedientePayload = z.infer<typeof CreateExpedientePayloadSchema>
 
 export const DocumentoFormStateSchema = z.object({
-  documentoId: z.number(),
+  numero: z.number(),
   radicado: z.string(),
   titulo: z.string(),
   especialidad: EspecialidadSchema,
+  estado: EstadoExpedienteSchema,
   despacho: z.string(),
   ciudad: z.string(),
+  resumen: z.string(),
   fechaInicio: z.string().optional(),
   partes: z.array(ParteSchema),
 })

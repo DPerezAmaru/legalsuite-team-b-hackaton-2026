@@ -1,103 +1,134 @@
 import { useState, useCallback, useMemo } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Info, AlertTriangle } from 'lucide-react'
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
-import { ExtraccionPanel } from './ExtraccionPanel'
+import { ProcesoCard } from './ProcesoCard'
 import { useDocumentoProcesar } from '../../hooks/useDocumentoProcesar'
 import { useCrearExpediente } from '../../hooks/useCrearExpediente'
-import type { DocumentoFormState, DocumentoExtraido } from '../../types'
+import type {
+  DocumentoFormState,
+  ProcesoSugerido,
+  ProcesarDocumentoResponse,
+} from '../../types'
 
 type PageState =
   | { stage: 'idle' }
   | { stage: 'processing'; file: File }
-  | { stage: 'review'; file: File; form: DocumentoFormState }
+  | {
+      stage: 'review'
+      file: File
+      response: ProcesarDocumentoResponse
+      forms: DocumentoFormState[]
+      createdIds: Record<number, number>
+    }
 
-function toFormState(doc: DocumentoExtraido): DocumentoFormState {
-  return {
-    documentoId: doc.documentoId,
-    radicado: doc.radicado,
-    titulo: doc.titulo || doc.nombreArchivo?.replace(/\.pdf$/i, '') || '',
-    especialidad: doc.especialidad,
-    despacho: doc.despacho,
-    ciudad: doc.ciudad,
-    partes: doc.partes,
-  }
+function deriveTitulo(file: File, proceso: ProcesoSugerido, hasMultiple: boolean): string {
+  const base = file.name.replace(/\.pdf$/i, '').replace(/[_-]/g, ' ')
+  return hasMultiple ? `${base} — Proceso ${proceso.numero}` : base
 }
 
-function emptyForm(file: File): DocumentoFormState {
+function procesoToForm(file: File, proceso: ProcesoSugerido, hasMultiple: boolean): DocumentoFormState {
   return {
-    documentoId: 0,
-    radicado: '',
-    titulo: file.name.replace(/\.pdf$/i, '').replace(/[_-]/g, ' '),
-    especialidad: 'CIVIL',
-    despacho: '',
-    ciudad: '',
-    partes: [],
+    numero: proceso.numero,
+    radicado: proceso.radicado,
+    titulo: deriveTitulo(file, proceso, hasMultiple),
+    especialidad: proceso.especialidad,
+    estado: proceso.estado,
+    despacho: proceso.despacho,
+    ciudad: proceso.ciudad,
+    resumen: proceso.resumen,
+    partes: proceso.partes,
   }
 }
 
 export function DocumentosPage() {
   const [state, setState] = useState<PageState>({ stage: 'idle' })
+  const [creatingNumero, setCreatingNumero] = useState<number | null>(null)
   const { mutateAsync: procesarDocumento } = useDocumentoProcesar()
-  const { mutate: crearExpediente, isPending: isCreating } = useCrearExpediente()
-  const navigate = useNavigate()
+  const { mutate: crearExpediente } = useCrearExpediente()
 
   const handleFile = useCallback(
     async (file: File) => {
       setState({ stage: 'processing', file })
       try {
-        const doc = await procesarDocumento(file)
-        setState({ stage: 'review', file, form: toFormState(doc) })
+        const response = await procesarDocumento(file)
+        const hasMultiple = response.procesos.length > 1
+        const forms = response.procesos.map((p) => procesoToForm(file, p, hasMultiple))
+        setState({ stage: 'review', file, response, forms, createdIds: {} })
       } catch {
-        setState({ stage: 'review', file, form: emptyForm(file) })
+        setState({
+          stage: 'review',
+          file,
+          response: {
+            esDocumentoJudicial: false,
+            sugerenciaTexto: 'No se pudo procesar el documento. Cargá otro o revisá manualmente.',
+            procesos: [],
+          },
+          forms: [],
+          createdIds: {},
+        })
       }
     },
     [procesarDocumento],
   )
 
-  const handleFormChange = useCallback((form: DocumentoFormState) => {
-    setState((prev) => (prev.stage === 'review' ? { ...prev, form } : prev))
+  const handleFormChange = useCallback((numero: number, form: DocumentoFormState) => {
+    setState((prev) => {
+      if (prev.stage !== 'review') return prev
+      return { ...prev, forms: prev.forms.map((f) => (f.numero === numero ? form : f)) }
+    })
   }, [])
 
-  const handleCrear = useCallback(() => {
-    if (state.stage !== 'review') return
-    const { form } = state
-    crearExpediente(
-      {
-        radicado: form.radicado,
-        titulo: form.titulo,
-        especialidad: form.especialidad,
-        despacho: form.despacho || undefined,
-        ciudad: form.ciudad || undefined,
-        estado: 'ACTIVO',
-        fechaInicio: form.fechaInicio,
-        documentoOrigenId: form.documentoId || undefined,
-        partes: form.partes,
-      },
-      {
-        onSuccess: (exp) =>
-          navigate({ to: '/expedientes/$expedienteId', params: { expedienteId: String(exp.id) } }),
-      },
-    )
-  }, [state, crearExpediente, navigate])
+  const handleCrear = useCallback(
+    (numero: number) => {
+      if (state.stage !== 'review') return
+      const form = state.forms.find((f) => f.numero === numero)
+      if (!form) return
+      setCreatingNumero(numero)
+      crearExpediente(
+        {
+          radicado: form.radicado,
+          titulo: form.titulo,
+          especialidad: form.especialidad,
+          despacho: form.despacho || undefined,
+          ciudad: form.ciudad || undefined,
+          estado: form.estado,
+          resumen: form.resumen || undefined,
+          fechaInicio: form.fechaInicio,
+          partes: form.partes,
+        },
+        {
+          onSuccess: (exp) => {
+            setState((prev) =>
+              prev.stage === 'review'
+                ? { ...prev, createdIds: { ...prev.createdIds, [numero]: exp.id } }
+                : prev,
+            )
+          },
+          onSettled: () => setCreatingNumero(null),
+        },
+      )
+    },
+    [state, crearExpediente],
+  )
 
   const handleReplace = useCallback(() => {
     setState({ stage: 'idle' })
+    setCreatingNumero(null)
   }, [])
 
-  // Valores a resaltar en el PDF — mínimo 4 chars para evitar falsos positivos
+  // Valores a resaltar en el PDF — unión de todas las cards, mínimo 4 chars
   const highlightValues = useMemo(() => {
     if (state.stage !== 'review') return []
-    const { form } = state
-    return [
-      form.radicado,
-      form.despacho,
-      form.ciudad,
-      form.fechaInicio,
-      ...form.partes.map((p) => p.nombre),
-      ...form.partes.map((p) => p.identificacion ?? ''),
-    ].filter((v): v is string => typeof v === 'string' && v.trim().length >= 4)
+    const vals: string[] = []
+    for (const f of state.forms) {
+      vals.push(f.radicado, f.despacho, f.ciudad, f.fechaInicio ?? '')
+      for (const p of f.partes) {
+        vals.push(p.nombre)
+        if (p.identificacion) vals.push(p.identificacion)
+      }
+    }
+    return vals.filter((v) => typeof v === 'string' && v.trim().length >= 4)
   }, [state])
 
   if (state.stage === 'idle') {
@@ -118,16 +149,18 @@ export function DocumentosPage() {
     )
   }
 
+  const { response, forms, createdIds } = state
+  const hasProcesos = forms.length > 0
+  const isJudicial = response.esDocumentoJudicial
+
   return (
     <div className="flex flex-col h-full">
-      {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border shrink-0">
         <span className="text-xs text-fg-tertiary">Asistente</span>
         <span className="text-xs text-fg-tertiary">/</span>
         <span className="text-xs text-fg-secondary">Crear desde documento</span>
       </div>
 
-      {/* 2 columnas */}
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 min-w-0">
           <PdfViewer
@@ -136,14 +169,61 @@ export function DocumentosPage() {
             highlightValues={highlightValues}
           />
         </div>
-        <div className="w-96 shrink-0">
-          <ExtraccionPanel
-            form={state.form}
-            onFormChange={handleFormChange}
-            onCrear={handleCrear}
-            onRevisarManualmente={handleReplace}
-            isCreating={isCreating}
-          />
+        <div className="w-96 shrink-0 border-l border-border flex flex-col">
+          <div className="mx-4 mt-4 mb-2 shrink-0">
+            <div
+              className={[
+                'flex items-start gap-2.5 px-3.5 py-3 rounded-xl border',
+                isJudicial ? 'bg-ai-tint border-ai-border' : 'bg-bg-subtle border-border',
+              ].join(' ')}
+            >
+              {isJudicial ? (
+                <Info size={14} className="text-ai-text mt-0.5 shrink-0" />
+              ) : (
+                <AlertTriangle size={14} className="text-fg-secondary mt-0.5 shrink-0" />
+              )}
+              <p
+                className={[
+                  'text-xs leading-relaxed',
+                  isJudicial ? 'text-ai-text' : 'text-fg-body',
+                ].join(' ')}
+              >
+                {response.sugerenciaTexto ||
+                  (isJudicial
+                    ? 'Documento procesado.'
+                    : 'Este documento no parece ser judicial.')}
+              </p>
+            </div>
+          </div>
+
+          {hasProcesos ? (
+            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2.5">
+              {forms.map((form, idx) => (
+                <ProcesoCard
+                  key={form.numero}
+                  form={form}
+                  defaultOpen={idx === 0}
+                  createdExpedienteId={createdIds[form.numero]}
+                  isCreating={creatingNumero === form.numero}
+                  onFormChange={(f) => handleFormChange(form.numero, f)}
+                  onCrear={() => handleCrear(form.numero)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+              <p className="text-xs text-fg-tertiary">
+                No se detectaron procesos judiciales en este documento.
+              </p>
+              <button
+                type="button"
+                onClick={handleReplace}
+                className="mt-3 px-3.5 py-2 text-xs font-medium text-fg-body border border-border rounded-lg hover:bg-bg-subtle hover:border-border-strong transition-colors"
+              >
+                Cargar otro documento
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

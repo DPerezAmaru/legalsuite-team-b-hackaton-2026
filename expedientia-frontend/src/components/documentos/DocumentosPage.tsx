@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { Loader2, Info, AlertTriangle } from 'lucide-react'
+import { CircleNotch, Info, Warning } from '@phosphor-icons/react'
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
 import { ProcesoCard } from './ProcesoCard'
@@ -145,7 +145,7 @@ export function DocumentosPage() {
   if (state.stage === 'processing') {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3">
-        <Loader2 size={28} className="animate-spin text-fg-secondary" />
+        <CircleNotch className="animate-spin text-fg-secondary" />
         <p className="text-sm text-fg-secondary">Analizando documento con IA...</p>
         <p className="text-xs text-fg-tertiary">{state.file.name}</p>
       </div>
@@ -180,9 +180,9 @@ export function DocumentosPage() {
               ].join(' ')}
             >
               {hasProcesos ? (
-                <Info size={14} className="text-ai-text mt-0.5 shrink-0" />
+                <Info className="text-ai-text mt-0.5 shrink-0" />
               ) : (
-                <AlertTriangle size={14} className="text-fg-secondary mt-0.5 shrink-0" />
+                <Warning className="text-fg-secondary mt-0.5 shrink-0" />
               )}
               <p
                 className={[

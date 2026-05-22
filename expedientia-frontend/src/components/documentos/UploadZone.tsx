@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import { Upload, FileText } from 'lucide-react'
+import { UploadSimple, FileText } from '@phosphor-icons/react'
 
 interface UploadZoneProps {
   onFile: (file: File) => void
@@ -37,7 +37,7 @@ export function UploadZone({ onFile }: UploadZoneProps) {
         ].join(' ')}
       >
         <div className="w-12 h-12 rounded-full bg-bg-muted flex items-center justify-center">
-          <Upload size={20} className="text-fg-secondary" />
+          <UploadSimple className="text-fg-secondary" />
         </div>
         <div className="text-center space-y-1">
           <p className="text-sm font-medium text-fg-primary">Arrastrá el documento acá</p>
@@ -45,7 +45,7 @@ export function UploadZone({ onFile }: UploadZoneProps) {
           <p className="text-xs text-fg-tertiary pt-1">Solo archivos PDF · máx. 10 MB</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-muted border border-border">
-          <FileText size={13} className="text-fg-secondary shrink-0" />
+          <FileText className="text-fg-secondary shrink-0" />
           <span className="text-xs text-fg-body">Seleccionar PDF</span>
         </div>
       </div>

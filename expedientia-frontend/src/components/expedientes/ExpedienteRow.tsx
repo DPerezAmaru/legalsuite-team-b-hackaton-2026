@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { FileText } from 'lucide-react'
+import { FileText } from '@phosphor-icons/react'
 import type { Expediente, Parte, TipoParticipacion } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
 
@@ -46,7 +46,7 @@ export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
       className="flex items-center gap-4 px-3 py-3 text-sm hover:bg-bg-subtle transition-colors"
     >
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
-        <FileText size={15} className="shrink-0 text-fg-tertiary" />
+        <FileText className="shrink-0 text-fg-tertiary" />
         <div className="min-w-0">
           <p className="font-medium text-fg-primary truncate tabular-nums">
             {expediente.radicado}

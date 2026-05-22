@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkle } from '@phosphor-icons/react'
 import { useCommandBar } from '../../store/commandBarStore'
 
 export function CommandBar() {
@@ -75,7 +75,7 @@ export function CommandBar() {
 
       <div className="relative w-full max-w-2xl rounded-2xl bg-bg-base border border-border shadow-2xl overflow-hidden">
         <div className="flex items-center gap-2 px-4 pt-4 text-xs text-fg-tertiary">
-          <Sparkles size={14} />
+          <Sparkle />
           <span>Preguntá al asistente</span>
           <span className="ml-auto font-mono text-[10px] tracking-wide">Esc</span>
         </div>
@@ -102,7 +102,7 @@ export function CommandBar() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cta-bg text-cta-text text-xs font-medium hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Enviar
-            <ArrowRight size={12} />
+            <ArrowRight />
           </button>
         </div>
       </div>

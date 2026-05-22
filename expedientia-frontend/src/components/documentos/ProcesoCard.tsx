@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ChevronDown, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react'
+import { CaretDown, CaretRight, CircleNotch, CheckCircle } from '@phosphor-icons/react'
 import { ExtraccionField } from './ExtraccionField'
 import { PartesEditor } from './PartesEditor'
 import type {
@@ -53,8 +53,8 @@ export function ProcesoCard({
         className="w-full flex items-center gap-2 px-3.5 py-3 text-left hover:bg-bg-subtle transition-colors"
       >
         {open
-          ? <ChevronDown size={14} className="text-fg-tertiary shrink-0" />
-          : <ChevronRight size={14} className="text-fg-tertiary shrink-0" />}
+          ? <CaretDown className="text-fg-tertiary shrink-0" />
+          : <CaretRight className="text-fg-tertiary shrink-0" />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-fg-primary">Proceso {numero}</span>
@@ -63,7 +63,7 @@ export function ProcesoCard({
             </span>
             {isCreated && (
               <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-cta-bg/10 text-cta-bg">
-                <CheckCircle2 size={10} /> Creado
+                <CheckCircle /> Creado
               </span>
             )}
           </div>
@@ -110,7 +110,7 @@ export function ProcesoCard({
                 disabled={!canCreate || isCreating}
                 className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-cta-bg text-cta-text rounded-lg hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                {isCreating && <Loader2 size={12} className="animate-spin" />}
+                {isCreating && <CircleNotch className="animate-spin" />}
                 {isCreating ? 'Creando...' : 'Crear expediente'}
               </button>
             )}

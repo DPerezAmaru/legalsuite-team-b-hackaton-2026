@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sparkles, Copy, Check } from 'lucide-react'
+import { Sparkle, Copy, Check } from '@phosphor-icons/react'
 
 interface ResumenIACardProps {
   resumen: string | null | undefined
@@ -20,7 +20,7 @@ export function ResumenIACard({ resumen }: ResumenIACardProps) {
     <div className="rounded-xl border border-ai-border bg-ai-tint p-4">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <Sparkles size={15} className="text-ai-text shrink-0" />
+          <Sparkle className="text-ai-text shrink-0" />
           <span className="text-sm font-semibold text-ai-text">Resumen IA</span>
         </div>
         {resumen && (
@@ -30,7 +30,7 @@ export function ResumenIACard({ resumen }: ResumenIACardProps) {
             className="p-1 rounded text-ai-text hover:bg-ai-border transition-colors"
             aria-label="Copiar resumen"
           >
-            {copied ? <Check size={13} /> : <Copy size={13} />}
+            {copied ? <Check /> : <Copy />}
           </button>
         )}
       </div>

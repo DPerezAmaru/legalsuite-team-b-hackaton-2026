@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
+import { CaretRight } from '@phosphor-icons/react'
 import { PageContainer } from '../../components/layout/PageContainer'
 import { PageHeader } from '../../components/layout/PageHeader'
 
@@ -10,7 +10,7 @@ function NuevoExpedientePage() {
         <Link to="/expedientes" className="hover:text-fg-secondary transition-colors">
           Expedientes
         </Link>
-        <ChevronRight size={12} />
+        <CaretRight />
         <span className="text-fg-secondary">Nuevo</span>
       </nav>
 

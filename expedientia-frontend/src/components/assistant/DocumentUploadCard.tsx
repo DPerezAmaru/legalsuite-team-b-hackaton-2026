@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import { FileText } from 'lucide-react'
+import { FileText } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useDocumentosStore } from '../../store/documentosStore'
 
@@ -43,7 +43,7 @@ export function DocumentUploadCard() {
       ].join(' ')}
     >
       <div className="shrink-0 w-8 h-8 rounded-lg bg-bg-muted border border-border flex items-center justify-center">
-        <FileText size={15} className="text-fg-secondary" />
+        <FileText className="text-fg-secondary" />
       </div>
       <div className="min-w-0">
         <p className="text-sm font-medium text-fg-primary leading-tight">

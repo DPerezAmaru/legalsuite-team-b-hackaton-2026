@@ -1,4 +1,4 @@
-import { House, Folder, ListTodo, History, FileText, Sparkles, PanelLeftClose, X } from 'lucide-react'
+import { House, Folder, ListChecks, ClockCounterClockwise, FileText, Sparkle, SidebarSimple, X } from '@phosphor-icons/react'
 import { SidebarNavItem } from './SidebarNavItem'
 import { useSidebar } from '../../hooks/useSidebar'
 import { useCommandBar } from '../../store/commandBarStore'
@@ -33,7 +33,7 @@ export function Sidebar() {
             className="hidden lg:flex items-center p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
             aria-label="Colapsar panel"
           >
-            <PanelLeftClose size={14} />
+            <SidebarSimple />
           </button>
 
           {/* Mobile: cierra el drawer */}
@@ -43,7 +43,7 @@ export function Sidebar() {
             className="lg:hidden p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
             aria-label="Cerrar menú"
           >
-            <X size={14} />
+            <X />
           </button>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function Sidebar() {
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-(--sidebar-text) bg-(--sidebar-hover) hover:bg-(--sidebar-hover) hover:text-fg-primary transition-colors"
           aria-label="Abrir asistente"
         >
-          <Sparkles size={13} />
+          <Sparkle />
           <span className="truncate">Preguntá al asistente</span>
           <span className="ml-auto font-mono text-[10px] tracking-wide opacity-70">
             {modKey()}K
@@ -65,12 +65,12 @@ export function Sidebar() {
       </div>
 
       {/* Nav principal */}
-      <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
-        <SidebarNavItem to="/" icon={<House size={15} />} label="Asistente" exact />
-        <SidebarNavItem to="/expedientes" icon={<Folder size={15} />} label="Expedientes" />
-        <SidebarNavItem to="/tareas" icon={<ListTodo size={15} />} label="Tareas" />
-        <SidebarNavItem to="/historial" icon={<History size={15} />} label="Historial" />
-        <SidebarNavItem to="/documentos" icon={<FileText size={15} />} label="Documentos" />
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
+        <SidebarNavItem to="/" icon={<House />} label="Asistente" exact />
+        <SidebarNavItem to="/expedientes" icon={<Folder />} label="Expedientes" />
+        <SidebarNavItem to="/tareas" icon={<ListChecks />} label="Tareas" />
+        <SidebarNavItem to="/historial" icon={<ClockCounterClockwise />} label="Historial" />
+        <SidebarNavItem to="/documentos" icon={<FileText />} label="Documentos" />
       </nav>
 
       {/* Nav inferior */}

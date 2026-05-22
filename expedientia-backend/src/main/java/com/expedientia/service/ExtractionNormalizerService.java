@@ -40,10 +40,10 @@ public class ExtractionNormalizerService {
             especialidad,
             trim(raw.despacho()),
             trim(raw.ciudad()),
-            Expediente.Estado.ACTIVO,
+            normalizeEstado(raw.estado()),
             trim(raw.resumen()),
             null,
-            null,
+            raw.documentoOrigenId(),
             partes
         );
     }
@@ -79,6 +79,15 @@ public class ExtractionNormalizerService {
             }
         }
         return "Expediente " + radicado;
+    }
+
+    private Expediente.Estado normalizeEstado(Expediente.Estado estado) {
+        if (estado == null) return Expediente.Estado.ACTIVO;
+        try {
+            return Expediente.Estado.valueOf(estado.name());
+        } catch (IllegalArgumentException e) {
+            return Expediente.Estado.ACTIVO;
+        }
     }
 
     private Expediente.Especialidad normalizeEspecialidad(Expediente.Especialidad especialidad) {

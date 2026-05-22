@@ -6,6 +6,7 @@ import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Parte;
 import com.expedientia.exception.AppException;
 import com.expedientia.exception.ResourceNotFoundException;
+import com.expedientia.repository.DocumentoRepository;
 import com.expedientia.repository.ExpedienteRepository;
 import com.expedientia.repository.ParteRepository;
 import com.expedientia.repository.UsuarioRepository;
@@ -22,13 +23,16 @@ public class ExpedienteService {
     private final ExpedienteRepository expedienteRepo;
     private final ParteRepository parteRepo;
     private final UsuarioRepository usuarioRepo;
+    private final DocumentoRepository documentoRepo;
 
     public ExpedienteService(ExpedienteRepository expedienteRepo,
                              ParteRepository parteRepo,
-                             UsuarioRepository usuarioRepo) {
+                             UsuarioRepository usuarioRepo,
+                             DocumentoRepository documentoRepo) {
         this.expedienteRepo = expedienteRepo;
         this.parteRepo = parteRepo;
         this.usuarioRepo = usuarioRepo;
+        this.documentoRepo = documentoRepo;
     }
 
     public ExpedienteDTO crear(CreateExpedienteRequest req, Long usuarioId) {
@@ -45,6 +49,10 @@ public class ExpedienteService {
 
         if (usuarioId != null) {
             usuarioRepo.findById(usuarioId).ifPresent(exp::setCreadoPor);
+        }
+
+        if (req.documentoOrigenId() != null) {
+            documentoRepo.findById(req.documentoOrigenId()).ifPresent(exp::setDocumentoOrigen);
         }
 
         // Check duplicate radicado

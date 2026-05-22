@@ -1,19 +1,13 @@
 package com.expedientia.controller;
 
-import com.expedientia.dto.ChatExpedienteRequest;
-import com.expedientia.dto.ChatIntent;
-import com.expedientia.dto.ChatResponse;
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.ExpedienteDTO;
-import com.expedientia.dto.TareaDTO;
-import com.expedientia.exception.AppException;
-import com.expedientia.exception.ResourceNotFoundException;
-import com.expedientia.service.AIService;
-import com.expedientia.service.ExtractionNormalizerService;
 import com.expedientia.service.ExpedienteService;
-import com.expedientia.service.IntentRouterService;
-import com.expedientia.service.PromptSanitizerService;
-import com.expedientia.service.TareaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,100 +15,74 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Expedientes", description = "CRUD de expedientes judiciales")
 @RestController
 @RequestMapping("/api/expedientes")
 public class ExpedienteController {
 
     private final ExpedienteService expedienteService;
-    private final TareaService tareaService;
-    private final PromptSanitizerService sanitizerService;
-    private final IntentRouterService intentRouter;
-    private final AIService aiService;
-    private final ExtractionNormalizerService normalizer;
 
-    public ExpedienteController(ExpedienteService expedienteService,
-                                TareaService tareaService,
-                                PromptSanitizerService sanitizerService,
-                                IntentRouterService intentRouter,
-                                AIService aiService,
-                                ExtractionNormalizerService normalizer) {
+    public ExpedienteController(ExpedienteService expedienteService) {
         this.expedienteService = expedienteService;
-        this.tareaService = tareaService;
-        this.sanitizerService = sanitizerService;
-        this.intentRouter = intentRouter;
-        this.aiService = aiService;
-        this.normalizer = normalizer;
     }
 
-    @PostMapping("/chat")
-    public ResponseEntity<ChatResponse> chat(
-            @Valid @RequestBody ChatExpedienteRequest request,
-            @RequestParam(required = false) Long usuarioId) {
-
-        String clean = sanitizerService.sanitize(request.prompt());
-        ChatIntent intent = intentRouter.classify(clean);
-
-        return switch (intent.accion()) {
-            case CREAR_EXPEDIENTE -> {
-                CreateExpedienteRequest extracted = aiService.interpretarDesdeChat(clean);
-                CreateExpedienteRequest normalized = normalizer.normalize(extracted);
-                ExpedienteDTO dto = expedienteService.crear(normalized, usuarioId);
-                yield ResponseEntity.status(HttpStatus.CREATED)
-                        .body(new ChatResponse("CREAR_EXPEDIENTE", "Expediente creado exitosamente", dto));
-            }
-            case LISTAR_EXPEDIENTES -> {
-                List<ExpedienteDTO> lista = expedienteService.listar();
-                yield ResponseEntity.ok(new ChatResponse("LISTAR_EXPEDIENTES",
-                        lista.size() + " expediente(s) encontrado(s)", lista));
-            }
-            case OBTENER_EXPEDIENTE -> {
-                if (intent.radicado() == null)
-                    throw new ResourceNotFoundException("Expediente", 0L);
-                ExpedienteDTO dto = expedienteService.obtenerPorRadicado(intent.radicado());
-                yield ResponseEntity.ok(new ChatResponse("OBTENER_EXPEDIENTE", "Expediente encontrado", dto));
-            }
-            case LISTAR_TAREAS -> {
-                if (intent.radicado() == null)
-                    throw new ResourceNotFoundException("Expediente", 0L);
-                List<TareaDTO> tareas = tareaService.listarPorRadicado(intent.radicado());
-                yield ResponseEntity.ok(new ChatResponse("LISTAR_TAREAS",
-                        tareas.size() + " tarea(s) encontrada(s)", tareas));
-            }
-            case SUGERENCIA_JUDICIAL -> {
-                String sugerencia = aiService.generarSugerencia(clean);
-                yield ResponseEntity.ok(new ChatResponse("SUGERENCIA_JUDICIAL", sugerencia, null));
-            }
-            case NO_PERMITIDO -> throw new AppException(AppException.Code.INTENT_BLOCKED_CONTEXT, "Solo puedo realizar acciones del sistema con los permisos otorgados");
-        };
-    }
-
+    @Operation(summary = "Crear expediente", description = "Crea un expediente con datos estructurados directamente, sin pasar por IA.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Expediente creado"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "409", description = "El radicado ya existe")
+    })
     @PostMapping
     public ResponseEntity<ExpedienteDTO> crear(
             @Valid @RequestBody CreateExpedienteRequest req,
+            @Parameter(description = "ID del usuario que crea el expediente", example = "1")
             @RequestParam(required = false) Long usuarioId) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(expedienteService.crear(req, usuarioId));
     }
 
+    @Operation(summary = "Listar todos los expedientes")
+    @ApiResponse(responseCode = "200", description = "Lista de expedientes")
     @GetMapping
     public ResponseEntity<List<ExpedienteDTO>> listar() {
         return ResponseEntity.ok(expedienteService.listar());
     }
 
+    @Operation(summary = "Obtener expediente por ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Expediente encontrado"),
+        @ApiResponse(responseCode = "404", description = "Expediente no encontrado")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<ExpedienteDTO> obtener(@PathVariable Long id) {
+    public ResponseEntity<ExpedienteDTO> obtener(
+            @Parameter(description = "ID interno del expediente", example = "1")
+            @PathVariable Long id) {
         return ResponseEntity.ok(expedienteService.obtener(id));
     }
 
+    @Operation(summary = "Actualizar expediente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Expediente actualizado"),
+        @ApiResponse(responseCode = "404", description = "Expediente no encontrado"),
+        @ApiResponse(responseCode = "409", description = "El radicado ya existe en otro expediente")
+    })
     @PutMapping("/{id}")
     public ResponseEntity<ExpedienteDTO> actualizar(
+            @Parameter(description = "ID interno del expediente", example = "1")
             @PathVariable Long id,
-            @RequestBody CreateExpedienteRequest req) {
+            @Valid @RequestBody CreateExpedienteRequest req) {
         return ResponseEntity.ok(expedienteService.actualizar(id, req));
     }
 
+    @Operation(summary = "Eliminar expediente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Expediente eliminado"),
+        @ApiResponse(responseCode = "404", description = "Expediente no encontrado")
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminar(
+            @Parameter(description = "ID interno del expediente", example = "1")
+            @PathVariable Long id) {
         expedienteService.eliminar(id);
         return ResponseEntity.noContent().build();
     }

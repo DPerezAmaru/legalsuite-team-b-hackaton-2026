@@ -70,6 +70,11 @@ public class AIService {
             CERRADO     → sentencia ejecutoriada, fallo en firme, proceso terminado por decisión judicial definitiva
             ARCHIVADO   → auto de archivo, proceso archivado en el despacho
 
+            TÍTULO — formato: "[Radicado o 'S/R'] | [Tipo de proceso] - [mini resumen del caso]"
+            El mini resumen debe ser máximo 50 caracteres, directo al punto, sin artículos innecesarios.
+            Ejemplo: "110013103-2024 | Ejecutivo hipotecario - cobro crédito vencido"
+            Si no hay radicado usá "S/R". Nunca superes 80 caracteres en total.
+
             REGLAS ABSOLUTAS:
             1. Extraé SOLO lo que esté EXPLÍCITAMENTE en el documento — null si no aparece
             2. NUNCA inventes radicados ni datos que no estén en el texto
@@ -78,17 +83,20 @@ public class AIService {
             5. En "resumen" incluí el tipo específico del proceso (ej: "Proceso ejecutivo hipotecario por obligación dineraria") y un breve resumen de los hechos si están disponibles
             6. Respondé ÚNICAMENTE con JSON válido, sin explicaciones ni markdown
 
-            Si el documento NO es judicial, respondé:
-            {"esDocumentoJudicial": false, "sugerenciaTexto": null, "procesos": []}
+            PRIMER PASO OBLIGATORIO — antes de extraer cualquier dato:
+            Determiná si el documento es un expediente judicial colombiano real
+            (demanda, auto, sentencia, memorial, providencia, acta de audiencia, notificación, poder, edicto).
+            Si NO lo es → respondé ÚNICAMENTE: {"esDocumentoJudicial": false, "sugerenciaTexto": null, "procesos": []}
+            No agregues nada más. No inventes procesos.
 
-            Si SÍ es judicial, respondé con el siguiente formato:
+            Si SÍ es judicial → extraé los datos y respondé:
             {
               "esDocumentoJudicial": true,
-              "sugerenciaTexto": "Encontré N proceso(s) judicial(es) en este documento. [descripción breve de qué contiene cada uno]",
+              "sugerenciaTexto": "Encontré N proceso(s) judicial(es) en este documento. [descripción breve]",
               "procesos": [
                 {
-                  "numero": 1,
                   "radicado": null,
+                  "titulo": null,
                   "especialidad": "CIVIL",
                   "estado": "ACTIVO",
                   "despacho": null,

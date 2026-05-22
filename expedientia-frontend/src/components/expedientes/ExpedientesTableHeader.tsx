@@ -5,10 +5,10 @@ export function ExpedientesTableHeader() {
         <span className="w-[15px] shrink-0" aria-hidden="true" />
         <span>Expediente</span>
       </div>
-      <div className="hidden md:block w-44">Demandante</div>
-      <div className="hidden md:block w-44">Demandado</div>
-      <div className="hidden sm:block w-24">Especialidad</div>
-      <div className="hidden lg:block w-44">Despacho</div>
+      <div className="hidden @2xl/table:block w-44">Demandante</div>
+      <div className="hidden @3xl/table:block w-44">Demandado</div>
+      <div className="hidden @lg/table:block w-24">Especialidad</div>
+      <div className="hidden @5xl/table:block w-44">Despacho</div>
       <div className="w-28">Estado</div>
       <div className="w-16 text-right">Creado</div>
     </div>

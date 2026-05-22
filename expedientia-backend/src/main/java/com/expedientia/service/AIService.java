@@ -78,16 +78,14 @@ public class AIService {
             5. En "resumen" incluí el tipo específico del proceso (ej: "Proceso ejecutivo hipotecario por obligación dineraria") y un breve resumen de los hechos si están disponibles
             6. Respondé ÚNICAMENTE con JSON válido, sin explicaciones ni markdown
 
-            Si el documento NO es judicial, respondé:
-            {"esDocumentoJudicial": false, "sugerenciaTexto": null, "procesos": []}
+            Si el documento NO es judicial, respondé ÚNICAMENTE:
+            {"sugerenciaTexto": null, "procesos": []}
 
             Si SÍ es judicial, respondé con el siguiente formato:
             {
-              "esDocumentoJudicial": true,
               "sugerenciaTexto": "Encontré N proceso(s) judicial(es) en este documento. [descripción breve de qué contiene cada uno]",
               "procesos": [
                 {
-                  "numero": 1,
                   "radicado": null,
                   "especialidad": "CIVIL",
                   "estado": "ACTIVO",

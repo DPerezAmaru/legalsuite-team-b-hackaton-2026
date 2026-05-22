@@ -5,7 +5,6 @@ import com.expedientia.entity.Parte;
 import java.util.List;
 
 public record ProcesoSugeridoDTO(
-    int numero,
     String radicado,
     Expediente.Especialidad especialidad,
     Expediente.Estado estado,

@@ -55,13 +55,22 @@ public class DocumentoService {
 
         DocumentoAnalisisResponse analisis = aiService.extraerProcesos(result.textForExtraction());
 
-        if (!analisis.esDocumentoJudicial()) {
+        if (analisis.procesos() == null || analisis.procesos().isEmpty()) {
             throw new AppException(AppException.Code.PDF_NOT_JUDICIAL,
                     "El documento no parece ser un expediente judicial colombiano. " +
                     "Solo se aceptan autos, sentencias, demandas, memoriales y documentos procesales.");
         }
 
-        return analisis;
+        List<String> prompts = analisis.procesos().stream()
+                .map(this::buildPromptParaChat)
+                .toList();
+
+        return new DocumentoAnalisisResponse(
+                analisis.procesos().size(),
+                analisis.sugerenciaTexto(),
+                analisis.procesos(),
+                prompts
+        );
     }
 
     /**
@@ -103,6 +112,35 @@ public class DocumentoService {
         List<String> tareas = aiService.generarTareasParaProceso(datos);
 
         return new ConfirmarProcesoResponse(expedienteDTO, tareas);
+    }
+
+    private String buildPromptParaChat(ProcesoSugeridoDTO proceso) {
+        StringBuilder sb = new StringBuilder("Crear expediente.");
+        if (proceso.radicado() != null)
+            sb.append(" Radicado: ").append(proceso.radicado()).append(".");
+        if (proceso.especialidad() != null)
+            sb.append(" Especialidad: ").append(proceso.especialidad()).append(".");
+        if (proceso.estado() != null)
+            sb.append(" Estado: ").append(proceso.estado()).append(".");
+        if (proceso.despacho() != null)
+            sb.append(" Despacho: ").append(proceso.despacho()).append(".");
+        if (proceso.ciudad() != null)
+            sb.append(" Ciudad: ").append(proceso.ciudad()).append(".");
+        if (proceso.partes() != null) {
+            proceso.partes().forEach(p ->
+                sb.append(" ").append(p.tipoParticipacion()).append(": ").append(p.nombre())
+                  .append(p.identificacion() != null ? " (" + p.identificacion() + ")" : "").append(".")
+            );
+        }
+        if (proceso.resumen() != null) {
+            // Truncar resumen para no superar el límite de 800 chars del chat
+            String resumen = proceso.resumen();
+            int available = 800 - sb.length() - 10;
+            if (available > 20) {
+                sb.append(" Resumen: ").append(resumen, 0, Math.min(resumen.length(), available)).append(".");
+            }
+        }
+        return sb.toString();
     }
 
     private List<CreateExpedienteRequest.ParteRequest> mapPartes(List<ProcesoSugeridoDTO.ParteExtraidaDTO> partes) {

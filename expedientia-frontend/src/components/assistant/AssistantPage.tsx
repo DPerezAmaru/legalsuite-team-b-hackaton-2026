@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { AssistantTab, ChatMessage, ConsultaReciente, ExpedienteReciente } from '../../types'
-import { AssistantTabs } from './AssistantTabs'
+import type { ChatMessage, ConsultaReciente, ExpedienteReciente } from '../../types'
 import { AssistantInput } from './AssistantInput'
 import { AssistantSuggestions } from './AssistantSuggestions'
+import { DocumentUploadCard } from './DocumentUploadCard'
 import { RecentConsultations } from './RecentConsultations'
 import { RecentExpedientes } from './RecentExpedientes'
 import { ChatMessages } from './ChatMessages'
@@ -30,7 +30,6 @@ const EXPEDIENTES_MOCK: ExpedienteReciente[] = [
 ]
 
 export function AssistantPage() {
-  const activeTab: AssistantTab = 'asistente'
   const [inputValue, setInputValue] = useState('')
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -107,12 +106,10 @@ export function AssistantPage() {
         {/* Input fijo abajo */}
         <div className="border-t border-border bg-bg-base">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">
-            <AssistantTabs />
             <AssistantInput
               value={inputValue}
               onChange={setInputValue}
               onSubmit={handleSubmit}
-              tab={activeTab}
               attachedFile={attachedFile}
               onAttach={setAttachedFile}
               isLoading={isPending}
@@ -131,23 +128,19 @@ export function AssistantPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-fg-primary">
             {getGreeting()}, Juan.
           </h1>
-          <p className="mt-1 text-sm text-fg-secondary">
-            Pregunte, suba un documento o genere un borrador.
-          </p>
         </div>
 
         <div className="space-y-3">
-          <AssistantTabs />
           <AssistantInput
             value={inputValue}
             onChange={setInputValue}
             onSubmit={handleSubmit}
-            tab={activeTab}
             attachedFile={attachedFile}
             onAttach={setAttachedFile}
             isLoading={isPending}
           />
           <AssistantSuggestions onSelect={setInputValue} />
+          <DocumentUploadCard />
         </div>
 
         <RecentConsultations items={CONSULTAS_MOCK} />

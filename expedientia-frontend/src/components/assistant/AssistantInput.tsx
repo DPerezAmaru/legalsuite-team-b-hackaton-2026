@@ -1,29 +1,23 @@
 import { useRef, useEffect } from 'react'
 import type { KeyboardEvent } from 'react'
 import { Paperclip, Folder, ArrowRight } from 'lucide-react'
-import type { AssistantTab } from '../../types'
 import { FileChip } from './FileChip'
+
+const PLACEHOLDER = 'Pregunte, suba un documento o genere un borrador.'
 
 interface AssistantInputProps {
   value: string
   onChange: (value: string) => void
   onSubmit: () => void
-  tab: AssistantTab
   attachedFile?: File | null
   onAttach?: (file: File | null) => void
   isLoading?: boolean
-}
-
-const PLACEHOLDER: Record<AssistantTab, string> = {
-  asistente: 'Pregunte, suba un documento o genere un borrador.',
-  borrador: 'Describa el documento que necesita redactar.',
 }
 
 export function AssistantInput({
   value,
   onChange,
   onSubmit,
-  tab,
   attachedFile,
   onAttach,
   isLoading = false,
@@ -67,7 +61,7 @@ export function AssistantInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={PLACEHOLDER[tab]}
+        placeholder={PLACEHOLDER}
         rows={3}
         disabled={isLoading}
         className="w-full px-4 pt-4 pb-2 text-sm text-fg-primary placeholder:text-fg-tertiary resize-none outline-none bg-transparent font-sans disabled:opacity-60"

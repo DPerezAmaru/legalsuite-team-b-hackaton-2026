@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { Loader2, Info, AlertTriangle } from 'lucide-react'
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
 import { ProcesoCard } from './ProcesoCard'
 import { useDocumentoProcesar } from '../../hooks/useDocumentoProcesar'
 import { useCrearExpediente } from '../../hooks/useCrearExpediente'
+import { useDocumentosStore } from '../../store/documentosStore'
 import type {
   DocumentoFormState,
   ProcesoSugerido,
@@ -40,6 +41,7 @@ export function DocumentosPage() {
   const [creatingIndex, setCreatingIndex] = useState<number | null>(null)
   const { mutateAsync: procesarDocumento } = useDocumentoProcesar()
   const { mutate: crearExpediente } = useCrearExpediente()
+  const consumePendingFile = useDocumentosStore(s => s.consumePendingFile)
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -66,6 +68,12 @@ export function DocumentosPage() {
     },
     [procesarDocumento],
   )
+
+  useEffect(() => {
+    const file = consumePendingFile()
+    if (file) handleFile(file)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleFormChange = useCallback((index: number, form: DocumentoFormState) => {
     setState((prev) => {

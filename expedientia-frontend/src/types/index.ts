@@ -143,8 +143,6 @@ export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 
-export type AssistantTab = 'asistente'
-
 export const ConsultaTipoSchema = z.enum(['Resumen', 'Consulta', 'Borrador', 'Informe'])
 export type ConsultaTipo = z.infer<typeof ConsultaTipoSchema>
 

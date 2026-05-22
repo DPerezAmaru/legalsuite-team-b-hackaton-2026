@@ -23,31 +23,31 @@ export function UploadZone({ onFile }: UploadZoneProps) {
   }
 
   return (
-    <div className="h-full flex items-center justify-center p-8">
-      <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        className={[
-          'w-full max-w-lg flex flex-col items-center gap-4 px-8 py-16 rounded-2xl border-2 border-dashed cursor-pointer transition-colors',
-          isDragging
-            ? 'border-ai-border bg-ai-tint'
-            : 'border-border hover:border-border-strong hover:bg-bg-subtle',
-        ].join(' ')}
-      >
-        <div className="w-12 h-12 rounded-full bg-bg-muted flex items-center justify-center">
-          <UploadSimple className="text-fg-secondary" />
-        </div>
-        <div className="text-center space-y-1">
-          <p className="text-sm font-medium text-fg-primary">Arrastrá el documento acá</p>
-          <p className="text-xs text-fg-tertiary">o hacé clic para seleccionarlo</p>
-          <p className="text-xs text-fg-tertiary pt-1">Solo archivos PDF · máx. 10 MB</p>
-        </div>
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-muted border border-border">
-          <FileText className="text-fg-secondary shrink-0" />
-          <span className="text-xs text-fg-body">Seleccionar PDF</span>
-        </div>
+    <div
+      onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
+      onClick={() => inputRef.current?.click()}
+      className={[
+        'w-full flex flex-col items-center gap-4 px-8 py-12 rounded-2xl border-2 border-dashed cursor-pointer transition-colors',
+        isDragging
+          ? 'border-ai-border bg-ai-tint'
+          : 'border-border hover:border-border-strong hover:bg-bg-subtle',
+      ].join(' ')}
+    >
+      <div className="w-12 h-12 rounded-full bg-bg-muted flex items-center justify-center">
+        <UploadSimple className="text-fg-secondary" />
+      </div>
+      <div className="text-center space-y-1">
+        <p className="text-sm font-medium text-fg-primary">
+          {isDragging ? 'Soltá el PDF acá' : 'Arrastrá el documento acá'}
+        </p>
+        <p className="text-xs text-fg-tertiary">o hacé clic para seleccionarlo</p>
+        <p className="text-xs text-fg-tertiary pt-1">Solo archivos PDF · máx. 10 MB</p>
+      </div>
+      <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-muted border border-border">
+        <FileText className="text-fg-secondary shrink-0" />
+        <span className="text-xs text-fg-body">Seleccionar PDF</span>
       </div>
       <input
         ref={inputRef}

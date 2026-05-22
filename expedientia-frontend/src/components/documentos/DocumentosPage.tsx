@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { CircleNotch, Info, Warning } from '@phosphor-icons/react'
+import { CircleNotch, Info, Warning, UploadSimple, Sparkle, FolderPlus } from '@phosphor-icons/react'
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
 import { ProcesoCard } from './ProcesoCard'
@@ -136,8 +136,38 @@ export function DocumentosPage() {
 
   if (state.stage === 'idle') {
     return (
-      <div className="h-full">
-        <UploadZone onFile={handleFile} />
+      <div className="h-full overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
+
+          <div>
+            <h1 className="text-2xl font-bold text-fg-primary">Crear expediente desde documento</h1>
+            <p className="mt-1 text-sm text-fg-secondary">
+              Subí un PDF judicial y la IA extrae el radicado, las partes y el juzgado automáticamente.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: <UploadSimple />, step: '1', title: 'Subí el PDF', desc: 'Cualquier documento judicial en formato PDF.' },
+              { icon: <Sparkle />,      step: '2', title: 'La IA analiza', desc: 'Extrae radicado, partes, juzgado y más.' },
+              { icon: <FolderPlus />,   step: '3', title: 'Creá el expediente', desc: 'Revisá los datos y confirmá con un clic.' },
+            ].map(({ icon, step, title, desc }) => (
+              <div key={step} className="flex flex-col gap-3 p-4 rounded-xl border border-border bg-bg-subtle">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-semibold text-fg-tertiary bg-bg-muted px-1.5 py-0.5 rounded-md">{step}</span>
+                  <span className="text-fg-secondary">{icon}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-fg-primary">{title}</p>
+                  <p className="text-xs text-fg-tertiary mt-0.5 leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <UploadZone onFile={handleFile} />
+
+        </div>
       </div>
     )
   }

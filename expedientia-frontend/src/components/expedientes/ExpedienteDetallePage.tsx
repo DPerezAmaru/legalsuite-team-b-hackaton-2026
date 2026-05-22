@@ -2,14 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { useExpediente } from '../../hooks/useExpediente'
 import { PageContainer } from '../layout/PageContainer'
-import { PageHeader } from '../layout/PageHeader'
-import { EstadoBadge } from './EstadoBadge'
-import { ResumenIACard } from './ResumenIACard'
-import { InfoSidebar } from './InfoSidebar'
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
-}
+import { ExpedienteContent } from './ExpedienteContent'
 
 interface ExpedienteDetallePageProps {
   expedienteId: number
@@ -44,33 +37,17 @@ export function ExpedienteDetallePage({ expedienteId }: ExpedienteDetallePagePro
     expediente.partes.find(p => p.tipoParticipacion === 'DEMANDANTE')?.nombre ??
     expediente.titulo
 
-  const subtitulo = [capitalize(expediente.especialidad), expediente.despacho]
-    .filter(Boolean)
-    .join(' · ')
-
   return (
-    <div className="flex h-full">
-      <div className="flex-1 min-w-0 overflow-auto">
-        <PageContainer>
-          <nav className="flex items-center gap-1 text-xs text-fg-tertiary mb-4">
-            <Link to="/expedientes" className="hover:text-fg-secondary transition-colors">
-              Expedientes
-            </Link>
-            <ChevronRight size={12} />
-            <span className="text-fg-secondary truncate">{nombreDemandante}</span>
-          </nav>
+    <PageContainer>
+      <nav className="flex items-center gap-1 text-xs text-fg-tertiary mb-4">
+        <Link to="/expedientes" className="hover:text-fg-secondary transition-colors">
+          Expedientes
+        </Link>
+        <ChevronRight size={12} />
+        <span className="text-fg-secondary truncate">{nombreDemandante}</span>
+      </nav>
 
-          <PageHeader
-            title={nombreDemandante}
-            subtitle={subtitulo || undefined}
-            meta={<EstadoBadge estado={expediente.estado} />}
-          />
-
-          <ResumenIACard resumen={expediente.resumen} />
-        </PageContainer>
-      </div>
-
-      <InfoSidebar expediente={expediente} />
-    </div>
+      <ExpedienteContent expediente={expediente} />
+    </PageContainer>
   )
 }

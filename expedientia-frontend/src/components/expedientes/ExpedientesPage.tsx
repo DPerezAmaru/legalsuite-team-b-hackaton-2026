@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import { Plus, Search } from 'lucide-react'
 import { useExpedientes } from '../../hooks/useExpedientes'
 import type { EstadoExpediente, Expediente } from '../../types'
@@ -7,6 +7,8 @@ import { PageContainer } from '../layout/PageContainer'
 import { PageHeader } from '../layout/PageHeader'
 import { PageToolbar } from '../layout/PageToolbar'
 import { ExpedienteRow } from './ExpedienteRow'
+import { ExpedientesTableHeader } from './ExpedientesTableHeader'
+import { ExpedienteDrawer } from './ExpedienteDrawer'
 
 type Tab = 'todos' | 'activos' | 'archivados'
 
@@ -22,8 +24,13 @@ function filterByTab(expedientes: Expediente[], tab: Tab): Expediente[] {
 export function ExpedientesPage() {
   const { data, isLoading, isError } = useExpedientes()
   const navigate = useNavigate()
+  const { caso } = useSearch({ from: '/expedientes/' })
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<Tab>('todos')
+
+  const drawerId = caso ?? null
+  const closeDrawer = () =>
+    navigate({ to: '/expedientes', search: {} })
 
   const expedientes = data ?? []
 
@@ -111,38 +118,57 @@ export function ExpedientesPage() {
         }
       />
 
-      <div className="divide-y divide-border border-t border-border">
-        {isLoading &&
-          Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="py-4 animate-pulse">
-              <div className="flex items-baseline justify-between gap-4">
-                <div className="h-4 w-56 bg-bg-muted rounded" />
-                <div className="h-3 w-12 bg-bg-muted rounded" />
+      <div>
+        <ExpedientesTableHeader />
+
+        <div className="divide-y divide-border">
+          {isLoading &&
+            Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-4 px-3 py-3 animate-pulse"
+              >
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <div className="w-[15px] h-[15px] bg-bg-muted rounded shrink-0" />
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="h-3.5 w-24 bg-bg-muted rounded" />
+                    <div className="h-2.5 w-56 bg-bg-muted rounded" />
+                  </div>
+                </div>
+                <div className="hidden md:block w-44 h-3 bg-bg-muted rounded" />
+                <div className="hidden md:block w-44 h-3 bg-bg-muted rounded" />
+                <div className="hidden sm:block w-24 h-3 bg-bg-muted rounded" />
+                <div className="hidden lg:block w-44 h-3 bg-bg-muted rounded" />
+                <div className="w-28 h-3 bg-bg-muted rounded" />
+                <div className="w-16 h-3 bg-bg-muted rounded" />
               </div>
-              <div className="h-3 w-72 bg-bg-muted rounded mt-2" />
+            ))}
+
+          {isError && (
+            <div className="flex items-center justify-center py-16">
+              <p className="text-sm text-fg-secondary">
+                No se pudieron cargar los expedientes.
+              </p>
             </div>
-          ))}
+          )}
 
-        {isError && (
-          <div className="flex items-center justify-center py-16">
-            <p className="text-sm text-fg-secondary">
-              No se pudieron cargar los expedientes.
-            </p>
-          </div>
-        )}
+          {!isLoading && !isError && visible.length === 0 && (
+            <div className="flex items-center justify-center py-16">
+              <p className="text-sm text-fg-secondary">
+                No hay expedientes para mostrar.
+              </p>
+            </div>
+          )}
 
-        {!isLoading && !isError && visible.length === 0 && (
-          <div className="flex items-center justify-center py-16">
-            <p className="text-sm text-fg-secondary">No hay expedientes para mostrar.</p>
-          </div>
-        )}
-
-        {!isLoading &&
-          !isError &&
-          visible.map(expediente => (
-            <ExpedienteRow key={expediente.id} expediente={expediente} />
-          ))}
+          {!isLoading &&
+            !isError &&
+            visible.map(expediente => (
+              <ExpedienteRow key={expediente.id} expediente={expediente} />
+            ))}
+        </div>
       </div>
+
+      <ExpedienteDrawer expedienteId={drawerId} onClose={closeDrawer} />
     </PageContainer>
   )
 }

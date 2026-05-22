@@ -1,25 +1,22 @@
-import { Link } from '@tanstack/react-router'
-import type { Expediente } from '../../types'
+import type { MouseEvent } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { FileText } from 'lucide-react'
+import type { Expediente, Parte, TipoParticipacion } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
 
-function demandante(expediente: Expediente): string {
-  const parte = expediente.partes.find(p => p.tipoParticipacion === 'DEMANDANTE')
-  return parte?.nombre ?? expediente.titulo
+function findParte(partes: Parte[], tipo: TipoParticipacion): string {
+  return partes.find(p => p.tipoParticipacion === tipo)?.nombre ?? '—'
 }
 
 function formatRelative(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diff / 60_000)
-  if (minutes < 60) return `hace ${minutes}m`
+  if (minutes < 60) return `${Math.max(minutes, 1)}m`
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `hace ${hours}h`
+  if (hours < 24) return `${hours}h`
   const days = Math.floor(hours / 24)
-  if (days < 30) return `hace ${days}d`
-  return new Date(iso).toLocaleDateString('es', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
+  if (days < 30) return `${days}d`
+  return new Date(iso).toLocaleDateString('es', { day: '2-digit', month: 'short' })
 }
 
 function capitalize(s: string): string {
@@ -31,31 +28,52 @@ interface ExpedienteRowProps {
 }
 
 export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
-  const nombre = demandante(expediente)
+  const navigate = useNavigate()
+  const demandante = findParte(expediente.partes, 'DEMANDANTE')
+  const demandado = findParte(expediente.partes, 'DEMANDADO')
 
-  const metadata = [capitalize(expediente.especialidad), expediente.radicado]
-    .filter(Boolean)
-    .join(' · ')
+  function handleClick(e: MouseEvent<HTMLAnchorElement>) {
+    // Dejar que el browser maneje cmd/ctrl/shift/middle click → abre standalone
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return
+    e.preventDefault()
+    navigate({ to: '/expedientes', search: { caso: expediente.id } })
+  }
 
   return (
     <Link
       to="/expedientes/$expedienteId"
       params={{ expedienteId: String(expediente.id) }}
-      className="group block -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 hover:bg-bg-subtle transition-colors"
+      onClick={handleClick}
+      className="flex items-center gap-4 px-3 py-3 text-sm hover:bg-bg-subtle transition-colors"
     >
-      <div className="flex items-baseline justify-between gap-4">
-        <h3 className="text-[15px] font-medium text-fg-primary truncate group-hover:text-fg-primary">
-          {nombre}
-        </h3>
-        <span className="text-xs text-fg-tertiary shrink-0 tabular-nums">
-          {formatRelative(expediente.createdAt)}
-        </span>
+      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        <FileText size={15} className="shrink-0 text-fg-tertiary" />
+        <div className="min-w-0">
+          <p className="font-medium text-fg-primary truncate tabular-nums">
+            {expediente.radicado}
+          </p>
+          <p className="text-xs text-fg-tertiary truncate">{expediente.titulo}</p>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 mt-1">
-        <p className="text-xs text-fg-secondary truncate">{metadata}</p>
-        <span className="text-fg-tertiary text-xs">·</span>
+      <div className="hidden md:block w-44 text-fg-body truncate">{demandante}</div>
+
+      <div className="hidden md:block w-44 text-fg-body truncate">{demandado}</div>
+
+      <div className="hidden sm:block w-24 text-fg-body">
+        {capitalize(expediente.especialidad)}
+      </div>
+
+      <div className="hidden lg:block w-44 text-xs text-fg-tertiary truncate">
+        {expediente.despacho ?? '—'}
+      </div>
+
+      <div className="w-28">
         <EstadoBadge estado={expediente.estado} />
+      </div>
+
+      <div className="w-16 text-right text-xs text-fg-tertiary tabular-nums">
+        {formatRelative(expediente.createdAt)}
       </div>
     </Link>
   )

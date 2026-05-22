@@ -22,16 +22,10 @@ type PageState =
       createdIds: Record<number, number>
     }
 
-function deriveTitulo(file: File, proceso: ProcesoSugerido, hasMultiple: boolean): string {
-  const base = file.name.replace(/\.pdf$/i, '').replace(/[_-]/g, ' ')
-  return hasMultiple ? `${base} — Proceso ${proceso.numero}` : base
-}
-
-function procesoToForm(file: File, proceso: ProcesoSugerido, hasMultiple: boolean): DocumentoFormState {
+function procesoToForm(proceso: ProcesoSugerido): DocumentoFormState {
   return {
-    numero: proceso.numero,
     radicado: proceso.radicado,
-    titulo: deriveTitulo(file, proceso, hasMultiple),
+    titulo: proceso.titulo,
     especialidad: proceso.especialidad,
     estado: proceso.estado,
     despacho: proceso.despacho,
@@ -43,7 +37,7 @@ function procesoToForm(file: File, proceso: ProcesoSugerido, hasMultiple: boolea
 
 export function DocumentosPage() {
   const [state, setState] = useState<PageState>({ stage: 'idle' })
-  const [creatingNumero, setCreatingNumero] = useState<number | null>(null)
+  const [creatingIndex, setCreatingIndex] = useState<number | null>(null)
   const { mutateAsync: procesarDocumento } = useDocumentoProcesar()
   const { mutate: crearExpediente } = useCrearExpediente()
 
@@ -52,17 +46,18 @@ export function DocumentosPage() {
       setState({ stage: 'processing', file })
       try {
         const response = await procesarDocumento(file)
-        const hasMultiple = response.procesos.length > 1
-        const forms = response.procesos.map((p) => procesoToForm(file, p, hasMultiple))
+        const forms = response.procesos.map(procesoToForm)
         setState({ stage: 'review', file, response, forms, createdIds: {} })
       } catch {
         setState({
           stage: 'review',
           file,
           response: {
-            esDocumentoJudicial: false,
-            sugerenciaTexto: 'No se pudo procesar el documento. Cargá otro o revisá manualmente.',
+            numeroExpedientesEncontrados: 0,
+            sugerenciaTexto:
+              'No se pudo procesar el documento. Cargá otro o revisá manualmente.',
             procesos: [],
+            promptsSugeridos: [],
           },
           forms: [],
           createdIds: {},
@@ -72,19 +67,19 @@ export function DocumentosPage() {
     [procesarDocumento],
   )
 
-  const handleFormChange = useCallback((numero: number, form: DocumentoFormState) => {
+  const handleFormChange = useCallback((index: number, form: DocumentoFormState) => {
     setState((prev) => {
       if (prev.stage !== 'review') return prev
-      return { ...prev, forms: prev.forms.map((f) => (f.numero === numero ? form : f)) }
+      return { ...prev, forms: prev.forms.map((f, i) => (i === index ? form : f)) }
     })
   }, [])
 
   const handleCrear = useCallback(
-    (numero: number) => {
+    (index: number) => {
       if (state.stage !== 'review') return
-      const form = state.forms.find((f) => f.numero === numero)
+      const form = state.forms[index]
       if (!form) return
-      setCreatingNumero(numero)
+      setCreatingIndex(index)
       crearExpediente(
         {
           radicado: form.radicado,
@@ -101,11 +96,11 @@ export function DocumentosPage() {
           onSuccess: (exp) => {
             setState((prev) =>
               prev.stage === 'review'
-                ? { ...prev, createdIds: { ...prev.createdIds, [numero]: exp.id } }
+                ? { ...prev, createdIds: { ...prev.createdIds, [index]: exp.id } }
                 : prev,
             )
           },
-          onSettled: () => setCreatingNumero(null),
+          onSettled: () => setCreatingIndex(null),
         },
       )
     },
@@ -114,7 +109,7 @@ export function DocumentosPage() {
 
   const handleReplace = useCallback(() => {
     setState({ stage: 'idle' })
-    setCreatingNumero(null)
+    setCreatingIndex(null)
   }, [])
 
   // Valores a resaltar en el PDF — unión de todas las cards, mínimo 4 chars
@@ -151,7 +146,6 @@ export function DocumentosPage() {
 
   const { response, forms, createdIds } = state
   const hasProcesos = forms.length > 0
-  const isJudicial = response.esDocumentoJudicial
 
   return (
     <div className="flex flex-col h-full">
@@ -174,10 +168,10 @@ export function DocumentosPage() {
             <div
               className={[
                 'flex items-start gap-2.5 px-3.5 py-3 rounded-xl border',
-                isJudicial ? 'bg-ai-tint border-ai-border' : 'bg-bg-subtle border-border',
+                hasProcesos ? 'bg-ai-tint border-ai-border' : 'bg-bg-subtle border-border',
               ].join(' ')}
             >
-              {isJudicial ? (
+              {hasProcesos ? (
                 <Info size={14} className="text-ai-text mt-0.5 shrink-0" />
               ) : (
                 <AlertTriangle size={14} className="text-fg-secondary mt-0.5 shrink-0" />
@@ -185,11 +179,11 @@ export function DocumentosPage() {
               <p
                 className={[
                   'text-xs leading-relaxed',
-                  isJudicial ? 'text-ai-text' : 'text-fg-body',
+                  hasProcesos ? 'text-ai-text' : 'text-fg-body',
                 ].join(' ')}
               >
                 {response.sugerenciaTexto ||
-                  (isJudicial
+                  (hasProcesos
                     ? 'Documento procesado.'
                     : 'Este documento no parece ser judicial.')}
               </p>
@@ -200,13 +194,14 @@ export function DocumentosPage() {
             <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2.5">
               {forms.map((form, idx) => (
                 <ProcesoCard
-                  key={form.numero}
+                  key={idx}
+                  numero={idx + 1}
                   form={form}
                   defaultOpen={idx === 0}
-                  createdExpedienteId={createdIds[form.numero]}
-                  isCreating={creatingNumero === form.numero}
-                  onFormChange={(f) => handleFormChange(form.numero, f)}
-                  onCrear={() => handleCrear(form.numero)}
+                  createdExpedienteId={createdIds[idx]}
+                  isCreating={creatingIndex === idx}
+                  onFormChange={(f) => handleFormChange(idx, f)}
+                  onCrear={() => handleCrear(idx)}
                 />
               ))}
             </div>

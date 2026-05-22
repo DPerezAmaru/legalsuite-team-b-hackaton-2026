@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ChevronDown, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react'
 import { ExtraccionField } from './ExtraccionField'
+import { PartesEditor } from './PartesEditor'
 import type {
   DocumentoFormState,
   Parte,
-  TipoParticipacion,
   Especialidad,
   EstadoExpediente,
 } from '../../types'
@@ -15,19 +15,8 @@ const ESPECIALIDADES: readonly Especialidad[] = [
 ]
 const ESTADOS: readonly EstadoExpediente[] = ['ACTIVO', 'CERRADO', 'ARCHIVADO']
 
-function getParte(partes: Parte[], tipo: TipoParticipacion): string {
-  return partes.find((p) => p.tipoParticipacion === tipo)?.nombre ?? ''
-}
-
-function setParte(partes: Parte[], tipo: TipoParticipacion, nombre: string): Parte[] {
-  if (!nombre.trim()) return partes.filter((p) => p.tipoParticipacion !== tipo)
-  if (partes.some((p) => p.tipoParticipacion === tipo)) {
-    return partes.map((p) => (p.tipoParticipacion === tipo ? { ...p, nombre } : p))
-  }
-  return [...partes, { nombre, tipoParticipacion: tipo }]
-}
-
 interface ProcesoCardProps {
+  numero: number
   form: DocumentoFormState
   defaultOpen?: boolean
   createdExpedienteId?: number
@@ -37,6 +26,7 @@ interface ProcesoCardProps {
 }
 
 export function ProcesoCard({
+  numero,
   form,
   defaultOpen = false,
   createdExpedienteId,
@@ -49,8 +39,7 @@ export function ProcesoCard({
   const update = <K extends keyof DocumentoFormState>(key: K, value: DocumentoFormState[K]) =>
     onFormChange({ ...form, [key]: value })
 
-  const updateParte = (tipo: TipoParticipacion, nombre: string) =>
-    onFormChange({ ...form, partes: setParte(form.partes, tipo, nombre) })
+  const updatePartes = (partes: Parte[]) => onFormChange({ ...form, partes })
 
   const canCreate = form.radicado.trim().length > 0 && form.titulo.trim().length > 0
   const isCreated = createdExpedienteId !== undefined
@@ -68,7 +57,7 @@ export function ProcesoCard({
           : <ChevronRight size={14} className="text-fg-tertiary shrink-0" />}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-fg-primary">Proceso {form.numero}</span>
+            <span className="text-sm font-medium text-fg-primary">Proceso {numero}</span>
             <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-bg-muted text-fg-secondary">
               {form.especialidad}
             </span>
@@ -94,10 +83,9 @@ export function ProcesoCard({
             <ExtraccionField label="Juzgado" value={form.despacho} onChange={(v) => update('despacho', v)} />
             <ExtraccionField label="Ciudad" value={form.ciudad} onChange={(v) => update('ciudad', v)} />
             <ExtraccionField label="Fecha inicio" value={form.fechaInicio ?? ''} onChange={(v) => update('fechaInicio', v || undefined)} />
-            <ExtraccionField label="Demandante" value={getParte(form.partes, 'DEMANDANTE')} onChange={(v) => updateParte('DEMANDANTE', v)} />
-            <ExtraccionField label="Demandado" value={getParte(form.partes, 'DEMANDADO')} onChange={(v) => updateParte('DEMANDADO', v)} />
-            <ExtraccionField label="Apoderado" value={getParte(form.partes, 'APODERADO')} onChange={(v) => updateParte('APODERADO', v)} />
           </div>
+
+          <PartesEditor partes={form.partes} onChange={updatePartes} />
 
           {form.resumen && (
             <div className="px-4 py-3 border-t border-border bg-bg-subtle">

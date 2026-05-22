@@ -51,8 +51,8 @@ export const ExpedienteSchema = z.object({
 // Procesar documento (respuesta de POST /api/documentos/procesar)
 
 export const ProcesoSugeridoSchema = z.object({
-  numero: z.number(),
   radicado: z.string().nullish().transform(v => v ?? ''),
+  titulo: z.string().nullish().transform(v => v ?? ''),
   especialidad: EspecialidadSchema.nullish().transform(v => v ?? 'CIVIL'),
   estado: EstadoExpedienteSchema.nullish().transform(v => v ?? 'ACTIVO'),
   despacho: z.string().nullish().transform(v => v ?? ''),
@@ -62,9 +62,10 @@ export const ProcesoSugeridoSchema = z.object({
 })
 
 export const ProcesarDocumentoResponseSchema = z.object({
-  esDocumentoJudicial: z.boolean(),
+  numeroExpedientesEncontrados: z.number().default(0),
   sugerenciaTexto: z.string().nullish().transform(v => v ?? ''),
   procesos: z.array(ProcesoSugeridoSchema).default([]),
+  promptsSugeridos: z.array(z.string()).default([]),
 })
 
 // Tipos inferidos
@@ -128,7 +129,6 @@ export const CreateExpedientePayloadSchema = z.object({
 export type CreateExpedientePayload = z.infer<typeof CreateExpedientePayloadSchema>
 
 export const DocumentoFormStateSchema = z.object({
-  numero: z.number(),
   radicado: z.string(),
   titulo: z.string(),
   especialidad: EspecialidadSchema,

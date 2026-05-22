@@ -55,7 +55,7 @@ public class DocumentoService {
 
         DocumentoAnalisisResponse analisis = aiService.extraerProcesos(result.textForExtraction());
 
-        if (analisis.procesos() == null || analisis.procesos().isEmpty()) {
+        if (!analisis.esDocumentoJudicial()) {
             throw new AppException(AppException.Code.PDF_NOT_JUDICIAL,
                     "El documento no parece ser un expediente judicial colombiano. " +
                     "Solo se aceptan autos, sentencias, demandas, memoriales y documentos procesales.");
@@ -66,6 +66,7 @@ public class DocumentoService {
                 .toList();
 
         return new DocumentoAnalisisResponse(
+                true,
                 analisis.procesos().size(),
                 analisis.sugerenciaTexto(),
                 analisis.procesos(),
@@ -95,7 +96,7 @@ public class DocumentoService {
 
         CreateExpedienteRequest req = new CreateExpedienteRequest(
                 datos.radicado(),
-                null,
+                datos.titulo(),
                 datos.especialidad(),
                 datos.despacho(),
                 datos.ciudad(),

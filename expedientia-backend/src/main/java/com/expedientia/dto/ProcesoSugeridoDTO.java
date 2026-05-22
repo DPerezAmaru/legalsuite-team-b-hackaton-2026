@@ -4,16 +4,15 @@ import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Parte;
 import java.util.List;
 
-public record DocumentoExtraidoDTO(
-    Long documentoId,
+public record ProcesoSugeridoDTO(
+    int numero,
     String radicado,
     Expediente.Especialidad especialidad,
     Expediente.Estado estado,
     String despacho,
     String ciudad,
     String resumen,
-    List<ParteExtraidaDTO> partes,
-    List<String> tareasSugeridas
+    List<ParteExtraidaDTO> partes
 ) {
     public record ParteExtraidaDTO(
         String nombre,

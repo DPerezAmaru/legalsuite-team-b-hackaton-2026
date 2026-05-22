@@ -9,7 +9,11 @@ public class AppException extends RuntimeException {
         INTENT_BLOCKED_SECURITY (HttpStatus.FORBIDDEN,             "Acción bloqueada por seguridad"),
         INTENT_BLOCKED_CONTEXT  (HttpStatus.UNPROCESSABLE_ENTITY,  "Acción no permitida"),
         AI_EXTRACTION_FAILED    (HttpStatus.BAD_GATEWAY,           "Error al procesar la respuesta de IA"),
-        DUPLICATE_RADICADO      (HttpStatus.CONFLICT,              "Radicado duplicado");
+        DUPLICATE_RADICADO      (HttpStatus.CONFLICT,              "Radicado duplicado"),
+        PDF_INVALID             (HttpStatus.BAD_REQUEST,           "Archivo PDF inválido"),
+        PDF_SCANNED             (HttpStatus.UNPROCESSABLE_ENTITY,  "PDF escaneado no procesable"),
+        PDF_TOO_LARGE           (HttpStatus.PAYLOAD_TOO_LARGE,     "Archivo demasiado grande"),
+        PDF_NOT_JUDICIAL        (HttpStatus.UNPROCESSABLE_ENTITY,  "Documento no judicial");
 
         public final HttpStatus status;
         public final String title;

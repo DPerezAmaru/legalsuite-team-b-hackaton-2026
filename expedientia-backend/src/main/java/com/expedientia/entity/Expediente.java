@@ -61,5 +61,13 @@ public class Expediente {
     private List<Tarea> tareas = new ArrayList<>();
 
     public enum Especialidad { CIVIL, PENAL, LABORAL, ADMINISTRATIVO, FAMILIA }
-    public enum Estado { ACTIVO, CERRADO, ARCHIVADO }
+    public enum Estado {
+        ACTIVO,       // proceso en trámite normal
+        SUSPENDIDO,   // proceso suspendido temporalmente por orden judicial
+        CONCILIADO,   // terminó por acuerdo conciliatorio entre partes
+        DESISTIDO,    // demandante desistió de la acción
+        PERENTO,      // proceso perimido por inactividad (Art. 317 CGP)
+        CERRADO,      // terminó por sentencia ejecutoriada
+        ARCHIVADO     // proceso archivado en despacho
+    }
 }

@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -39,11 +40,17 @@ public class AIService {
             """;
 
     private static final String SYSTEM_PROCESOS = """
-            Sos un extractor de datos judiciales colombiano experto. Analizá el documento y detectá TODOS los procesos judiciales que contiene.
+            Sos un extractor de datos judiciales colombiano experto. Analizá el documento y extraé el proceso judicial PRINCIPAL que contiene.
 
-            SEÑALES DE SEPARACIÓN entre procesos en el mismo documento:
-            - Fin de proceso: aparece sección "Resuelve", "Parte Resolutiva" o "En mérito de lo expuesto", seguida de firma o sello del juez/magistrado y fecha
-            - Inicio de nuevo proceso: nuevo encabezado con juzgado/tribunal diferente y/o radicado distinto al anterior
+            RADICADO PRINCIPAL:
+            Un documento puede mencionar múltiples números de radicado (referencias a procesos anteriores, acumulaciones, expedientes relacionados).
+            Identificá el radicado del proceso principal — el que es objeto central del documento.
+            Los demás radicados son referencias secundarias; ignoralos.
+
+            RESUELVE / PARTE RESOLUTIVA:
+            - Si el documento contiene sección "Resuelve", "Parte Resolutiva", "En mérito de lo expuesto" o similar → copiá el texto LITERAL en el campo "resuelve"
+            - Si no existe esta sección (demandas, memoriales, escritos sin decisión) → "resuelve": null
+            - NUNCA inventes ni resumas el Resuelve — texto literal o null
 
             HOMÓLOGOS — normalizalos al valor del enum correspondiente:
             DEMANDANTE → "actor", "accionante", "parte actora", "demandante principal", "accionante principal", "demandante inicial"
@@ -78,34 +85,59 @@ public class AIService {
             REGLAS ABSOLUTAS:
             1. Extraé SOLO lo que esté EXPLÍCITAMENTE en el documento — null si no aparece
             2. NUNCA inventes radicados ni datos que no estén en el texto
-            3. Cada proceso tiene su propia lista de partes — puede haber N demandantes, N demandados, N apoderados
-            4. Numerá los procesos desde 1
-            5. En "resumen" incluí el tipo específico del proceso (ej: "Proceso ejecutivo hipotecario por obligación dineraria") y un breve resumen de los hechos si están disponibles
-            6. Respondé ÚNICAMENTE con JSON válido, sin explicaciones ni markdown
+            3. Puede haber N demandantes, N demandados, N apoderados — incluí todos
+            4. En "resumen" incluí el tipo específico del proceso y un breve resumen de los hechos
+            5. Respondé ÚNICAMENTE con JSON válido, sin explicaciones ni markdown
 
             PRIMER PASO OBLIGATORIO — antes de extraer cualquier dato:
             Determiná si el documento es un expediente judicial colombiano real
             (demanda, auto, sentencia, memorial, providencia, acta de audiencia, notificación, poder, edicto).
-            Si NO lo es → respondé ÚNICAMENTE: {"esDocumentoJudicial": false, "sugerenciaTexto": null, "procesos": []}
-            No agregues nada más. No inventes procesos.
+            Si NO lo es → respondé ÚNICAMENTE: {"esDocumentoJudicial": false, "sugerenciaTexto": null, "proceso": null}
+            No agregues nada más.
 
             Si SÍ es judicial → extraé los datos y respondé:
             {
               "esDocumentoJudicial": true,
-              "sugerenciaTexto": "Encontré N proceso(s) judicial(es) en este documento. [descripción breve]",
-              "procesos": [
-                {
-                  "radicado": null,
-                  "titulo": null,
-                  "especialidad": "CIVIL",
-                  "estado": "ACTIVO",
-                  "despacho": null,
-                  "ciudad": null,
-                  "resumen": null,
-                  "partes": [
-                    {"nombre": "string", "identificacion": null, "tipoParticipacion": "DEMANDANTE"}
-                  ]
-                }
+              "sugerenciaTexto": "Proceso judicial identificado. [descripción breve del tipo de documento]",
+              "proceso": {
+                "radicado": null,
+                "titulo": null,
+                "especialidad": "CIVIL",
+                "estado": "ACTIVO",
+                "despacho": null,
+                "ciudad": null,
+                "resumen": null,
+                "resuelve": null,
+                "partes": [
+                  {"nombre": "string", "identificacion": null, "tipoParticipacion": "DEMANDANTE"}
+                ]
+              }
+            }
+            """;
+
+    private static final String SYSTEM_CHAT_MASIVO = """
+            Sos un extractor de datos legales colombiano. El usuario te proporciona información de MÚLTIPLES expedientes judiciales en un solo mensaje.
+            Extraé CADA expediente y retorná un array JSON con todos ellos.
+
+            REGLAS ABSOLUTAS:
+            1. Extraé SOLO datos EXPLÍCITAMENTE mencionados — null si no aparece
+            2. NUNCA inventes radicados ni datos ausentes
+            3. Respondé ÚNICAMENTE con un array JSON válido, sin texto adicional
+
+            Formato de cada elemento del array:
+            {
+              "radicado": null,
+              "titulo": null,
+              "especialidad": "CIVIL",
+              "estado": "ACTIVO",
+              "despacho": null,
+              "ciudad": null,
+              "resumen": null,
+              "resuelve": null,
+              "fechaInicio": null,
+              "documentoOrigenId": null,
+              "partes": [
+                {"nombre": "string", "identificacion": null, "tipoParticipacion": "DEMANDANTE"}
               ]
             }
             """;
@@ -178,6 +210,23 @@ public class AIService {
         } catch (Exception e) {
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
                     "No se pudo extraer la información del expediente: " + e.getMessage());
+        }
+    }
+
+    public List<CreateExpedienteRequest> interpretarMasivoDesdeChat(String prompt) {
+        try {
+            String raw = chatClient.prompt()
+                    .system(SYSTEM_CHAT_MASIVO)
+                    .user(prompt)
+                    .call()
+                    .content();
+            String json = raw.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
+            return objectMapper.readValue(json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, CreateExpedienteRequest.class));
+        } catch (AppException e) {
+            throw e;
+        } catch (Exception e) {
+            return Collections.emptyList();
         }
     }
 

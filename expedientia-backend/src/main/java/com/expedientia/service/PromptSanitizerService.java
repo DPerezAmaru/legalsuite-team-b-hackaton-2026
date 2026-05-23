@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 @Service
 public class PromptSanitizerService {
 
-    private static final int MAX_LENGTH = 800;
+    private static final int MAX_LENGTH = 3000;
 
     private static final List<String> INJECTION_PATTERNS = List.of(
         "ignore previous", "ignore las instrucciones", "olvida las instrucciones",

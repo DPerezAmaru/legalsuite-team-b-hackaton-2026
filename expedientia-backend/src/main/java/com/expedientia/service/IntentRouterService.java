@@ -14,13 +14,15 @@ public class IntentRouterService {
             Analizá el texto y devolvé el JSON con la acción que el usuario quiere ejecutar.
 
             ACCIONES DISPONIBLES:
-            - CREAR_EXPEDIENTE: quiere crear, registrar o abrir un nuevo expediente o caso legal
+            - CREAR_EXPEDIENTE: quiere crear un único expediente o caso legal
+            - CREAR_EXPEDIENTES_MASIVO: quiere crear múltiples expedientes a la vez (el prompt contiene 2 o más casos numerados o claramente separados)
             - LISTAR_EXPEDIENTES: quiere ver, listar o consultar los expedientes existentes
             - OBTENER_EXPEDIENTE: quiere ver un expediente específico (extraé el radicado si se menciona)
             - LISTAR_TAREAS: quiere ver las tareas de un expediente (extraé el radicado si se menciona)
             - SUGERENCIA_JUDICIAL: pide consejo, recomendación o sugerencia sobre un caso legal
             - NO_PERMITIDO: la solicitud no corresponde a ninguna acción del sistema
 
+            REGLA DE MASIVO: si el prompt contiene 2 o más expedientes numerados o separados → CREAR_EXPEDIENTES_MASIVO
             REGLA DE DUDA: si no está claro pero parece legal → CREAR_EXPEDIENTE
             REGLA DE EMPRESA: "Clima S.A." o "Recetas del Valle" en contexto legal → CREAR_EXPEDIENTE
 

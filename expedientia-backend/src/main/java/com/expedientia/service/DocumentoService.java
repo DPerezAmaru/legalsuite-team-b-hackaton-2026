@@ -21,7 +21,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,17 +67,7 @@ public class DocumentoService {
                     "Solo se aceptan autos, sentencias, demandas, memoriales y documentos procesales.");
         }
 
-        List<String> prompts = analisis.procesos().stream()
-                .map(this::buildPromptParaChat)
-                .toList();
-
-        return new DocumentoAnalisisResponse(
-                true,
-                analisis.procesos().size(),
-                analisis.sugerenciaTexto(),
-                analisis.procesos(),
-                prompts
-        );
+        return analisis;
     }
 
     public ConfirmarProcesoResponse confirmar(ConfirmarProcesoRequest request, Long usuarioId) {
@@ -144,13 +136,12 @@ public class DocumentoService {
                 if (result.omitido()) {
                     omitidos.add(new BulkAnalisisResponse.ArchivoOmitido(result.filename(), result.razon()));
                 } else {
-                    for (ProcesoSugeridoDTO proceso : result.procesos()) {
-                        procesos.add(new BulkAnalisisResponse.ProcesoEncontrado(indice++, result.filename(), proceso));
-                    }
+                    procesos.add(new BulkAnalisisResponse.ProcesoEncontrado(indice++, result.filename(), result.proceso()));
                 }
             }
 
-            return new BulkAnalisisResponse(files.size(), procesos.size(), procesos, omitidos);
+            String promptCombinado = buildPromptCombinado(procesos);
+            return new BulkAnalisisResponse(files.size(), procesos.size(), procesos, omitidos, promptCombinado);
         } finally {
             executor.shutdown();
         }
@@ -158,7 +149,8 @@ public class DocumentoService {
 
     public BulkConfirmarResponse bulkConfirmar(BulkConfirmarRequest request, Long usuarioId) {
         List<BulkConfirmarResponse.Omitido> omitidos = new ArrayList<>();
-        List<ExpedienteDTO> expedientes = new ArrayList<>();
+        List<CreateExpedienteRequest> requests = new ArrayList<>();
+        Map<String, BulkAnalisisResponse.ProcesoEncontrado> radicadoAEncontrado = new LinkedHashMap<>();
 
         for (Integer indice : request.seleccionados()) {
             BulkAnalisisResponse.ProcesoEncontrado encontrado = request.procesos().stream()
@@ -172,17 +164,46 @@ public class DocumentoService {
                 continue;
             }
 
-            try {
-                ConfirmarProcesoRequest req = new ConfirmarProcesoRequest(
-                        indice, encontrado.datos(), encontrado.archivoOrigen());
-                expedientes.add(confirmar(req, usuarioId).expediente());
-            } catch (AppException e) {
-                omitidos.add(new BulkConfirmarResponse.Omitido(
-                        indice, encontrado.archivoOrigen(), e.getDetail()));
+            Documento documento = new Documento();
+            documento.setNombreArchivo(encontrado.archivoOrigen());
+            documento.setRutaArchivo("uploads/" + encontrado.archivoOrigen());
+            documento.setContenidoExtraido(encontrado.datos().resumen());
+            documento.setEstadoProcesamiento(Documento.EstadoProcesamiento.PROCESADO);
+            documento.setFechaSubida(LocalDateTime.now());
+            if (usuarioId != null) {
+                usuarioRepo.findById(usuarioId).ifPresent(documento::setSubidoPor);
             }
+            Documento savedDoc = documentoRepo.save(documento);
+
+            CreateExpedienteRequest req = new CreateExpedienteRequest(
+                    encontrado.datos().radicado(),
+                    encontrado.datos().titulo(),
+                    encontrado.datos().especialidad(),
+                    encontrado.datos().despacho(),
+                    encontrado.datos().ciudad(),
+                    encontrado.datos().estado(),
+                    encontrado.datos().resumen(),
+                    encontrado.datos().resuelve(),
+                    null,
+                    savedDoc.getId(),
+                    mapPartes(encontrado.datos().partes())
+            );
+            CreateExpedienteRequest normalized = normalizer.normalize(req);
+            requests.add(normalized);
+            radicadoAEncontrado.put(normalized.radicado(), encontrado);
         }
 
-        return new BulkConfirmarResponse(expedientes.size(), omitidos.size(), expedientes, omitidos);
+        ExpedienteService.BulkResult result = expedienteService.crearMasivo(requests, usuarioId);
+
+        result.radicadosDuplicados().forEach(radicado -> {
+            BulkAnalisisResponse.ProcesoEncontrado encontrado = radicadoAEncontrado.get(radicado);
+            if (encontrado != null) {
+                omitidos.add(new BulkConfirmarResponse.Omitido(
+                        encontrado.indice(), encontrado.archivoOrigen(), "Radicado duplicado: " + radicado));
+            }
+        });
+
+        return new BulkConfirmarResponse(result.creados().size(), omitidos.size(), result.creados(), omitidos);
     }
 
     private FileResult processFileSingle(MultipartFile file) {
@@ -208,7 +229,7 @@ public class DocumentoService {
                 return FileResult.omitido(filename, "No es un expediente judicial colombiano");
             }
 
-            return FileResult.ok(filename, analisis.procesos());
+            return FileResult.ok(filename, analisis.proceso());
         } catch (AppException e) {
             return FileResult.omitido(filename, e.getDetail());
         } catch (Exception e) {
@@ -216,28 +237,28 @@ public class DocumentoService {
         }
     }
 
-    private String buildPromptParaChat(ProcesoSugeridoDTO proceso) {
-        StringBuilder sb = new StringBuilder("Crear expediente.");
-        if (proceso.radicado() != null) sb.append(" Radicado: ").append(proceso.radicado()).append(".");
-        if (proceso.especialidad() != null) sb.append(" Especialidad: ").append(proceso.especialidad()).append(".");
-        if (proceso.estado() != null) sb.append(" Estado: ").append(proceso.estado()).append(".");
-        if (proceso.despacho() != null) sb.append(" Despacho: ").append(proceso.despacho()).append(".");
-        if (proceso.ciudad() != null) sb.append(" Ciudad: ").append(proceso.ciudad()).append(".");
-        if (proceso.partes() != null) {
-            proceso.partes().forEach(p ->
-                sb.append(" ").append(p.tipoParticipacion()).append(": ").append(p.nombre())
-                  .append(p.identificacion() != null ? " (" + p.identificacion() + ")" : "").append(".")
-            );
-        }
-        if (proceso.resumen() != null) {
-            int available = 800 - sb.length() - 10;
-            if (available > 20) {
-                sb.append(" Resumen: ")
-                  .append(proceso.resumen(), 0, Math.min(proceso.resumen().length(), available))
-                  .append(".");
+    private String buildPromptCombinado(List<BulkAnalisisResponse.ProcesoEncontrado> procesos) {
+        if (procesos.isEmpty()) return null;
+        StringBuilder sb = new StringBuilder("Crear expedientes masivos:\n");
+        for (BulkAnalisisResponse.ProcesoEncontrado pe : procesos) {
+            ProcesoSugeridoDTO p = pe.datos();
+            sb.append(pe.indice()).append(". ");
+            if (p.radicado() != null) sb.append("Radicado: ").append(p.radicado()).append(". ");
+            if (p.especialidad() != null) sb.append("Especialidad: ").append(p.especialidad()).append(". ");
+            if (p.estado() != null) sb.append("Estado: ").append(p.estado()).append(". ");
+            if (p.despacho() != null) sb.append("Despacho: ").append(p.despacho()).append(". ");
+            if (p.ciudad() != null) sb.append("Ciudad: ").append(p.ciudad()).append(". ");
+            if (p.partes() != null) {
+                p.partes().forEach(parte ->
+                    sb.append(parte.tipoParticipacion()).append(": ").append(parte.nombre())
+                      .append(parte.identificacion() != null ? " (" + parte.identificacion() + ")" : "").append(". ")
+                );
             }
+            if (p.resumen() != null) sb.append("Resumen: ").append(p.resumen()).append(". ");
+            if (p.resuelve() != null) sb.append("Resuelve: ").append(p.resuelve()).append(". ");
+            sb.append("\n");
         }
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     private List<CreateExpedienteRequest.ParteRequest> mapPartes(List<ProcesoSugeridoDTO.ParteExtraidaDTO> partes) {
@@ -252,12 +273,12 @@ public class DocumentoService {
                 .toList();
     }
 
-    private record FileResult(String filename, List<ProcesoSugeridoDTO> procesos, String razon) {
-        static FileResult ok(String filename, List<ProcesoSugeridoDTO> procesos) {
-            return new FileResult(filename, procesos, null);
+    private record FileResult(String filename, ProcesoSugeridoDTO proceso, String razon) {
+        static FileResult ok(String filename, ProcesoSugeridoDTO proceso) {
+            return new FileResult(filename, proceso, null);
         }
         static FileResult omitido(String filename, String razon) {
-            return new FileResult(filename, List.of(), razon);
+            return new FileResult(filename, null, razon);
         }
         boolean omitido() { return razon != null; }
     }

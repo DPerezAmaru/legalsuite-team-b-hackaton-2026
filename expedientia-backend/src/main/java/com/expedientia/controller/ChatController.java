@@ -28,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Tag(name = "Chat", description = "Interfaz conversacional con IA para gestión de expedientes legales")
 @RestController
@@ -123,6 +124,20 @@ public class ChatController {
                 ExpedienteDTO dto = expedienteService.crear(normalized, usuarioId);
                 yield ResponseEntity.status(HttpStatus.CREATED)
                         .body(new ChatResponse("CREAR_EXPEDIENTE", "Expediente creado exitosamente", dto));
+            }
+            case CREAR_EXPEDIENTES_MASIVO -> {
+                List<CreateExpedienteRequest> extracted = aiService.interpretarMasivoDesdeChat(clean);
+                if (extracted.isEmpty()) throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
+                        "No se pudieron extraer expedientes del prompt");
+                List<CreateExpedienteRequest> normalized = extracted.stream()
+                        .map(normalizer::normalize)
+                        .collect(Collectors.toList());
+                ExpedienteService.BulkResult result = expedienteService.crearMasivo(normalized, usuarioId);
+                String mensaje = result.creados().size() + " expediente(s) creado(s)" +
+                        (result.radicadosDuplicados().isEmpty() ? "" :
+                         ", " + result.radicadosDuplicados().size() + " omitido(s) por radicado duplicado");
+                yield ResponseEntity.status(HttpStatus.CREATED)
+                        .body(new ChatResponse("CREAR_EXPEDIENTES_MASIVO", mensaje, result.creados()));
             }
             case LISTAR_EXPEDIENTES -> {
                 List<ExpedienteDTO> lista = expedienteService.listar();

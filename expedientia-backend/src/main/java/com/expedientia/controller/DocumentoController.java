@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +88,7 @@ public class DocumentoController {
     public ResponseEntity<ConfirmarProcesoResponse> confirmar(
             @Parameter(description = "ID del usuario que confirma la creación", example = "1")
             @RequestParam(required = false) Long usuarioId,
-            @RequestBody ConfirmarProcesoRequest request) {
+            @Valid @RequestBody ConfirmarProcesoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(documentoService.confirmar(request, usuarioId));
     }

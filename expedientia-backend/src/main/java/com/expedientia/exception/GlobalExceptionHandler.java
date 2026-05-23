@@ -48,9 +48,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestPartException.class)
     public ProblemDetail handleMissingRequestPart(MissingServletRequestPartException ex) {
+        String campo = ex.getRequestPartName();
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
-                "El campo 'file' es obligatorio. Enviá el archivo como form-data con clave 'file'.");
+                "El campo '" + campo + "' es obligatorio. Enviá el archivo como form-data con clave '" + campo + "'.");
         pd.setTitle("Archivo faltante");
         return pd;
     }

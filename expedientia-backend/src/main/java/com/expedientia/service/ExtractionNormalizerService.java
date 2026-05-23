@@ -42,6 +42,7 @@ public class ExtractionNormalizerService {
             trim(raw.ciudad()),
             normalizeEstado(raw.estado()),
             trim(raw.resumen()),
+            trim(raw.resuelve()),
             null,
             raw.documentoOrigenId(),
             partes

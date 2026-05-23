@@ -1,9 +1,9 @@
 import { Link, useRouterState } from '@tanstack/react-router'
-import type { RegisteredRouter, RoutePaths } from '@tanstack/react-router'
+import type { LinkProps } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useSidebar } from '../../hooks/useSidebar'
 
-type AppRoute = RoutePaths<RegisteredRouter['routeTree']>
+type AppRoute = NonNullable<LinkProps['to']>
 
 interface SidebarNavItemProps {
   to: AppRoute

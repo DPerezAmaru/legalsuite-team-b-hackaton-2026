@@ -145,10 +145,20 @@ export const DocumentoFormStateSchema = z.object({
   despacho: z.string(),
   ciudad: z.string(),
   resumen: z.string(),
+  resuelve: z.string(),
   fechaInicio: z.string().optional(),
   partes: z.array(ParteSchema),
 })
 export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
+
+export const BulkConfirmarResponseItemSchema = z.object({
+  indice: z.number(),
+  expedienteId: z.number(),
+})
+export const BulkConfirmarResponseSchema = z.object({
+  expedientesCreados: z.array(BulkConfirmarResponseItemSchema).default([]),
+})
+export type BulkConfirmarResponse = z.infer<typeof BulkConfirmarResponseSchema>
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 

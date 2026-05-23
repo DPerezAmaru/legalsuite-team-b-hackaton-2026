@@ -1,6 +1,6 @@
 import { useState, forwardRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { CaretDown, CaretRight, CircleNotch, CheckCircle, Check } from '@phosphor-icons/react'
+import { CaretDown, CaretRight, CheckCircle, Check } from '@phosphor-icons/react'
 import { ExtraccionField } from './ExtraccionField'
 import { PartesEditor } from './PartesEditor'
 import type {
@@ -23,9 +23,7 @@ interface ProcesoCardProps {
   isSelected?: boolean
   defaultOpen?: boolean
   createdExpedienteId?: number
-  isCreating: boolean
   onFormChange: (form: DocumentoFormState) => void
-  onCrear: () => void
   onSelectFile?: () => void
   onToggleSelect?: () => void
 }
@@ -38,9 +36,7 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
   isSelected = true,
   defaultOpen = false,
   createdExpedienteId,
-  isCreating,
   onFormChange,
-  onCrear,
   onSelectFile,
   onToggleSelect,
 }, ref) {
@@ -51,7 +47,6 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
 
   const updatePartes = (partes: Parte[]) => onFormChange({ ...form, partes })
 
-  const canCreate = form.radicado.trim().length > 0 && form.titulo.trim().length > 0
   const isCreated = createdExpedienteId !== undefined
 
   return (

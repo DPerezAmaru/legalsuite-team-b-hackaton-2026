@@ -2,7 +2,6 @@ import '../../lib/pdfWorker'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
-import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus } from '@phosphor-icons/react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -98,7 +97,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
     return () => ro.disconnect()
   }, [])
 
-  const onDocumentLoad = useCallback(({ numPages }: PDFDocumentProxy) => {
+  const onDocumentLoad = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages)
     setPage(1)
   }, [])

@@ -1,4 +1,4 @@
-import { House, Folder, ListChecks, ClockCounterClockwise, FileText, Sparkle, SidebarSimple, X } from '@phosphor-icons/react'
+import { House, Folder, ListChecks, ClockCounterClockwise, Sparkle, SidebarSimple, X } from '@phosphor-icons/react'
 import { SidebarNavItem } from './SidebarNavItem'
 import { useSidebar } from '../../hooks/useSidebar'
 import { useCommandBar } from '../../store/commandBarStore'
@@ -70,7 +70,6 @@ export function Sidebar() {
         <SidebarNavItem to="/expedientes" icon={<Folder />} label="Expedientes" />
         <SidebarNavItem to="/tareas" icon={<ListChecks />} label="Tareas" />
         <SidebarNavItem to="/historial" icon={<ClockCounterClockwise />} label="Historial" />
-        <SidebarNavItem to="/documentos" icon={<FileText />} label="Documentos" />
       </nav>
 
       {/* Nav inferior */}

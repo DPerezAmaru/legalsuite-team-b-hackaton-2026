@@ -152,14 +152,27 @@ export const DocumentoFormStateSchema = z.object({
 })
 export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
 
-export const BulkConfirmarResponseItemSchema = z.object({
-  indice: z.number(),
-  expedienteId: z.number(),
-})
 export const BulkConfirmarResponseSchema = z.object({
-  expedientesCreados: z.array(BulkConfirmarResponseItemSchema).default([]),
+  totalCreados: z.number(),
+  totalOmitidos: z.number(),
+  expedientes: z.array(ExpedienteSchema).default([]),
+  omitidos: z.array(z.unknown()).default([]),
 })
 export type BulkConfirmarResponse = z.infer<typeof BulkConfirmarResponseSchema>
+
+export type TareaSugerida = {
+  id: number
+  texto: string
+  prioridad: 'ALTA' | 'MEDIA' | 'BAJA'
+}
+
+export type ExpedienteCreadoConTareas = {
+  expedienteId: number
+  titulo: string
+  radicado: string
+  especialidad: Especialidad
+  tareasSugeridas: TareaSugerida[]
+}
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 

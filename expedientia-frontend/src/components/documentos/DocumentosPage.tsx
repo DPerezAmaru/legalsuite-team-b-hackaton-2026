@@ -4,6 +4,7 @@ import { CircleNotchIcon, InfoIcon, WarningIcon, UploadSimpleIcon, SparkleIcon, 
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
 import { ProcesoCard } from './ProcesoCard'
+import { TareasResumen } from './TareasResumen'
 import { useDocumentoProcesar } from '../../hooks/useDocumentoProcesar'
 import { useDocumentosConfirmar } from '../../hooks/useDocumentosConfirmar'
 import { useDocumentosStore } from '../../store/documentosStore'
@@ -11,7 +12,44 @@ import type {
   DocumentoFormState,
   ProcesoSugerido,
   ProcesarDocumentoResponse,
+  ExpedienteCreadoConTareas,
+  TareaSugerida,
 } from '../../types'
+
+let _tareaIdCounter = 1
+
+const TAREAS_POR_ESPECIALIDAD: Record<string, { texto: string; prioridad: TareaSugerida['prioridad'] }[]> = {
+  CIVIL: [
+    { texto: 'Notificar auto admisorio a las partes', prioridad: 'ALTA' },
+    { texto: 'Verificar términos de traslado del proceso', prioridad: 'MEDIA' },
+    { texto: 'Revisar poderes de representación', prioridad: 'BAJA' },
+  ],
+  PENAL: [
+    { texto: 'Verificar términos de prescripción de la acción', prioridad: 'ALTA' },
+    { texto: 'Revisar medidas cautelares vigentes', prioridad: 'ALTA' },
+    { texto: 'Notificar fecha de audiencia preliminar', prioridad: 'MEDIA' },
+  ],
+  LABORAL: [
+    { texto: 'Verificar liquidación de prestaciones sociales', prioridad: 'ALTA' },
+    { texto: 'Notificar convocatoria a audiencia de conciliación', prioridad: 'MEDIA' },
+    { texto: 'Revisar constancias de pago de nómina', prioridad: 'BAJA' },
+  ],
+  ADMINISTRATIVO: [
+    { texto: 'Verificar caducidad de la acción contenciosa', prioridad: 'ALTA' },
+    { texto: 'Solicitar historia administrativa al ente demandado', prioridad: 'MEDIA' },
+    { texto: 'Revisar agotamiento de vía gubernativa', prioridad: 'MEDIA' },
+  ],
+  FAMILIA: [
+    { texto: 'Notificar demanda a todas las partes', prioridad: 'ALTA' },
+    { texto: 'Verificar cuota alimentaria vigente', prioridad: 'MEDIA' },
+    { texto: 'Programar audiencia de conciliación', prioridad: 'MEDIA' },
+  ],
+}
+
+function mockTareasSugeridas(especialidad: string): TareaSugerida[] {
+  const plantillas = TAREAS_POR_ESPECIALIDAD[especialidad] ?? TAREAS_POR_ESPECIALIDAD.CIVIL
+  return plantillas.map((t) => ({ ...t, id: _tareaIdCounter++ }))
+}
 
 type PageState =
   | { stage: 'idle' }
@@ -24,6 +62,7 @@ type PageState =
       archivoOrigen: string[]
       createdIds: Record<number, number>
     }
+  | { stage: 'created'; expedientes: ExpedienteCreadoConTareas[] }
 
 function procesoToForm(datos: ProcesoSugerido): DocumentoFormState {
   return {
@@ -134,16 +173,14 @@ export function DocumentosPage() {
     setBulkCreating(true)
     try {
       const result = await confirmarBulk({ seleccionados, procesos })
-      const newCreatedIds: Record<number, number> = {}
-      for (const { indice, expedienteId } of result.expedientesCreados) {
-        const formIdx = state.response.procesos.findIndex(p => p.indice === indice)
-        if (formIdx >= 0) newCreatedIds[formIdx] = expedienteId
-      }
-      setState(prev =>
-        prev.stage === 'review'
-          ? { ...prev, createdIds: { ...prev.createdIds, ...newCreatedIds } }
-          : prev,
-      )
+      const expedientesCreadosConTareas: ExpedienteCreadoConTareas[] = result.expedientes.map((exp) => ({
+        expedienteId: exp.id,
+        titulo: exp.titulo,
+        radicado: exp.radicado,
+        especialidad: exp.especialidad,
+        tareasSugeridas: mockTareasSugeridas(exp.especialidad),
+      }))
+      setState({ stage: 'created', expedientes: expedientesCreadosConTareas })
     } finally {
       setBulkCreating(false)
     }
@@ -216,6 +253,10 @@ export function DocumentosPage() {
         <p className="text-xs text-fg-tertiary">{state.files.map(f => f.name).join(', ')}</p>
       </div>
     )
+  }
+
+  if (state.stage === 'created') {
+    return <TareasResumen expedientes={state.expedientes} />
   }
 
   const { response, forms, files, createdIds } = state

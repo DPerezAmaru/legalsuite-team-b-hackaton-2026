@@ -6,6 +6,7 @@ import com.expedientia.entity.Tarea;
 import com.expedientia.exception.ResourceNotFoundException;
 import com.expedientia.repository.ExpedienteRepository;
 import com.expedientia.repository.TareaRepository;
+import com.expedientia.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +18,42 @@ public class TareaService {
 
     private final TareaRepository tareaRepo;
     private final ExpedienteRepository expedienteRepo;
+    private final UsuarioRepository usuarioRepo;
 
-    public TareaService(TareaRepository tareaRepo, ExpedienteRepository expedienteRepo) {
+    public TareaService(TareaRepository tareaRepo,
+                        ExpedienteRepository expedienteRepo,
+                        UsuarioRepository usuarioRepo) {
         this.tareaRepo = tareaRepo;
         this.expedienteRepo = expedienteRepo;
+        this.usuarioRepo = usuarioRepo;
+    }
+
+    @Transactional
+    public TareaDTO crear(TareaDTO dto, Long usuarioId) {
+        Expediente exp = expedienteRepo.findById(dto.expedienteId())
+                .orElseThrow(() -> new ResourceNotFoundException("Expediente", dto.expedienteId()));
+
+        Tarea tarea = new Tarea();
+        tarea.setExpediente(exp);
+        tarea.setTitulo(dto.titulo());
+        tarea.setDescripcion(dto.descripcion());
+        tarea.setEstado(dto.estado() != null ? dto.estado() : Tarea.Estado.PENDIENTE);
+        tarea.setPrioridad(dto.prioridad() != null ? dto.prioridad() : Tarea.Prioridad.MEDIA);
+        tarea.setFechaVencimiento(dto.fechaVencimiento());
+        tarea.setSugeridaPorIa(dto.sugeridaPorIa() != null ? dto.sugeridaPorIa() : false);
+
+        if (dto.asignadoAId() != null) {
+            usuarioRepo.findById(dto.asignadoAId()).ifPresent(tarea::setAsignadoA);
+        }
+        if (usuarioId != null) {
+            usuarioRepo.findById(usuarioId).ifPresent(tarea::setCreadoPor);
+        }
+
+        return toDTO(tareaRepo.save(tarea));
+    }
+
+    public TareaDTO obtener(Long id) {
+        return toDTO(findById(id));
     }
 
     public List<TareaDTO> listarPorExpediente(Long expedienteId) {
@@ -33,6 +66,34 @@ public class TareaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Expediente", 0L));
         return tareaRepo.findByExpediente_Id(exp.getId())
                 .stream().map(this::toDTO).toList();
+    }
+
+    @Transactional
+    public TareaDTO actualizar(Long id, TareaDTO dto) {
+        Tarea tarea = findById(id);
+
+        if (dto.titulo() != null) tarea.setTitulo(dto.titulo());
+        if (dto.descripcion() != null) tarea.setDescripcion(dto.descripcion());
+        if (dto.estado() != null) tarea.setEstado(dto.estado());
+        if (dto.prioridad() != null) tarea.setPrioridad(dto.prioridad());
+        if (dto.fechaVencimiento() != null) tarea.setFechaVencimiento(dto.fechaVencimiento());
+        if (dto.sugeridaPorIa() != null) tarea.setSugeridaPorIa(dto.sugeridaPorIa());
+        if (dto.asignadoAId() != null) {
+            usuarioRepo.findById(dto.asignadoAId()).ifPresent(tarea::setAsignadoA);
+        }
+
+        return toDTO(tareaRepo.save(tarea));
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+        if (!tareaRepo.existsById(id)) throw new ResourceNotFoundException("Tarea", id);
+        tareaRepo.deleteById(id);
+    }
+
+    private Tarea findById(Long id) {
+        return tareaRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Tarea", id));
     }
 
     private TareaDTO toDTO(Tarea t) {

@@ -1,4 +1,4 @@
-import { FileText, X } from 'lucide-react'
+import { FileText, X } from '@phosphor-icons/react'
 
 interface FileChipProps {
   file: File
@@ -13,7 +13,7 @@ function formatBytes(bytes: number): string {
 export function FileChip({ file, onRemove }: FileChipProps) {
   return (
     <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-bg-base border border-border max-w-xs">
-      <FileText size={13} className="text-fg-secondary shrink-0" />
+      <FileText className="text-fg-secondary shrink-0" />
       <div className="flex items-baseline gap-1.5 min-w-0">
         <span className="text-xs font-medium text-fg-body truncate">{file.name}</span>
         <span className="text-[10px] text-fg-tertiary shrink-0">{formatBytes(file.size)}</span>
@@ -24,7 +24,7 @@ export function FileChip({ file, onRemove }: FileChipProps) {
         className="p-0.5 rounded text-fg-tertiary hover:text-fg-secondary transition-colors shrink-0"
         aria-label="Quitar archivo"
       >
-        <X size={11} />
+        <X />
       </button>
     </div>
   )

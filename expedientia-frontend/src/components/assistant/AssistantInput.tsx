@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Paperclip, Folder, ArrowRight } from 'lucide-react'
+import { Paperclip, Folder, ArrowRight } from '@phosphor-icons/react'
 import { FileChip } from './FileChip'
 
 const PLACEHOLDER = 'Pregunte, suba un documento o genere un borrador.'
@@ -75,10 +75,10 @@ export function AssistantInput({
             onClick={() => fileInputRef.current?.click()}
             className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-fg-secondary hover:text-fg-body hover:bg-bg-muted transition-colors"
           >
-            <Paperclip size={13} />
+            <Paperclip />
             <span className="hidden sm:inline">Adjuntar</span>
           </button>
-          <InputAction icon={<Folder size={13} />} label="Expediente" />
+          <InputAction icon={<Folder />} label="Expediente" />
         </div>
         <button
           type="button"
@@ -87,7 +87,7 @@ export function AssistantInput({
           className="p-2 rounded-lg bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           aria-label="Consultar"
         >
-          <ArrowRight size={14} />
+          <ArrowRight />
         </button>
       </div>
 

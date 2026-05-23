@@ -1,7 +1,16 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
+import {
+  Sparkle, Copy, Check,
+  IdentificationCard,
+  CheckSquare,
+  Gavel,
+  Files,
+  Robot,
+} from '@phosphor-icons/react'
 import type { Expediente } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
-import { ResumenIACard } from './ResumenIACard'
+import { AccordionSection } from '../ui/AccordionSection'
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
@@ -16,29 +25,44 @@ function formatFecha(iso: string | null | undefined): string | null {
   })
 }
 
+const TIPO_LABELS: Record<string, string> = {
+  DEMANDANTE: 'Demandante',
+  DEMANDADO: 'Demandado',
+  APODERADO: 'Apoderado',
+  TERCERO: 'Tercero',
+}
+
 interface ExpedienteContentProps {
   expediente: Expediente
   headerExtras?: ReactNode
 }
 
 export function ExpedienteContent({ expediente, headerExtras }: ExpedienteContentProps) {
-  const demandante =
-    expediente.partes.find(p => p.tipoParticipacion === 'DEMANDANTE')?.nombre ?? null
-  const demandado =
-    expediente.partes.find(p => p.tipoParticipacion === 'DEMANDADO')?.nombre ?? null
-  const apoderado =
-    expediente.partes.find(p => p.tipoParticipacion === 'APODERADO')?.nombre ?? null
+  const [copied, setCopied] = useState(false)
+
+  const partesByTipo = expediente.partes.reduce<Record<string, string[]>>(
+    (acc, p) => { ;(acc[p.tipoParticipacion] ??= []).push(p.nombre); return acc },
+    {},
+  )
 
   const subtitulo = [capitalize(expediente.especialidad), expediente.despacho]
     .filter(Boolean)
     .join(' · ')
 
+  function handleCopy() {
+    if (!expediente.resumen) return
+    navigator.clipboard.writeText(expediente.resumen).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-fg-primary tracking-tight truncate">
-            {demandante ?? expediente.titulo}
+            {expediente.titulo}
           </h1>
           {subtitulo && (
             <p className="mt-1 text-sm text-fg-secondary">{subtitulo}</p>
@@ -50,23 +74,82 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
         </div>
       </header>
 
-      <ResumenIACard resumen={expediente.resumen} />
+      <AccordionSection
+        title="Resumen IA"
+        icon={<Sparkle className="text-ai-text" />}
+        defaultOpen
+      >
+        <div className="bg-ai-tint px-4 py-3">
+          {expediente.resumen ? (
+            <>
+              <div className="flex justify-end mb-2">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="p-1 rounded text-ai-text hover:bg-ai-border transition-colors"
+                  aria-label="Copiar resumen"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+              <p className="text-sm text-fg-body leading-relaxed">{expediente.resumen}</p>
+            </>
+          ) : (
+            <p className="text-sm text-fg-tertiary italic">
+              Sin resumen generado. Pedile al asistente que analice este expediente.
+            </p>
+          )}
+        </div>
+      </AccordionSection>
 
-      <section>
-        <h2 className="text-sm font-semibold text-fg-primary mb-3">
-          Información del caso
-        </h2>
-        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+      <AccordionSection
+        title="Información del expediente"
+        icon={<IdentificationCard className="text-fg-secondary" />}
+        defaultOpen
+      >
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-4">
           <Field label="Radicado" value={expediente.radicado} mono />
           <Field label="Especialidad" value={capitalize(expediente.especialidad)} />
-          <Field label="Demandante" value={demandante} />
-          <Field label="Demandado" value={demandado} />
-          <Field label="Apoderado" value={apoderado} />
           <Field label="Fecha de inicio" value={formatFecha(expediente.fechaInicio)} />
           <Field label="Ciudad" value={expediente.ciudad} />
           <Field label="Despacho" value={expediente.despacho} />
+          {Object.entries(partesByTipo).map(([tipo, nombres]) => (
+            <Field
+              key={tipo}
+              label={`${TIPO_LABELS[tipo] ?? tipo}${nombres.length > 1 ? 's' : ''}`}
+              value={nombres.join(' · ')}
+            />
+          ))}
         </dl>
-      </section>
+      </AccordionSection>
+
+      <AccordionSection
+        title="Tareas"
+        icon={<CheckSquare className="text-fg-secondary" />}
+      >
+        <EmptyState message="No hay tareas para este expediente" />
+      </AccordionSection>
+
+      <AccordionSection
+        title="Actuaciones"
+        icon={<Gavel className="text-fg-secondary" />}
+      >
+        <EmptyState message="No hay actuaciones registradas" />
+      </AccordionSection>
+
+      <AccordionSection
+        title="Documentos"
+        icon={<Files className="text-fg-secondary" />}
+      >
+        <EmptyState message="No hay documentos adjuntos" />
+      </AccordionSection>
+
+      <AccordionSection
+        title="Preguntarle a la IA"
+        icon={<Robot className="text-fg-secondary" />}
+      >
+        <EmptyState message="Próximamente: consultá la IA sobre este expediente" />
+      </AccordionSection>
     </div>
   )
 }
@@ -81,11 +164,17 @@ function Field({ label, value, mono = false }: FieldProps) {
   return (
     <div className="min-w-0">
       <dt className="text-xs text-fg-tertiary">{label}</dt>
-      <dd
-        className={`text-sm text-fg-body mt-0.5 truncate ${mono ? 'tabular-nums' : ''}`.trim()}
-      >
+      <dd className={`text-sm text-fg-body mt-0.5 truncate ${mono ? 'tabular-nums' : ''}`.trim()}>
         {value ?? '—'}
       </dd>
+    </div>
+  )
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="px-4 py-6 text-center">
+      <p className="text-sm text-fg-tertiary">{message}</p>
     </div>
   )
 }

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react'
+import { X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus } from '@phosphor-icons/react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -18,11 +18,36 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// PDFs often use Unicode dash variants instead of ASCII hyphen.
+// Also expands compound values (radicados, IDs) into their segments
+// so cross-span splits don't silently break matches.
+const DASH_CLASS = '[-‐‑‒–—−]'
+
+function expandTerms(terms: string[]): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const raw of terms) {
+    const t = raw.trim()
+    if (!t) continue
+    if (t.length >= 4 && !seen.has(t)) { seen.add(t); result.push(t) }
+    for (const seg of t.split(/[-‐-—−\s/]+/)) {
+      if (seg.length >= 4 && !seen.has(seg)) { seen.add(seg); result.push(seg) }
+    }
+  }
+  return result
+}
+
+function termToPattern(term: string): string {
+  // Escape special regex chars, then replace escaped hyphens with a
+  // character class that matches all Unicode dash variants.
+  return escapeRegex(term).replace(/\\-/g, DASH_CLASS)
+}
+
 function buildRenderer(terms: string[]) {
-  const active = terms.filter((t) => t && t.trim().length >= 4)
+  const active = expandTerms(terms)
   if (!active.length) return ({ str }: { str: string }) => escapeHtml(str)
 
-  const pattern = new RegExp(active.map(escapeRegex).join('|'), 'gi')
+  const pattern = new RegExp(active.map(termToPattern).join('|'), 'gi')
 
   return ({ str }: { str: string }) => {
     let result = ''
@@ -97,7 +122,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
           onClick={onReplace}
           className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-fg-secondary hover:text-fg-primary border border-border hover:border-border-strong rounded-lg transition-colors shrink-0"
         >
-          <X size={12} />
+          <X />
           Reemplazar
         </button>
       </div>
@@ -133,7 +158,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             disabled={page <= 1 || numPages === 0}
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
           >
-            <ChevronLeft size={15} />
+            <CaretLeft />
           </button>
           <span className="text-xs text-fg-secondary tabular-nums px-1">
             {numPages > 0 ? `${page} / ${numPages}` : '—'}
@@ -144,7 +169,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             disabled={page >= numPages || numPages === 0}
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
           >
-            <ChevronRight size={15} />
+            <CaretRight />
           </button>
         </div>
 
@@ -157,7 +182,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
             aria-label="Reducir zoom"
           >
-            <ZoomOut size={14} />
+            <MagnifyingGlassMinus />
           </button>
           <span className="text-xs text-fg-secondary tabular-nums w-10 text-center">
             {Math.round(zoom * 100)}%
@@ -169,7 +194,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
             aria-label="Aumentar zoom"
           >
-            <ZoomIn size={14} />
+            <MagnifyingGlassPlus />
           </button>
         </div>
       </div>

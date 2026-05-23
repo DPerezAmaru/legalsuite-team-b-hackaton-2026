@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Pencil, Check } from 'lucide-react'
+import { PencilSimple, Check } from '@phosphor-icons/react'
 
 interface ExtraccionFieldProps {
   label: string
@@ -65,7 +65,7 @@ export function ExtraccionField({
             className="p-1 rounded opacity-0 group-hover:opacity-100 text-fg-tertiary hover:text-fg-secondary transition-all shrink-0"
             aria-label={`Editar ${label}`}
           >
-            <Pencil size={12} />
+            <PencilSimple />
           </button>
         )}
       </div>
@@ -101,7 +101,7 @@ export function ExtraccionField({
             onClick={commit}
             className="p-1 rounded text-cta-bg hover:bg-bg-muted transition-colors shrink-0"
           >
-            <Check size={13} />
+            <Check />
           </button>
         </div>
       ) : (

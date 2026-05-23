@@ -75,7 +75,7 @@
   /* Sidebar claro con active oscuro invertido */
   --sidebar-active:      #1a1a1a;
   --sidebar-hover:       rgba(0, 0, 0, 0.05);
-  --sidebar-text:        rgba(0, 0, 0, 0.50);
+  --sidebar-text:        rgba(0, 0, 0, 0.70);
   --sidebar-text-active: #ffffff;
   --sidebar-border:      rgba(0, 0, 0, 0.07);
 }

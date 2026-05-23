@@ -14,8 +14,8 @@ import { Route as TareasIndexRouteImport } from './routes/tareas/index'
 import { Route as InformesIndexRouteImport } from './routes/informes/index'
 import { Route as HistorialIndexRouteImport } from './routes/historial/index'
 import { Route as ExpedientesIndexRouteImport } from './routes/expedientes/index'
-import { Route as DocumentosIndexRouteImport } from './routes/documentos/index'
 import { Route as ExpedientesNuevoRouteImport } from './routes/expedientes/nuevo'
+import { Route as ExpedientesDesdeDocumentoRouteImport } from './routes/expedientes/desde-documento'
 import { Route as ExpedientesExpedienteIdIndexRouteImport } from './routes/expedientes/$expedienteId/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -43,16 +43,17 @@ const ExpedientesIndexRoute = ExpedientesIndexRouteImport.update({
   path: '/expedientes/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DocumentosIndexRoute = DocumentosIndexRouteImport.update({
-  id: '/documentos/',
-  path: '/documentos/',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ExpedientesNuevoRoute = ExpedientesNuevoRouteImport.update({
   id: '/expedientes/nuevo',
   path: '/expedientes/nuevo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExpedientesDesdeDocumentoRoute =
+  ExpedientesDesdeDocumentoRouteImport.update({
+    id: '/expedientes/desde-documento',
+    path: '/expedientes/desde-documento',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ExpedientesExpedienteIdIndexRoute =
   ExpedientesExpedienteIdIndexRouteImport.update({
     id: '/expedientes/$expedienteId/',
@@ -62,8 +63,8 @@ const ExpedientesExpedienteIdIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/expedientes/desde-documento': typeof ExpedientesDesdeDocumentoRoute
   '/expedientes/nuevo': typeof ExpedientesNuevoRoute
-  '/documentos/': typeof DocumentosIndexRoute
   '/expedientes/': typeof ExpedientesIndexRoute
   '/historial/': typeof HistorialIndexRoute
   '/informes/': typeof InformesIndexRoute
@@ -72,8 +73,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/expedientes/desde-documento': typeof ExpedientesDesdeDocumentoRoute
   '/expedientes/nuevo': typeof ExpedientesNuevoRoute
-  '/documentos': typeof DocumentosIndexRoute
   '/expedientes': typeof ExpedientesIndexRoute
   '/historial': typeof HistorialIndexRoute
   '/informes': typeof InformesIndexRoute
@@ -83,8 +84,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/expedientes/desde-documento': typeof ExpedientesDesdeDocumentoRoute
   '/expedientes/nuevo': typeof ExpedientesNuevoRoute
-  '/documentos/': typeof DocumentosIndexRoute
   '/expedientes/': typeof ExpedientesIndexRoute
   '/historial/': typeof HistorialIndexRoute
   '/informes/': typeof InformesIndexRoute
@@ -95,8 +96,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/expedientes/desde-documento'
     | '/expedientes/nuevo'
-    | '/documentos/'
     | '/expedientes/'
     | '/historial/'
     | '/informes/'
@@ -105,8 +106,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/expedientes/desde-documento'
     | '/expedientes/nuevo'
-    | '/documentos'
     | '/expedientes'
     | '/historial'
     | '/informes'
@@ -115,8 +116,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/expedientes/desde-documento'
     | '/expedientes/nuevo'
-    | '/documentos/'
     | '/expedientes/'
     | '/historial/'
     | '/informes/'
@@ -126,8 +127,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExpedientesDesdeDocumentoRoute: typeof ExpedientesDesdeDocumentoRoute
   ExpedientesNuevoRoute: typeof ExpedientesNuevoRoute
-  DocumentosIndexRoute: typeof DocumentosIndexRoute
   ExpedientesIndexRoute: typeof ExpedientesIndexRoute
   HistorialIndexRoute: typeof HistorialIndexRoute
   InformesIndexRoute: typeof InformesIndexRoute
@@ -172,18 +173,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExpedientesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/documentos/': {
-      id: '/documentos/'
-      path: '/documentos'
-      fullPath: '/documentos/'
-      preLoaderRoute: typeof DocumentosIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/expedientes/nuevo': {
       id: '/expedientes/nuevo'
       path: '/expedientes/nuevo'
       fullPath: '/expedientes/nuevo'
       preLoaderRoute: typeof ExpedientesNuevoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/expedientes/desde-documento': {
+      id: '/expedientes/desde-documento'
+      path: '/expedientes/desde-documento'
+      fullPath: '/expedientes/desde-documento'
+      preLoaderRoute: typeof ExpedientesDesdeDocumentoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/expedientes/$expedienteId/': {
@@ -198,8 +199,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExpedientesDesdeDocumentoRoute: ExpedientesDesdeDocumentoRoute,
   ExpedientesNuevoRoute: ExpedientesNuevoRoute,
-  DocumentosIndexRoute: DocumentosIndexRoute,
   ExpedientesIndexRoute: ExpedientesIndexRoute,
   HistorialIndexRoute: HistorialIndexRoute,
   InformesIndexRoute: InformesIndexRoute,

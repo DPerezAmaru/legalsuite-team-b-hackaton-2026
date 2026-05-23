@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Plus, Search } from 'lucide-react'
+import { Plus, MagnifyingGlass } from '@phosphor-icons/react'
 import { useExpedientes } from '../../hooks/useExpedientes'
 import type { EstadoExpediente, Expediente } from '../../types'
 import { PageContainer } from '../layout/PageContainer'
@@ -97,7 +97,7 @@ export function ExpedientesPage() {
                 onClick={() => navigate({ to: '/expedientes/nuevo' })}
                 className="flex items-center gap-1.5 text-sm font-medium bg-cta-bg text-cta-text hover:bg-cta-hover px-3 py-1.5 rounded-lg transition-colors"
               >
-                <Plus size={14} />
+                <Plus />
                 Nuevo expediente
               </button>
             }
@@ -106,9 +106,8 @@ export function ExpedientesPage() {
           <PageToolbar
             search={
               <div className="relative">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-tertiary"
+                <MagnifyingGlass
+                                   className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-tertiary"
                 />
                 <input
                   type="text"
@@ -185,7 +184,7 @@ export function ExpedientesPage() {
               {!isLoading &&
                 !isError &&
                 visible.map(expediente => (
-                  <ExpedienteRow key={expediente.id} expediente={expediente} />
+                  <ExpedienteRow key={expediente.id} expediente={expediente} isActive={expediente.id === drawerId} />
                 ))}
             </div>
           </div>

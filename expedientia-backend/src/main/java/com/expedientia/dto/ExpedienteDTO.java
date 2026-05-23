@@ -14,6 +14,7 @@ public record ExpedienteDTO(
     String ciudad,
     Expediente.Estado estado,
     String resumen,
+    String resuelve,
     LocalDate fechaInicio,
     LocalDateTime createdAt,
     Long creadoPorId,

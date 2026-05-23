@@ -15,6 +15,7 @@ public record CreateExpedienteRequest(
     String ciudad,
     Expediente.Estado estado,
     String resumen,
+    String resuelve,
     LocalDate fechaInicio,
     Long documentoOrigenId,
     List<ParteRequest> partes

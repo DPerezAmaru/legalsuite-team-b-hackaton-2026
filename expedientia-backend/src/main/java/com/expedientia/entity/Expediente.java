@@ -37,6 +37,9 @@ public class Expediente {
     @Column(columnDefinition = "TEXT")
     private String resumen;
 
+    @Column(columnDefinition = "TEXT")
+    private String resuelve;
+
     @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
 

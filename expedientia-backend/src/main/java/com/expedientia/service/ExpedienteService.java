@@ -44,6 +44,7 @@ public class ExpedienteService {
         exp.setCiudad(req.ciudad());
         exp.setEstado(req.estado() != null ? req.estado() : Expediente.Estado.ACTIVO);
         exp.setResumen(req.resumen());
+        exp.setResuelve(req.resuelve());
         exp.setFechaInicio(req.fechaInicio());
         exp.setCreatedAt(LocalDateTime.now());
 
@@ -101,6 +102,7 @@ public class ExpedienteService {
         if (req.ciudad() != null) exp.setCiudad(req.ciudad());
         if (req.estado() != null) exp.setEstado(req.estado());
         if (req.resumen() != null) exp.setResumen(req.resumen());
+        if (req.resuelve() != null) exp.setResuelve(req.resuelve());
         if (req.fechaInicio() != null) exp.setFechaInicio(req.fechaInicio());
         return toDTO(expedienteRepo.save(exp));
     }
@@ -134,6 +136,7 @@ public class ExpedienteService {
                 exp.getCiudad(),
                 exp.getEstado(),
                 exp.getResumen(),
+                exp.getResuelve(),
                 exp.getFechaInicio(),
                 exp.getCreatedAt(),
                 exp.getCreadoPor() != null ? exp.getCreadoPor().getId() : null,

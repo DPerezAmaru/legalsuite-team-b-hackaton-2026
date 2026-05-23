@@ -25,9 +25,10 @@ function capitalize(s: string): string {
 
 interface ExpedienteRowProps {
   expediente: Expediente
+  isActive?: boolean
 }
 
-export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
+export function ExpedienteRow({ expediente, isActive = false }: ExpedienteRowProps) {
   const navigate = useNavigate()
   const demandante = findParte(expediente.partes, 'DEMANDANTE')
   const demandado = findParte(expediente.partes, 'DEMANDADO')
@@ -43,7 +44,7 @@ export function ExpedienteRow({ expediente }: ExpedienteRowProps) {
       to="/expedientes/$expedienteId"
       params={{ expedienteId: String(expediente.id) }}
       onClick={handleClick}
-      className="flex items-center gap-4 px-3 py-3 text-sm hover:bg-bg-subtle transition-colors"
+      className={['flex items-center gap-4 px-3 py-3 text-sm transition-colors', isActive ? 'bg-bg-muted' : 'hover:bg-bg-subtle'].join(' ')}
     >
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
         <FileText className="shrink-0 text-fg-tertiary" />

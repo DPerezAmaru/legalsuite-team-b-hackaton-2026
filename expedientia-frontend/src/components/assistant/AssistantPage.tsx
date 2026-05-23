@@ -104,7 +104,7 @@ export function AssistantPage() {
         </div>
 
         {/* Input fijo abajo */}
-        <div className="border-t border-border bg-bg-base">
+        <div className="bg-bg-base">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">
             <AssistantInput
               value={inputValue}

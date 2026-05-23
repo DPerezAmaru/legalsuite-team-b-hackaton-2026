@@ -184,7 +184,7 @@ export function ExpedientesPage() {
               {!isLoading &&
                 !isError &&
                 visible.map(expediente => (
-                  <ExpedienteRow key={expediente.id} expediente={expediente} />
+                  <ExpedienteRow key={expediente.id} expediente={expediente} isActive={expediente.id === drawerId} />
                 ))}
             </div>
           </div>

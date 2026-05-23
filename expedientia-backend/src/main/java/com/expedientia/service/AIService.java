@@ -145,7 +145,7 @@ public class AIService {
             throw e;
         } catch (Exception e) {
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
-                    "No se pudo extraer la información del documento PDF");
+                    "No se pudo extraer la información del documento PDF: " + e.getMessage());
         }
     }
 
@@ -177,7 +177,7 @@ public class AIService {
             throw e;
         } catch (Exception e) {
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
-                    "No se pudo extraer la información del expediente");
+                    "No se pudo extraer la información del expediente: " + e.getMessage());
         }
     }
 
@@ -212,6 +212,7 @@ public class AIService {
         sb.append("Estado/Etapa procesal: ").append(proceso.estado()).append("\n");
         if (proceso.despacho() != null) sb.append("Despacho: ").append(proceso.despacho()).append("\n");
         if (proceso.resumen() != null) sb.append("Resumen del proceso: ").append(proceso.resumen()).append("\n");
+        if (proceso.resuelve() != null) sb.append("Sección Resuelve: ").append(proceso.resuelve()).append("\n");
         if (proceso.partes() != null && !proceso.partes().isEmpty()) {
             sb.append("Partes:\n");
             proceso.partes().forEach(p ->

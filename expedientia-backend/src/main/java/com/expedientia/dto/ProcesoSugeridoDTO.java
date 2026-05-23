@@ -12,6 +12,7 @@ public record ProcesoSugeridoDTO(
     String despacho,
     String ciudad,
     String resumen,
+    String resuelve,
     List<ParteExtraidaDTO> partes
 ) {
     public record ParteExtraidaDTO(

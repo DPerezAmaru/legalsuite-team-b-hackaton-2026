@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -54,11 +55,6 @@ public class ExpedienteService {
 
         if (req.documentoOrigenId() != null) {
             documentoRepo.findById(req.documentoOrigenId()).ifPresent(exp::setDocumentoOrigen);
-        }
-
-        // Check duplicate radicado
-        if (expedienteRepo.findByRadicado(exp.getRadicado()).isPresent()) {
-            throw new AppException(AppException.Code.DUPLICATE_RADICADO, "Ya existe un expediente con el radicado: " + exp.getRadicado());
         }
 
         Expediente saved = expedienteRepo.save(exp);
@@ -105,6 +101,61 @@ public class ExpedienteService {
         if (req.resuelve() != null) exp.setResuelve(req.resuelve());
         if (req.fechaInicio() != null) exp.setFechaInicio(req.fechaInicio());
         return toDTO(expedienteRepo.save(exp));
+    }
+
+    public record BulkResult(List<ExpedienteDTO> creados, List<String> radicadosDuplicados) {}
+
+    public BulkResult crearMasivo(List<CreateExpedienteRequest> requests, Long usuarioId) {
+        if (requests.isEmpty()) {
+            return new BulkResult(List.of(), List.of());
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        com.expedientia.entity.Usuario usuario = usuarioId != null
+                ? usuarioRepo.findById(usuarioId).orElse(null)
+                : null;
+
+        List<Expediente> expedientes = requests.stream().map(req -> {
+            Expediente exp = new Expediente();
+            exp.setRadicado(req.radicado());
+            exp.setTitulo(req.titulo());
+            exp.setEspecialidad(req.especialidad());
+            exp.setDespacho(req.despacho());
+            exp.setCiudad(req.ciudad());
+            exp.setEstado(req.estado() != null ? req.estado() : Expediente.Estado.ACTIVO);
+            exp.setResumen(req.resumen());
+            exp.setResuelve(req.resuelve());
+            exp.setFechaInicio(req.fechaInicio());
+            exp.setCreatedAt(now);
+            if (usuario != null) exp.setCreadoPor(usuario);
+            if (req.documentoOrigenId() != null) {
+                documentoRepo.findById(req.documentoOrigenId()).ifPresent(exp::setDocumentoOrigen);
+            }
+            return exp;
+        }).toList();
+
+        List<Expediente> savedExps = expedienteRepo.saveAll(expedientes);
+
+        List<Parte> todasPartes = new ArrayList<>();
+        for (int i = 0; i < savedExps.size(); i++) {
+            Expediente saved = savedExps.get(i);
+            CreateExpedienteRequest req = requests.get(i);
+            if (req.partes() != null) {
+                req.partes().forEach(p -> {
+                    Parte parte = new Parte();
+                    parte.setNombre(p.nombre());
+                    parte.setIdentificacion(p.identificacion());
+                    parte.setTipoParticipacion(p.tipoParticipacion());
+                    parte.setExpediente(saved);
+                    todasPartes.add(parte);
+                });
+            }
+        }
+        if (!todasPartes.isEmpty()) {
+            parteRepo.saveAll(todasPartes);
+        }
+
+        return new BulkResult(savedExps.stream().map(this::toDTO).toList(), List.of());
     }
 
     public void eliminar(Long id) {

@@ -6,6 +6,7 @@ public record ChatIntent(
 ) {
     public enum Accion {
         CREAR_EXPEDIENTE,
+        CREAR_EXPEDIENTES_MASIVO,
         LISTAR_EXPEDIENTES,
         OBTENER_EXPEDIENTE,
         LISTAR_TAREAS,

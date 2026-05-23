@@ -1,7 +1,8 @@
 package com.expedientia.dto;
 
+import jakarta.validation.constraints.NotNull;
+
 public record ConfirmarProcesoRequest(
-    int numero,
-    ProcesoSugeridoDTO datos,
+    @NotNull(message = "El campo 'datos' es obligatorio") ProcesoSugeridoDTO datos,
     String nombreArchivo
 ) {}

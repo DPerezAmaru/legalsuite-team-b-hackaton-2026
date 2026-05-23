@@ -6,7 +6,8 @@ public record BulkAnalisisResponse(
     int totalArchivos,
     int totalProcesosEncontrados,
     List<ProcesoEncontrado> procesos,
-    List<ArchivoOmitido> omitidos
+    List<ArchivoOmitido> omitidos,
+    String promptCombinado
 ) {
     public record ProcesoEncontrado(
         int indice,

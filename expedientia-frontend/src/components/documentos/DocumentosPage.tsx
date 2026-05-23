@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { CircleNotch, Info, Warning, UploadSimple, Sparkle, FolderPlus, CaretRight, FileText } from '@phosphor-icons/react'
+import { CircleNotchIcon, InfoIcon, WarningIcon, UploadSimpleIcon, SparkleIcon, FolderPlusIcon, CaretRightIcon, FileTextIcon } from '@phosphor-icons/react'
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
 import { ProcesoCard } from './ProcesoCard'
@@ -184,9 +184,9 @@ export function DocumentosPage() {
 
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: <UploadSimple />, step: '1', title: 'Subí los PDFs', desc: 'Hasta 5 documentos judiciales en formato PDF.' },
-              { icon: <Sparkle />,      step: '2', title: 'La IA analiza', desc: 'Extrae radicado, partes, juzgado y más.' },
-              { icon: <FolderPlus />,   step: '3', title: 'Creá los expedientes', desc: 'Revisá los datos y confirmá con un clic.' },
+              { icon: <UploadSimpleIcon />, step: '1', title: 'Subí los PDFs', desc: 'Hasta 5 documentos judiciales en formato PDF.' },
+              { icon: <SparkleIcon />,      step: '2', title: 'La IA analiza', desc: 'Extrae radicado, partes, juzgado y más.' },
+              { icon: <FolderPlusIcon />,   step: '3', title: 'Creá los expedientes', desc: 'Revisá los datos y confirmá con un clic.' },
             ].map(({ icon, step, title, desc }) => (
               <div key={step} className="flex flex-col gap-3 p-4 rounded-xl border border-border bg-bg-subtle">
                 <div className="flex items-center gap-2">
@@ -211,7 +211,7 @@ export function DocumentosPage() {
   if (state.stage === 'processing') {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-3">
-        <CircleNotch className="animate-spin text-fg-secondary" />
+        <CircleNotchIcon className="animate-spin text-fg-secondary" />
         <p className="text-sm text-fg-secondary">Analizando {state.files.length > 1 ? `${state.files.length} documentos` : 'documento'} con IA...</p>
         <p className="text-xs text-fg-tertiary">{state.files.map(f => f.name).join(', ')}</p>
       </div>
@@ -226,9 +226,9 @@ export function DocumentosPage() {
     <div className="flex flex-col h-full">
       <nav className="flex items-center gap-1 px-4 py-2 border-b border-border shrink-0">
         <Link to="/expedientes" className="text-xs text-fg-tertiary hover:text-fg-secondary transition-colors">Expedientes</Link>
-        <CaretRight className="text-fg-tertiary" size={12} />
+        <CaretRightIcon className="text-fg-tertiary" size={12} />
         <Link to="/expedientes/nuevo" className="text-xs text-fg-tertiary hover:text-fg-secondary transition-colors">Nuevo expediente</Link>
-        <CaretRight className="text-fg-tertiary" size={12} />
+        <CaretRightIcon className="text-fg-tertiary" size={12} />
         <span className="text-xs text-fg-secondary">Desde documento</span>
       </nav>
 
@@ -249,7 +249,7 @@ export function DocumentosPage() {
                       : 'text-fg-tertiary hover:text-fg-secondary hover:bg-bg-subtle',
                   ].join(' ')}
                 >
-                  <FileText size={12} />
+                  <FileTextIcon  size={12} />
                   {f.name}
                 </button>
               ))}
@@ -274,9 +274,9 @@ export function DocumentosPage() {
               ].join(' ')}
             >
               {hasProcesos ? (
-                <Info className="text-ai-text mt-0.5 shrink-0" />
+                <InfoIcon className="text-ai-text mt-0.5 shrink-0" />
               ) : (
-                <Warning className="text-fg-secondary mt-0.5 shrink-0" />
+                <WarningIcon className="text-fg-secondary mt-0.5 shrink-0" />
               )}
               <p className={['text-xs leading-relaxed', hasProcesos ? 'text-ai-text' : 'text-fg-body'].join(' ')}>
                 {hasProcesos
@@ -303,7 +303,7 @@ export function DocumentosPage() {
                       className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-cta-bg text-cta-text rounded-lg hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {bulkCreating
-                        ? <><CircleNotch className="animate-spin" />Creando...</>
+                        ? <><CircleNotchIcon className="animate-spin" />Creando...</>
                         : `Crear seleccionados (${pendingSelected.length})`}
                     </button>
                   </div>

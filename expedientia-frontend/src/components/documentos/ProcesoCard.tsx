@@ -41,6 +41,8 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
   onToggleSelect,
 }, ref) {
   const [open, setOpen] = useState(defaultOpen)
+  const [resuelveExpanded, setResuelveExpanded] = useState(false)
+  const RESUELVE_LIMIT = 300
 
   const update = <K extends keyof DocumentoFormState>(key: K, value: DocumentoFormState[K]) =>
     onFormChange({ ...form, [key]: value })
@@ -123,6 +125,26 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
             <div className="px-4 py-3 border-t border-border bg-bg-subtle">
               <p className="text-[10px] uppercase tracking-wide text-fg-tertiary mb-1">Resumen IA</p>
               <p className="text-xs text-fg-body leading-relaxed">{form.resumen}</p>
+            </div>
+          )}
+
+          {form.resuelve && (
+            <div className="px-4 py-3 border-t border-border bg-bg-subtle">
+              <p className="text-[10px] uppercase tracking-wide text-fg-tertiary mb-1">Resuelve</p>
+              <p className="text-xs text-fg-body leading-relaxed whitespace-pre-line">
+                {resuelveExpanded || form.resuelve.length <= RESUELVE_LIMIT
+                  ? form.resuelve
+                  : `${form.resuelve.slice(0, RESUELVE_LIMIT).trimEnd()}…`}
+              </p>
+              {form.resuelve.length > RESUELVE_LIMIT && (
+                <button
+                  type="button"
+                  onClick={() => setResuelveExpanded(e => !e)}
+                  className="mt-1.5 text-[10px] text-fg-secondary hover:text-fg-primary transition-colors"
+                >
+                  {resuelveExpanded ? 'Ver menos' : 'Ver más'}
+                </button>
+              )}
             </div>
           )}
 

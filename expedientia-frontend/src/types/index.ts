@@ -41,6 +41,7 @@ export const ExpedienteSchema = z.object({
   ciudad: z.string().nullable().optional(),
   estado: EstadoExpedienteSchema,
   resumen: z.string().nullable().optional(),
+  resuelve: z.string().nullable().optional(),
   fechaInicio: z.string().nullable().optional(),
   createdAt: z.string(),
   creadoPorId: z.number().nullable().optional(),

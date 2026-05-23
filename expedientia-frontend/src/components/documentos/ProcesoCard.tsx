@@ -18,21 +18,25 @@ const ESTADOS: readonly EstadoExpediente[] = ['ACTIVO', 'CERRADO', 'ARCHIVADO']
 interface ProcesoCardProps {
   numero: number
   form: DocumentoFormState
+  archivoOrigen?: string
   defaultOpen?: boolean
   createdExpedienteId?: number
   isCreating: boolean
   onFormChange: (form: DocumentoFormState) => void
   onCrear: () => void
+  onSelectFile?: () => void
 }
 
 export function ProcesoCard({
   numero,
   form,
+  archivoOrigen,
   defaultOpen = false,
   createdExpedienteId,
   isCreating,
   onFormChange,
   onCrear,
+  onSelectFile,
 }: ProcesoCardProps) {
   const [open, setOpen] = useState(defaultOpen)
 
@@ -70,6 +74,15 @@ export function ProcesoCard({
           <p className="text-xs text-fg-tertiary truncate mt-0.5">
             {form.radicado || 'sin radicado'}
           </p>
+          {archivoOrigen && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onSelectFile?.() }}
+              className="text-[10px] text-fg-tertiary hover:text-fg-secondary transition-colors truncate mt-0.5 text-left block max-w-full"
+            >
+              {archivoOrigen}
+            </button>
+          )}
         </div>
       </button>
 

@@ -58,14 +58,22 @@ export const ProcesoSugeridoSchema = z.object({
   despacho: z.string().nullish().transform(v => v ?? ''),
   ciudad: z.string().nullish().transform(v => v ?? ''),
   resumen: z.string().nullish().transform(v => v ?? ''),
+  resuelve: z.string().nullish().transform(v => v ?? ''),
   partes: z.array(ParteSchema).default([]),
 })
 
+export const BulkProcesoSchema = z.object({
+  indice: z.number(),
+  archivoOrigen: z.string(),
+  datos: ProcesoSugeridoSchema,
+})
+
 export const ProcesarDocumentoResponseSchema = z.object({
-  numeroExpedientesEncontrados: z.number().default(0),
-  sugerenciaTexto: z.string().nullish().transform(v => v ?? ''),
-  procesos: z.array(ProcesoSugeridoSchema).default([]),
-  promptsSugeridos: z.array(z.string()).default([]),
+  totalArchivos: z.number().default(0),
+  totalProcesosEncontrados: z.number().default(0),
+  procesos: z.array(BulkProcesoSchema).default([]),
+  omitidos: z.array(z.string()).default([]),
+  promptCombinado: z.string().nullish().transform(v => v ?? ''),
 })
 
 // Tipos inferidos
@@ -79,6 +87,7 @@ export type Parte = z.infer<typeof ParteSchema>
 export type Tarea = z.infer<typeof TareaSchema>
 export type Expediente = z.infer<typeof ExpedienteSchema>
 export type ProcesoSugerido = z.infer<typeof ProcesoSugeridoSchema>
+export type BulkProceso = z.infer<typeof BulkProcesoSchema>
 export type ProcesarDocumentoResponse = z.infer<typeof ProcesarDocumentoResponseSchema>
 
 // ─── CHAT API (respuesta de /api/expedientes/chat) ────────────────────────────

@@ -1,17 +1,17 @@
 import { create } from 'zustand'
 
 interface DocumentosStore {
-  pendingFile: File | null
-  setPendingFile: (file: File) => void
-  consumePendingFile: () => File | null
+  pendingFiles: File[]
+  setPendingFiles: (files: File[]) => void
+  consumePendingFiles: () => File[]
 }
 
 export const useDocumentosStore = create<DocumentosStore>((set, get) => ({
-  pendingFile: null,
-  setPendingFile: (file) => set({ pendingFile: file }),
-  consumePendingFile: () => {
-    const file = get().pendingFile
-    if (file) set({ pendingFile: null })
-    return file
+  pendingFiles: [],
+  setPendingFiles: (files) => set({ pendingFiles: files }),
+  consumePendingFiles: () => {
+    const files = get().pendingFiles
+    if (files.length) set({ pendingFiles: [] })
+    return files
   },
 }))

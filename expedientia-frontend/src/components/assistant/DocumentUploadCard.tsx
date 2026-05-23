@@ -4,28 +4,35 @@ import { FileText } from '@phosphor-icons/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useDocumentosStore } from '../../store/documentosStore'
 
+const MAX_FILES = 5
+
 export function DocumentUploadCard() {
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const setPendingFile = useDocumentosStore(s => s.setPendingFile)
+  const setPendingFiles = useDocumentosStore(s => s.setPendingFiles)
   const navigate = useNavigate()
 
-  const handleFile = (file: File) => {
-    if (file.type !== 'application/pdf') return
-    setPendingFile(file)
+  function pickPdfs(fileList: FileList | null): File[] {
+    if (!fileList) return []
+    return Array.from(fileList)
+      .filter(f => f.type === 'application/pdf')
+      .slice(0, MAX_FILES)
+  }
+
+  const handleFiles = (files: File[]) => {
+    if (!files.length) return
+    setPendingFiles(files)
     navigate({ to: '/expedientes/desde-documento' })
   }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleFile(file)
+    handleFiles(pickPdfs(e.dataTransfer.files))
   }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleFile(file)
+    handleFiles(pickPdfs(e.target.files ?? null))
     if (inputRef.current) inputRef.current.value = ''
   }
 
@@ -50,13 +57,14 @@ export function DocumentUploadCard() {
           Crear expediente desde documento
         </p>
         <p className="text-xs text-fg-tertiary mt-0.5">
-          {isDragging ? 'Soltá el PDF acá' : 'Arrastrá un PDF o hacé clic para seleccionarlo'}
+          {isDragging ? 'Soltá los PDFs acá' : 'Arrastrá hasta 5 PDFs o hacé clic para seleccionarlos'}
         </p>
       </div>
       <input
         ref={inputRef}
         type="file"
         accept="application/pdf"
+        multiple
         className="hidden"
         onChange={handleChange}
       />

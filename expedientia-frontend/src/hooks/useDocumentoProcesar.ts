@@ -1,17 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import { ProcesarDocumentoResponseSchema, type ProcesarDocumentoResponse } from '../types'
 
-const USUARIO_ID_MOCK = '1'
-
-async function procesarDocumento(file: File): Promise<ProcesarDocumentoResponse> {
+async function analizarDocumentos(files: File[]): Promise<ProcesarDocumentoResponse> {
   const body = new FormData()
-  body.append('file', file)
-  body.append('usuarioId', USUARIO_ID_MOCK)
-  const res = await fetch('/api/documentos/procesar', { method: 'POST', body })
-  if (!res.ok) throw new Error(`Error ${res.status}: no se pudo procesar el documento`)
+  for (const file of files) body.append('files', file)
+  const res = await fetch('/api/documentos/bulk/analizar', { method: 'POST', body })
+  if (!res.ok) throw new Error(`Error ${res.status}: no se pudo analizar los documentos`)
   return ProcesarDocumentoResponseSchema.parse(await res.json())
 }
 
 export function useDocumentoProcesar() {
-  return useMutation({ mutationFn: procesarDocumento })
+  return useMutation({ mutationFn: analizarDocumentos })
 }

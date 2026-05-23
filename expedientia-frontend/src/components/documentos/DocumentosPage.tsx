@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { CircleNotch, Info, Warning, UploadSimple, Sparkle, FolderPlus } from '@phosphor-icons/react'
+import { Link } from '@tanstack/react-router'
+import { CircleNotch, Info, Warning, UploadSimple, Sparkle, FolderPlus, CaretRight } from '@phosphor-icons/react'
 import { UploadZone } from './UploadZone'
 import { PdfViewer } from './PdfViewer'
 import { ProcesoCard } from './ProcesoCard'
@@ -187,11 +188,13 @@ export function DocumentosPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border shrink-0">
-        <span className="text-xs text-fg-tertiary">Asistente</span>
-        <span className="text-xs text-fg-tertiary">/</span>
-        <span className="text-xs text-fg-secondary">Crear desde documento</span>
-      </div>
+      <nav className="flex items-center gap-1 px-4 py-2 border-b border-border shrink-0">
+        <Link to="/expedientes" className="text-xs text-fg-tertiary hover:text-fg-secondary transition-colors">Expedientes</Link>
+        <CaretRight className="text-fg-tertiary" size={12} />
+        <Link to="/expedientes/nuevo" className="text-xs text-fg-tertiary hover:text-fg-secondary transition-colors">Nuevo expediente</Link>
+        <CaretRight className="text-fg-tertiary" size={12} />
+        <span className="text-xs text-fg-secondary">Desde documento</span>
+      </nav>
 
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 min-w-0">

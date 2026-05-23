@@ -18,11 +18,36 @@ function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+// PDFs often use Unicode dash variants instead of ASCII hyphen.
+// Also expands compound values (radicados, IDs) into their segments
+// so cross-span splits don't silently break matches.
+const DASH_CLASS = '[-‐‑‒–—−]'
+
+function expandTerms(terms: string[]): string[] {
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const raw of terms) {
+    const t = raw.trim()
+    if (!t) continue
+    if (t.length >= 4 && !seen.has(t)) { seen.add(t); result.push(t) }
+    for (const seg of t.split(/[-‐-—−\s/]+/)) {
+      if (seg.length >= 4 && !seen.has(seg)) { seen.add(seg); result.push(seg) }
+    }
+  }
+  return result
+}
+
+function termToPattern(term: string): string {
+  // Escape special regex chars, then replace escaped hyphens with a
+  // character class that matches all Unicode dash variants.
+  return escapeRegex(term).replace(/\\-/g, DASH_CLASS)
+}
+
 function buildRenderer(terms: string[]) {
-  const active = terms.filter((t) => t && t.trim().length >= 4)
+  const active = expandTerms(terms)
   if (!active.length) return ({ str }: { str: string }) => escapeHtml(str)
 
-  const pattern = new RegExp(active.map(escapeRegex).join('|'), 'gi')
+  const pattern = new RegExp(active.map(termToPattern).join('|'), 'gi')
 
   return ({ str }: { str: string }) => {
     let result = ''

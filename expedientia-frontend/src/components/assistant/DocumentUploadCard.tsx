@@ -13,7 +13,7 @@ export function DocumentUploadCard() {
   const handleFile = (file: File) => {
     if (file.type !== 'application/pdf') return
     setPendingFile(file)
-    navigate({ to: '/documentos/' })
+    navigate({ to: '/expedientes/desde-documento' })
   }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {

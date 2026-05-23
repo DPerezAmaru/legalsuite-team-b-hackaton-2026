@@ -2,7 +2,6 @@ package com.expedientia.service;
 
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.DocumentoAnalisisResponse;
-import com.expedientia.dto.ProcesoSugeridoDTO;
 import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Tarea;
 import com.expedientia.exception.AppException;
@@ -142,21 +141,6 @@ public class AIService {
             }
             """;
 
-    private static final String SYSTEM_TAREAS = """
-            Sos un asistente legal colombiano experto. Con base en la información del proceso judicial que te proporcionan, generá tareas procesales concretas y accionables para el abogado responsable.
-
-            Tené en cuenta:
-            - La especialidad del proceso (rama del derecho)
-            - El estado/etapa procesal actual
-            - Las partes involucradas y sus roles
-            - El resumen del proceso, especialmente lo que ordenó el despacho en la sección "Resuelve" si está disponible
-
-            Generá entre 3 y 6 tareas CONCRETAS, ESPECÍFICAS y ACCIONABLES. No generes tareas genéricas.
-            Cada tarea debe mencionar términos legales reales (traslados, notificaciones, audiencias, memoriales, recursos, etc.)
-            Respondé ÚNICAMENTE con un array JSON de strings, sin explicaciones ni markdown.
-            Ejemplo: ["Radicar memorial de traslado dentro de los 3 días siguientes al auto", "Verificar notificación del auto admisorio a todas las partes demandadas"]
-            """;
-
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
 
@@ -178,22 +162,6 @@ public class AIService {
         } catch (Exception e) {
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
                     "No se pudo extraer la información del documento PDF: " + e.getMessage());
-        }
-    }
-
-    public List<String> generarTareasParaProceso(ProcesoSugeridoDTO proceso) {
-        String contexto = buildContextoTareas(proceso);
-        try {
-            String raw = chatClient.prompt()
-                    .system(SYSTEM_TAREAS)
-                    .user(contexto)
-                    .call()
-                    .content();
-            String json = raw.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
-            return objectMapper.readValue(json,
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
-        } catch (Exception e) {
-            return List.of();
         }
     }
 
@@ -253,22 +221,6 @@ public class AIService {
                 .user(prompt)
                 .call()
                 .content();
-    }
-
-    private String buildContextoTareas(ProcesoSugeridoDTO proceso) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Especialidad: ").append(proceso.especialidad()).append("\n");
-        sb.append("Estado/Etapa procesal: ").append(proceso.estado()).append("\n");
-        if (proceso.despacho() != null) sb.append("Despacho: ").append(proceso.despacho()).append("\n");
-        if (proceso.resumen() != null) sb.append("Resumen del proceso: ").append(proceso.resumen()).append("\n");
-        if (proceso.resuelve() != null) sb.append("Sección Resuelve: ").append(proceso.resuelve()).append("\n");
-        if (proceso.partes() != null && !proceso.partes().isEmpty()) {
-            sb.append("Partes:\n");
-            proceso.partes().forEach(p ->
-                sb.append("  - ").append(p.tipoParticipacion()).append(": ").append(p.nombre()).append("\n")
-            );
-        }
-        return sb.toString();
     }
 
     private <T> T parse(String raw, Class<T> type) {

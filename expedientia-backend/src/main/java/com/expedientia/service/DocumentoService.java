@@ -3,8 +3,6 @@ package com.expedientia.service;
 import com.expedientia.dto.BulkAnalisisResponse;
 import com.expedientia.dto.BulkConfirmarRequest;
 import com.expedientia.dto.BulkConfirmarResponse;
-import com.expedientia.dto.ConfirmarProcesoRequest;
-import com.expedientia.dto.ConfirmarProcesoResponse;
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.DocumentoAnalisisResponse;
 import com.expedientia.dto.ExpedienteDTO;
@@ -54,57 +52,6 @@ public class DocumentoService {
         this.usuarioRepo = usuarioRepo;
         this.expedienteService = expedienteService;
         this.normalizer = normalizer;
-    }
-
-    @Transactional(readOnly = true)
-    public DocumentoAnalisisResponse procesar(MultipartFile file) {
-        PdfTextExtractorService.ExtractionResult result = extractor.extract(file);
-        DocumentoAnalisisResponse analisis = aiService.extraerProcesos(result.textForExtraction());
-
-        if (!analisis.esDocumentoJudicial()) {
-            throw new AppException(AppException.Code.PDF_NOT_JUDICIAL,
-                    "El documento no parece ser un expediente judicial colombiano. " +
-                    "Solo se aceptan autos, sentencias, demandas, memoriales y documentos procesales.");
-        }
-
-        return analisis;
-    }
-
-    public ConfirmarProcesoResponse confirmar(ConfirmarProcesoRequest request, Long usuarioId) {
-        ProcesoSugeridoDTO datos = request.datos();
-
-        Documento documento = new Documento();
-        documento.setNombreArchivo(request.nombreArchivo());
-        documento.setRutaArchivo("uploads/" + request.nombreArchivo());
-        documento.setContenidoExtraido(datos.resumen());
-        documento.setEstadoProcesamiento(Documento.EstadoProcesamiento.PROCESADO);
-        documento.setFechaSubida(LocalDateTime.now());
-
-        if (usuarioId != null) {
-            usuarioRepo.findById(usuarioId).ifPresent(documento::setSubidoPor);
-        }
-
-        Documento savedDoc = documentoRepo.save(documento);
-
-        CreateExpedienteRequest req = new CreateExpedienteRequest(
-                datos.radicado(),
-                datos.titulo(),
-                datos.especialidad(),
-                datos.despacho(),
-                datos.ciudad(),
-                datos.estado(),
-                datos.resumen(),
-                datos.resuelve(),
-                null,
-                savedDoc.getId(),
-                mapPartes(datos.partes())
-        );
-
-        CreateExpedienteRequest normalized = normalizer.normalize(req);
-        ExpedienteDTO expedienteDTO = expedienteService.crear(normalized, usuarioId);
-        List<String> tareas = aiService.generarTareasParaProceso(datos);
-
-        return new ConfirmarProcesoResponse(expedienteDTO, tareas);
     }
 
     @Transactional(readOnly = true)

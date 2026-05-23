@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { CircleNotch, Info, Warning, UploadSimple, Sparkle, FolderPlus, CaretRight, FileText } from '@phosphor-icons/react'
 import { UploadZone } from './UploadZone'
@@ -42,8 +42,13 @@ export function DocumentosPage() {
   const [state, setState] = useState<PageState>({ stage: 'idle' })
   const [creatingIndex, setCreatingIndex] = useState<number | null>(null)
   const [selectedFileIdx, setSelectedFileIdx] = useState(0)
+  const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set())
+  const [bulkCreating, setBulkCreating] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 })
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const panelScrollRef = useRef<HTMLDivElement>(null)
   const { mutateAsync: procesarDocumento } = useDocumentoProcesar()
-  const { mutate: crearExpediente } = useCrearExpediente()
+  const { mutate: crearExpediente, mutateAsync: crearExpedienteAsync } = useCrearExpediente()
   const consumePendingFiles = useDocumentosStore(s => s.consumePendingFiles)
 
   const handleFiles = useCallback(
@@ -55,6 +60,7 @@ export function DocumentosPage() {
         const forms = response.procesos.map(p => procesoToForm(p.datos))
         const archivoOrigen = response.procesos.map(p => p.archivoOrigen)
         setState({ stage: 'review', files, response, forms, archivoOrigen, createdIds: {} })
+        setSelectedIndexes(new Set(forms.map((_, i) => i)))
       } catch {
         setState({
           stage: 'review',
@@ -80,6 +86,21 @@ export function DocumentosPage() {
     if (files.length) handleFiles(files)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (state.stage !== 'review') return
+    const fileName = state.files[selectedFileIdx]?.name
+    const firstIdx = state.archivoOrigen.findIndex(o => o === fileName)
+    const card = cardRefs.current[firstIdx]
+    const container = panelScrollRef.current
+    if (!card || !container) return
+    const cardRect = card.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    container.scrollTo({
+      top: cardRect.top - containerRect.top + container.scrollTop - 12,
+      behavior: 'smooth',
+    })
+  }, [selectedFileIdx]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFormChange = useCallback((index: number, form: DocumentoFormState) => {
     setState((prev) => {
@@ -121,10 +142,53 @@ export function DocumentosPage() {
     [state, crearExpediente],
   )
 
+  const handleToggleSelect = useCallback((idx: number) => {
+    setSelectedIndexes(prev => {
+      const next = new Set(prev)
+      if (next.has(idx)) next.delete(idx)
+      else next.add(idx)
+      return next
+    })
+  }, [])
+
+  const handleCrearSeleccionados = useCallback(async () => {
+    if (state.stage !== 'review') return
+    const pending = [...selectedIndexes].filter(i => state.createdIds[i] === undefined)
+    if (!pending.length) return
+    setBulkCreating(true)
+    setBulkProgress({ current: 0, total: pending.length })
+    for (let i = 0; i < pending.length; i++) {
+      const idx = pending[i]
+      const form = state.forms[idx]
+      if (!form) continue
+      setBulkProgress({ current: i + 1, total: pending.length })
+      try {
+        const exp = await crearExpedienteAsync({
+          radicado: form.radicado,
+          titulo: form.titulo,
+          especialidad: form.especialidad,
+          despacho: form.despacho || undefined,
+          ciudad: form.ciudad || undefined,
+          estado: form.estado,
+          resumen: form.resumen || undefined,
+          fechaInicio: form.fechaInicio,
+          partes: form.partes,
+        })
+        setState(prev =>
+          prev.stage === 'review'
+            ? { ...prev, createdIds: { ...prev.createdIds, [idx]: exp.id } }
+            : prev,
+        )
+      } catch { /* sigue con el siguiente */ }
+    }
+    setBulkCreating(false)
+  }, [state, selectedIndexes, crearExpedienteAsync])
+
   const handleReplace = useCallback(() => {
     setState({ stage: 'idle' })
     setCreatingIndex(null)
     setSelectedFileIdx(0)
+    setSelectedIndexes(new Set())
   }, [])
 
   const highlightValues = useMemo(() => {
@@ -259,24 +323,51 @@ export function DocumentosPage() {
           </div>
 
           {hasProcesos ? (
-            <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-2.5">
+            <div ref={panelScrollRef} className="flex-1 overflow-y-auto pb-4 flex flex-col">
+              {/* Bulk action bar */}
+              {(() => {
+                const pendingSelected = [...selectedIndexes].filter(i => createdIds[i] === undefined)
+                return (
+                  <div className="px-4 pt-3 pb-2 flex items-center justify-between shrink-0">
+                    <span className="text-xs text-fg-tertiary">
+                      {selectedIndexes.size} de {forms.length} seleccionado{forms.length !== 1 ? 's' : ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCrearSeleccionados}
+                      disabled={pendingSelected.length === 0 || bulkCreating}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-cta-bg text-cta-text rounded-lg hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {bulkCreating
+                        ? <><CircleNotch className="animate-spin" />Creando {bulkProgress.current} de {bulkProgress.total}...</>
+                        : `Crear seleccionados (${pendingSelected.length})`}
+                    </button>
+                  </div>
+                )
+              })()}
+              <div className="px-4 space-y-2.5">
               {forms.map((form, idx) => (
                 <ProcesoCard
                   key={idx}
+                  ref={el => { cardRefs.current[idx] = el }}
                   numero={idx + 1}
                   form={form}
                   archivoOrigen={state.archivoOrigen[idx]}
+                  isActiveFile={state.archivoOrigen[idx] === selectedFile?.name}
+                  isSelected={selectedIndexes.has(idx)}
                   defaultOpen={idx === 0}
                   createdExpedienteId={createdIds[idx]}
                   isCreating={creatingIndex === idx}
                   onFormChange={(f) => handleFormChange(idx, f)}
                   onCrear={() => handleCrear(idx)}
+                  onToggleSelect={() => handleToggleSelect(idx)}
                   onSelectFile={() => {
                     const fileIdx = files.findIndex(f => f.name === state.archivoOrigen[idx])
                     if (fileIdx >= 0) setSelectedFileIdx(fileIdx)
                   }}
                 />
               ))}
+              </div>
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">

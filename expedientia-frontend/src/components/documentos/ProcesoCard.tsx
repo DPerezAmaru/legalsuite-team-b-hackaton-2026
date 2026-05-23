@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, forwardRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { CaretDown, CaretRight, CircleNotch, CheckCircle } from '@phosphor-icons/react'
+import { CaretDown, CaretRight, CircleNotch, CheckCircle, Check } from '@phosphor-icons/react'
 import { ExtraccionField } from './ExtraccionField'
 import { PartesEditor } from './PartesEditor'
 import type {
@@ -19,25 +19,31 @@ interface ProcesoCardProps {
   numero: number
   form: DocumentoFormState
   archivoOrigen?: string
+  isActiveFile?: boolean
+  isSelected?: boolean
   defaultOpen?: boolean
   createdExpedienteId?: number
   isCreating: boolean
   onFormChange: (form: DocumentoFormState) => void
   onCrear: () => void
   onSelectFile?: () => void
+  onToggleSelect?: () => void
 }
 
-export function ProcesoCard({
+export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function ProcesoCard({
   numero,
   form,
   archivoOrigen,
+  isActiveFile = false,
+  isSelected = true,
   defaultOpen = false,
   createdExpedienteId,
   isCreating,
   onFormChange,
   onCrear,
   onSelectFile,
-}: ProcesoCardProps) {
+  onToggleSelect,
+}, ref) {
   const [open, setOpen] = useState(defaultOpen)
 
   const update = <K extends keyof DocumentoFormState>(key: K, value: DocumentoFormState[K]) =>
@@ -49,42 +55,60 @@ export function ProcesoCard({
   const isCreated = createdExpedienteId !== undefined
 
   return (
-    <div className="border border-border rounded-xl bg-bg-base overflow-hidden">
-      {/* Header */}
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-2 px-3.5 py-3 text-left hover:bg-bg-subtle transition-colors"
-      >
-        {open
-          ? <CaretDown className="text-fg-tertiary shrink-0" />
-          : <CaretRight className="text-fg-tertiary shrink-0" />}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-fg-primary">Proceso {numero}</span>
-            <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-bg-muted text-fg-secondary">
-              {form.especialidad}
-            </span>
-            {isCreated && (
-              <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-cta-bg/10 text-cta-bg">
-                <CheckCircle /> Creado
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-fg-tertiary truncate mt-0.5">
-            {form.radicado || 'sin radicado'}
-          </p>
-          {archivoOrigen && (
+    <div
+      ref={ref}
+      className={`border rounded-xl bg-bg-base overflow-hidden transition-colors ${isActiveFile ? 'border-fg-secondary' : 'border-border'}`}
+    >
+      <div className="flex items-stretch">
+        {onToggleSelect && (
+          <div className="flex items-center pl-3.5 pr-1 shrink-0">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onSelectFile?.() }}
-              className="text-[10px] text-fg-tertiary hover:text-fg-secondary transition-colors truncate mt-0.5 text-left block max-w-full"
+              role="checkbox"
+              aria-checked={isSelected}
+              onClick={onToggleSelect}
+              disabled={isCreated}
+              className={[
+                'w-4 h-4 rounded flex items-center justify-center border transition-colors shrink-0',
+                'disabled:opacity-40 disabled:cursor-not-allowed',
+                isSelected
+                  ? 'bg-cta-bg border-cta-bg'
+                  : 'bg-bg-base border-border hover:border-border-strong',
+              ].join(' ')}
             >
-              {archivoOrigen}
+              {isSelected && <Check size={10} weight="bold" className="text-cta-text" />}
             </button>
-          )}
-        </div>
-      </button>
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => { setOpen((o) => !o); onSelectFile?.() }}
+          className="flex-1 flex items-center gap-2 px-3.5 py-3 text-left hover:bg-bg-subtle transition-colors min-w-0"
+        >
+          {open
+            ? <CaretDown className="text-fg-tertiary shrink-0" />
+            : <CaretRight className="text-fg-tertiary shrink-0" />}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-medium text-fg-primary">Proceso {numero}</span>
+              <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-bg-muted text-fg-secondary">
+                {form.especialidad}
+              </span>
+              {isCreated && (
+                <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-cta-bg/10 text-cta-bg">
+                  <CheckCircle /> Creado
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-fg-tertiary truncate mt-0.5">
+              {form.radicado || 'sin radicado'}
+            </p>
+            {archivoOrigen && (
+              <p className="text-[10px] text-fg-tertiary truncate mt-0.5">{archivoOrigen}</p>
+            )}
+          </div>
+        </button>
+      </div>
 
       {open && (
         <div className="border-t border-border">
@@ -107,8 +131,8 @@ export function ProcesoCard({
             </div>
           )}
 
-          <div className="px-4 py-3 border-t border-border flex items-center justify-end gap-2">
-            {isCreated ? (
+          {isCreated && (
+            <div className="px-4 py-3 border-t border-border flex items-center justify-end">
               <Link
                 to="/expedientes/$expedienteId"
                 params={{ expedienteId: String(createdExpedienteId) }}
@@ -116,20 +140,10 @@ export function ProcesoCard({
               >
                 Ver expediente
               </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={onCrear}
-                disabled={!canCreate || isCreating}
-                className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-cta-bg text-cta-text rounded-lg hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {isCreating && <CircleNotch className="animate-spin" />}
-                {isCreating ? 'Creando...' : 'Crear expediente'}
-              </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   )
-}
+})

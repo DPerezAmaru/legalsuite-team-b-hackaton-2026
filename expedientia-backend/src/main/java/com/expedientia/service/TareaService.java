@@ -57,6 +57,10 @@ public class TareaService {
         return toDTO(findById(id));
     }
 
+    public List<TareaDTO> listar() {
+        return tareaRepo.findAll().stream().map(this::toDTO).toList();
+    }
+
     public List<TareaDTO> listarPorExpediente(Long expedienteId) {
         return tareaRepo.findByExpediente_Id(expedienteId)
                 .stream().map(this::toDTO).toList();

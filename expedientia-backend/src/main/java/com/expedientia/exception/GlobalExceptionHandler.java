@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
@@ -54,6 +55,12 @@ public class GlobalExceptionHandler {
                 "El campo '" + campo + "' es obligatorio. Enviá el archivo como form-data con clave '" + campo + "'.");
         pd.setTitle("Archivo faltante");
         return pd;
+    }
+
+    @ExceptionHandler(HttpMessageConversionException.class)
+    public ProblemDetail handleMalformedRequest(HttpMessageConversionException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "El cuerpo del request está malformado: " + ex.getMostSpecificCause().getMessage());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

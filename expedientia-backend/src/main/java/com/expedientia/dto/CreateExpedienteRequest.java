@@ -13,7 +13,7 @@ import java.util.List;
 public record CreateExpedienteRequest(
     @JsonProperty("radicado") String radicado,
     @JsonProperty("titulo") @NotBlank String titulo,
-    @JsonProperty("especialidad") @NotNull Expediente.Especialidad especialidad,
+    @JsonProperty("especialidad") Expediente.Especialidad especialidad,
     @JsonProperty("despacho") String despacho,
     @JsonProperty("ciudad") String ciudad,
     @JsonProperty("estado") Expediente.Estado estado,

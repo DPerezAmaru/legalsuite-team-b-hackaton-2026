@@ -1,43 +1,66 @@
 package com.expedientia.service;
 
 import com.expedientia.dto.ChatIntent;
+import com.expedientia.dto.MensajeHistorial;
 import com.expedientia.exception.AppException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class IntentRouterService {
 
     private static final String SYSTEM_INTENT = """
             Sos el clasificador de acciones de un sistema de gestión de expedientes legales colombianos.
-            Analizá el texto y devolvé el JSON con la acción que el usuario quiere ejecutar.
+            Analizá el texto (y la conversación previa si se proporciona) y devolvé el JSON con la acción que el usuario quiere ejecutar.
 
             ACCIONES DISPONIBLES:
-            - ASISTENTE_CREACION: el usuario quiere crear un expediente pero NO proporciona suficiente información (al menos el tipo de caso y las partes), o pide ayuda/guía para crear uno paso a paso
-            - CREAR_EXPEDIENTE: quiere crear un único expediente y proporciona datos concretos del caso (partes, tipo de proceso, juzgado, etc.)
-            - CREAR_EXPEDIENTES_MASIVO: quiere crear múltiples expedientes a la vez (el prompt contiene 2 o más casos numerados o claramente separados)
+            - ASISTENTE_CREACION: el usuario quiere crear un expediente, guiarlo paso a paso, o proporciona datos de un caso nuevo
+            - CREAR_EXPEDIENTE: quiere crear un único expediente y proporciona datos concretos del caso
+            - CREAR_EXPEDIENTES_MASIVO: quiere crear múltiples expedientes a la vez (2 o más casos)
             - LISTAR_EXPEDIENTES: quiere ver, listar o consultar los expedientes existentes
             - OBTENER_EXPEDIENTE: quiere ver un expediente específico (extraé el radicado si se menciona)
-            - LISTAR_TAREAS: quiere ver las tareas de un expediente (extraé el radicado si se menciona)
-            - SUGERENCIA_JUDICIAL: cualquier pregunta, consulta o duda de carácter legal: consejos sobre casos, referencias a leyes o códigos colombianos, procedimientos judiciales, recursos legales, normativa, doctrina o jurisprudencia
-            - SUGERIR_TAREAS: quiere que se le sugieran tareas para uno o más expedientes por ID (NO las crea, solo sugiere). Extraé los IDs numéricos como lista.
-            - CREAR_TAREAS_EXPEDIENTE: quiere crear o guardar tareas para uno o más expedientes por ID en masa. Extraé los IDs numéricos como lista.
-            - RESUMEN_EXPEDIENTE: quiere un resumen, informe o reporte de un expediente por ID. Extraé el ID como primer elemento de la lista.
-            - ALERTAS_VENCIMIENTO: quiere ver tareas próximas a vencer, alertas o pendientes urgentes
-            - BUSCAR_EXPEDIENTES: quiere buscar o filtrar expedientes por criterios (especialidad, ciudad, estado, juzgado)
-            - NECESITA_ACLARACION: el mensaje es demasiado corto, vago o ambiguo para determinar con certeza qué acción ejecutar (ej: "rama civil", "expediente", "tareas", una sola palabra o frase sin contexto claro)
-            - NO_PERMITIDO: la solicitud es claramente inapropiada, ofensiva o completamente ajena al ámbito legal
+            - LISTAR_TAREAS: quiere ver las tareas de UN expediente específico (extraé el radicado si se menciona)
+            - LISTAR_TODAS_TAREAS: quiere ver todas las tareas del sistema, sin filtrar por expediente ("mis tareas", "todas las tareas", "qué tareas hay")
+            - SUGERENCIA_JUDICIAL: cualquier pregunta, consulta o duda de carácter legal
+            - SUGERIR_TAREAS: quiere que se le sugieran tareas para expedientes por ID o nombre
+            - CREAR_TAREAS_EXPEDIENTE: quiere crear o guardar tareas para un expediente. Extraé el nombre del expediente como expedienteNombre si lo menciona (en cualquier turno de la conversación). Extraé IDs numéricos como expedienteIds si los menciona.
+            - RESUMEN_EXPEDIENTE: quiere un resumen o informe de un expediente por ID
+            - ALERTAS_VENCIMIENTO: quiere ver tareas próximas a vencer o pendientes urgentes
+            - BUSCAR_EXPEDIENTES: quiere buscar o filtrar expedientes por criterios
+            - CREAR_USUARIO: quiere crear un usuario/abogado/asistente en el sistema (extrae nombre, email y rol si los menciona)
+            - CONVERSACION_LIBRE: el usuario quiere conversar, analizar, reflexionar o discutir algo sin pedir que el sistema ejecute una acción concreta. Ejemplos: "ayudame a analizar este caso", "qué pensás de esta situación", "hablemos sobre...", "quiero entender...", preguntas abiertas de análisis
+            - NECESITA_ACLARACION: el mensaje es demasiado corto, vago o ambiguo
+            - NO_PERMITIDO: solicitud inapropiada o completamente ajena al ámbito legal
 
-            REGLA DE MASIVO: si el prompt contiene 2 o más expedientes numerados o separados → CREAR_EXPEDIENTES_MASIVO
-            REGLA DE DUDA: si no está claro pero parece legal → CREAR_EXPEDIENTE
-            REGLA DE IDs: para SUGERIR_TAREAS, CREAR_TAREAS_EXPEDIENTE y RESUMEN_EXPEDIENTE extraé los números de expediente mencionados como lista de enteros en expedienteIds
-            REGLA DE EMPRESA: "Clima S.A." o "Recetas del Valle" en contexto legal → CREAR_EXPEDIENTE
-            REGLA DE PERMISO: cualquier pregunta sobre derecho colombiano, leyes, códigos, normativa, jurisprudencia, doctrina, trámites judiciales o un caso/expediente → SUGERENCIA_JUDICIAL. Solo usá NO_PERMITIDO para temas completamente ajenos al derecho (recetas, deportes, entretenimiento, tecnología sin relación legal).
-            REGLA DE AMBIGÜEDAD: si el mensaje tiene menos de 4 palabras, es una sola frase sin verbo o no queda claro qué acción ejecutar → NECESITA_ACLARACION.
+            REGLAS (aplicar en orden):
+            - REGLA DE CONTINUACION (PRIORIDAD MÁXIMA): si el mensaje actual es una afirmación, confirmación o selección \
+              ("si", "sí", "ok", "dale", "con ese", "ese mismo", "ese", "el mismo", "correcto", "de acuerdo", \
+              "así", "listo", "el primero", "el segundo", "el 1", "el 2", "ese expediente", "con ese expediente") \
+              Y hay conversación previa → NUNCA clasifiques como SUGERENCIA_JUDICIAL ni NECESITA_ACLARACION. \
+              Buscá la intención original en TODO el historial y mantenela.
+            - REGLA DE LISTA EN CONVERSACION: si la conversación muestra: (1) usuario pidió hacer algo (ej: crear tarea) → \
+              (2) pidió ver lista ("cuales hay", "listar", "muéstrame") → (3) asistente mostró lista con IDs → \
+              (4) usuario confirma o selecciona ("si", "con ese", "el primero", "ese", "el ID X") → \
+              clasificá según la intención ORIGINAL (ej: CREAR_TAREAS_EXPEDIENTE) y extraé el expedienteId \
+              del mensaje del asistente que contenía la lista. El formato del asistente es "ID N: titulo".
+            - REGLA DE EXTRACCION TOTAL: para extraer expedienteIds, expedienteNombre o radicado, revisá TODOS los \
+              turnos del historial incluyendo los mensajes del asistente — los IDs aparecen en formato "ID N: titulo".
+            - REGLA DE CONTEXTO: si hay conversación previa, usá el contexto completo para clasificar el mensaje actual
+            - REGLA DE NOMBRE: si el usuario menciona el nombre de un expediente en cualquier turno → poné ese nombre en expedienteNombre
+            - REGLA DE SELECCIÓN: si el usuario dice "el primero", "1", "el segundo", "2", etc. en respuesta a una lista de expedientes → extraé el ID o nombre del expediente correspondiente de esa lista
+            - REGLA DE MASIVO: si el prompt contiene 2 o más expedientes numerados → CREAR_EXPEDIENTES_MASIVO
+            - REGLA DE IDs: para SUGERIR_TAREAS, CREAR_TAREAS_EXPEDIENTE y RESUMEN_EXPEDIENTE extraé los números de expediente mencionados como lista de enteros en expedienteIds
+            - REGLA DE CONVERSACION: si el usuario quiere analizar, discutir o reflexionar sin pedir acción del sistema → CONVERSACION_LIBRE. Tiene prioridad sobre SUGERENCIA_JUDICIAL cuando el mensaje es conversacional y no una consulta legal puntual.
+            - REGLA DE PERMISO: solo usá NO_PERMITIDO para temas completamente ajenos al derecho
+            - REGLA DE AMBIGÜEDAD: si el mensaje tiene menos de 4 palabras sin verbo Y no hay contexto previo → NECESITA_ACLARACION
+            - REGLA DE CREACION: si el usuario quiere crear un expediente (con o sin historial) → ASISTENTE_CREACION siempre
 
             Respondé ÚNICAMENTE con este JSON (sin texto adicional):
-            {"accion":"CREAR_EXPEDIENTE","radicado":null,"expedienteIds":null}
+            {"accion":"CREAR_EXPEDIENTE","radicado":null,"expedienteIds":null,"expedienteNombre":null}
             """;
 
     private final ChatClient chatClient;
@@ -49,27 +72,52 @@ public class IntentRouterService {
     }
 
     public ChatIntent classify(String prompt) {
+        return classify(prompt, null);
+    }
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IntentRouterService.class);
+
+    public ChatIntent classify(String prompt, List<MensajeHistorial> historial) {
+        String userMessage = buildUserMessage(prompt, historial);
+        log.info("=== INTENT ROUTER — mensaje a Gemini ===\n{}\n========================================", userMessage);
         try {
             String raw = chatClient.prompt()
                     .system(SYSTEM_INTENT)
-                    .user(prompt)
+                    .user(userMessage)
                     .call()
                     .content();
 
+            log.info("=== INTENT ROUTER — respuesta de Gemini ===\n{}\n===========================================", raw);
             String cleaned = raw.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
             int start = cleaned.indexOf('{'); int end = cleaned.lastIndexOf('}');
             String json = (start >= 0 && end > start) ? cleaned.substring(start, end + 1) : cleaned;
             ChatIntent intent = objectMapper.readValue(json, ChatIntent.class);
+            log.info("=== INTENT ROUTER — clasificación final: {} | ids={} | nombre={} | radicado={} ===",
+                    intent.accion(), intent.expedienteIds(), intent.expedienteNombre(), intent.radicado());
 
             if (intent.accion() == ChatIntent.Accion.NO_PERMITIDO) {
-                throw new AppException(AppException.Code.INTENT_BLOCKED_CONTEXT, "Solo puedo realizar acciones del sistema con los permisos otorgados");
+                throw new AppException(AppException.Code.INTENT_BLOCKED_SECURITY,
+                        "Solo puedo realizar acciones del sistema con los permisos otorgados");
             }
 
             return intent;
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
-            return new ChatIntent(ChatIntent.Accion.SUGERENCIA_JUDICIAL, null, null);
+            ChatIntent.Accion fallback = (historial != null && !historial.isEmpty())
+                    ? ChatIntent.Accion.NECESITA_ACLARACION
+                    : ChatIntent.Accion.SUGERENCIA_JUDICIAL;
+            return new ChatIntent(fallback, null, null, null);
         }
+    }
+
+    private String buildUserMessage(String prompt, List<MensajeHistorial> historial) {
+        if (historial == null || historial.isEmpty()) {
+            return prompt;
+        }
+        String contexto = historial.stream()
+                .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
+                .collect(Collectors.joining("\n"));
+        return "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL: " + prompt;
     }
 }

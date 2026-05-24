@@ -3,10 +3,8 @@ package com.expedientia.service;
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Parte;
-import com.expedientia.repository.ExpedienteRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -15,29 +13,18 @@ import java.util.Set;
 @Service
 public class ExtractionNormalizerService {
 
-    private static final Set<String> VALID_ESPECIALIDADES = Set.of(
-        "CIVIL", "PENAL", "LABORAL", "ADMINISTRATIVO", "FAMILIA"
-    );
     private static final Set<String> VALID_PARTICIPACIONES = Set.of(
         "DEMANDANTE", "DEMANDADO", "APODERADO", "TERCERO"
     );
 
-    private final ExpedienteRepository expedienteRepository;
-
-    public ExtractionNormalizerService(ExpedienteRepository expedienteRepository) {
-        this.expedienteRepository = expedienteRepository;
-    }
-
     public CreateExpedienteRequest normalize(CreateExpedienteRequest raw) {
-        String radicado = normalizeRadicado(raw.radicado());
-        String titulo = normalizeTitulo(raw.titulo(), raw.partes(), radicado);
-        Expediente.Especialidad especialidad = normalizeEspecialidad(raw.especialidad());
+        String titulo = normalizeTitulo(raw.titulo(), raw.partes(), raw.radicado());
         List<CreateExpedienteRequest.ParteRequest> partes = normalizePartes(raw.partes());
 
         return new CreateExpedienteRequest(
-            radicado,
+            raw.radicado() != null ? raw.radicado().trim() : null,
             titulo,
-            especialidad,
+            raw.especialidad(),
             trim(raw.despacho()),
             trim(raw.ciudad()),
             normalizeEstado(raw.estado()),
@@ -47,16 +34,6 @@ public class ExtractionNormalizerService {
             raw.documentoOrigenId(),
             partes
         );
-    }
-
-    private String normalizeRadicado(String radicado) {
-        if (radicado != null && !radicado.isBlank()) {
-            return radicado.trim();
-        }
-        // Generate from system: YYYY-NNNNN
-        int year = LocalDate.now().getYear();
-        long count = expedienteRepository.count() + 1;
-        return String.format("%d-%05d", year, count);
     }
 
     private String normalizeTitulo(String titulo, List<CreateExpedienteRequest.ParteRequest> partes, String radicado) {
@@ -79,7 +56,10 @@ public class ExtractionNormalizerService {
                 return "Expediente " + demandante.get();
             }
         }
-        return "Expediente " + radicado;
+        if (radicado != null && !radicado.isBlank()) {
+            return "Expediente " + radicado.trim();
+        }
+        return "Expediente sin radicado";
     }
 
     private Expediente.Estado normalizeEstado(Expediente.Estado estado) {
@@ -88,15 +68,6 @@ public class ExtractionNormalizerService {
             return Expediente.Estado.valueOf(estado.name());
         } catch (IllegalArgumentException e) {
             return Expediente.Estado.ACTIVO;
-        }
-    }
-
-    private Expediente.Especialidad normalizeEspecialidad(Expediente.Especialidad especialidad) {
-        if (especialidad == null) return Expediente.Especialidad.CIVIL;
-        try {
-            return Expediente.Especialidad.valueOf(especialidad.name());
-        } catch (IllegalArgumentException e) {
-            return Expediente.Especialidad.CIVIL;
         }
     }
 

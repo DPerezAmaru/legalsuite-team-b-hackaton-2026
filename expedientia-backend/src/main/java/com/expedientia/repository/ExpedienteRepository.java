@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ExpedienteRepository extends JpaRepository<Expediente, Long> {
-    Optional<Expediente> findByRadicado(String radicado);
+    Optional<Expediente> findFirstByRadicado(String radicado);
     List<Expediente> findByEstado(Expediente.Estado estado);
     List<Expediente> findByCreadoPor_Id(Long userId);
+    List<Expediente> findByTituloContainingIgnoreCase(String titulo);
 }

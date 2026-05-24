@@ -14,7 +14,8 @@ public record ExtraccionWizardDTO(
     @JsonProperty("ciudad") String ciudad,
     @JsonProperty("resumen") String resumen,
     @JsonProperty("partes") List<ParteWizard> partes,
-    @JsonProperty("confirma") Boolean confirma
+    @JsonProperty("confirma") Boolean confirma,
+    @JsonProperty("mensaje") String mensaje
 ) {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record ParteWizard(

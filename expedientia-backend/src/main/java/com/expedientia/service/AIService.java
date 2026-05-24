@@ -1,19 +1,31 @@
 package com.expedientia.service;
 
+import com.expedientia.dto.AsistenteCreacionResult;
+import com.expedientia.dto.ExtraccionWizardDTO;
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.DocumentoAnalisisResponse;
+import com.expedientia.dto.ExpedienteDTO;
+import com.expedientia.dto.FiltroExpedienteDTO;
+import com.expedientia.dto.MensajeHistorial;
+import com.expedientia.dto.TareaDTO;
 import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Tarea;
 import com.expedientia.exception.AppException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AIService {
+
+    private static final Logger log = LoggerFactory.getLogger(AIService.class);
 
     private static final String SYSTEM_CHAT = """
             Sos un extractor de datos legales colombiano. Tu ÚNICA función es identificar información EXPLÍCITAMENTE mencionada en el texto.
@@ -188,7 +200,7 @@ public class AIService {
                     .user(prompt)
                     .call()
                     .content();
-            String json = raw.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
+            String json = limpiarJson(raw);
             return objectMapper.readValue(json,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, CreateExpedienteRequest.class));
         } catch (AppException e) {
@@ -198,12 +210,116 @@ public class AIService {
         }
     }
 
+    public String generarAclaracion(String prompt) {
+        return chatClient.prompt()
+                .system("""
+                        Sos un asistente legal colombiano. El usuario envió un mensaje ambiguo o muy corto.
+                        Explicale amablemente que no entendiste bien qué quería hacer y preguntale qué necesita.
+                        Mencioná brevemente las cosas que podés hacer: crear expedientes, buscarlos, ver tareas, sugerir tareas, generar resúmenes, alertas de vencimiento, o responder preguntas legales.
+                        Máx 60 palabras. Sin introducciones largas.
+                        """)
+                .user("El usuario dijo: \"" + prompt + "\"")
+                .call()
+                .content();
+    }
+
     public String generarSugerencia(String prompt) {
         return chatClient.prompt()
-                .system("Sos un asesor legal colombiano. Dá una sugerencia concreta y práctica (máx 120 palabras) sobre la situación legal descrita. Sin introducciones, directo al punto.")
+                .system("""
+                        Sos un asesor legal colombiano experto en derecho colombiano.
+                        Respondé ÚNICAMENTE sobre temas legales: casos, leyes, códigos, procedimientos, normativa, jurisprudencia colombiana.
+                        Si la pregunta no es legal, respondé: "Solo puedo asistirte con temas legales colombianos."
+                        Sé concreto y práctico (máx 150 palabras). Sin introducciones, directo al punto.
+                        NUNCA mezcles temas legales con contenido no relacionado al derecho.
+                        """)
                 .user(prompt)
                 .call()
                 .content();
+    }
+
+    public AsistenteCreacionResult asistirCreacion(String prompt, List<MensajeHistorial> historial) {
+        String contexto = (historial == null || historial.isEmpty()) ? "" :
+                historial.stream()
+                        .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
+                        .collect(Collectors.joining("\n"));
+
+        String system = """
+                Sos un extractor de datos legales colombiano. Extraé los campos del expediente judicial \
+                a partir de la conversación previa y el mensaje actual del usuario.
+
+                REGLAS:
+                - Extraé SOLO lo mencionado EXPLÍCITAMENTE por el usuario
+                - NUNCA inventes datos ni radicados (radicado siempre null)
+                - especialidad: CIVIL | PENAL | LABORAL | ADMINISTRATIVO | FAMILIA — inferí del tipo de proceso mencionado
+                - confirma = true SOLO si el usuario dice claramente: dale, créalo, sí, listo, así está, confirmo
+
+                Respondé ÚNICAMENTE con JSON válido, sin texto adicional:
+                {"titulo":null,"especialidad":null,"despacho":null,"ciudad":null,"resumen":null,"partes":[{"nombre":"string","identificacion":null,"tipoParticipacion":"DEMANDANTE"}],"confirma":false}
+                tipoParticipacion valores válidos: DEMANDANTE | DEMANDADO | APODERADO | TERCERO
+                Si no hay partes mencionadas: "partes":[]
+                """;
+
+        String userMessage = contexto.isBlank()
+                ? prompt
+                : "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL DEL USUARIO: " + prompt;
+
+        try {
+            String raw = chatClient.prompt()
+                    .system(system)
+                    .user(userMessage)
+                    .call()
+                    .content();
+            log.debug("asistirCreacion raw response: {}", raw);
+            ExtraccionWizardDTO ext = parse(raw, ExtraccionWizardDTO.class);
+            return construirFase(ext);
+        } catch (Exception e) {
+            log.error("asistirCreacion falló — prompt='{}' error={}", prompt, e.getMessage(), e);
+            return new AsistenteCreacionResult("NECESITA_INFO", null,
+                    "¿Podés contarme más? Necesito el nombre del caso y el tipo de proceso.",
+                    List.of("titulo", "especialidad"));
+        }
+    }
+
+    private AsistenteCreacionResult construirFase(ExtraccionWizardDTO ext) {
+        boolean tieneTitulo = ext.titulo() != null && !ext.titulo().isBlank();
+        boolean tieneEspecialidad = ext.especialidad() != null;
+
+        if (!tieneTitulo && !tieneEspecialidad) {
+            return new AsistenteCreacionResult("SIN_INFO", null,
+                    "Para crear un expediente necesito al menos el nombre del caso y el tipo de proceso (civil, penal, laboral...). ¿Podés darme esa información?",
+                    List.of("titulo", "especialidad"));
+        }
+        if (!tieneTitulo) {
+            return new AsistenteCreacionResult("NECESITA_INFO", null,
+                    "¿Cuál es el nombre o descripción del caso?",
+                    List.of("titulo"));
+        }
+        if (!tieneEspecialidad) {
+            return new AsistenteCreacionResult("NECESITA_INFO", null,
+                    "¿A qué rama del derecho pertenece? (civil, penal, laboral, administrativo, familia)",
+                    List.of("especialidad"));
+        }
+
+        List<CreateExpedienteRequest.ParteRequest> partes = ext.partes() == null ? List.of() :
+                ext.partes().stream()
+                        .map(p -> new CreateExpedienteRequest.ParteRequest(p.nombre(), p.identificacion(), p.tipoParticipacion()))
+                        .toList();
+
+        CreateExpedienteRequest expediente = new CreateExpedienteRequest(
+                null, ext.titulo(), ext.especialidad(),
+                ext.despacho(), ext.ciudad(), null,
+                ext.resumen(), null, null, null, partes);
+
+        if (Boolean.TRUE.equals(ext.confirma())) {
+            return new AsistenteCreacionResult("LISTO", expediente, null, List.of());
+        }
+
+        String resumen = "Tengo: " + ext.titulo() + " (" + ext.especialidad() + ")"
+                + (ext.despacho() != null ? ", juzgado: " + ext.despacho() : "")
+                + (ext.ciudad() != null ? ", ciudad: " + ext.ciudad() : "")
+                + ". ¿Querés agregar algo más o lo creo así?";
+
+        return new AsistenteCreacionResult("CONFIRMAR", expediente, resumen, List.of());
     }
 
     public String generarInforme(Expediente expediente, List<Tarea> tareas) {
@@ -223,10 +339,134 @@ public class AIService {
                 .content();
     }
 
+    public String generarResumen(ExpedienteDTO expediente, List<TareaDTO> tareas) {
+        String prompt = String.format(
+                "Expediente ID %d — %s (%s). Estado: %s. Resumen: %s. Tareas (%d): %s.",
+                expediente.id(),
+                expediente.titulo(),
+                expediente.especialidad(),
+                expediente.estado(),
+                expediente.resumen() != null ? expediente.resumen() : "sin resumen",
+                tareas.size(),
+                tareas.stream().map(TareaDTO::titulo).collect(Collectors.joining(", "))
+        );
+        return chatClient.prompt()
+                .system("Generá un informe ejecutivo breve (máx 150 palabras) del expediente legal.")
+                .user(prompt)
+                .call()
+                .content();
+    }
+
+    public List<TareaDTO> sugerirTareas(List<ExpedienteDTO> expedientes) {
+        String contexto = expedientes.stream().map(e -> String.format(
+                "ID %d | %s | %s | Estado: %s | %s",
+                e.id(), e.especialidad(), e.titulo(),
+                e.estado(), e.resumen() != null ? e.resumen() : "sin resumen"
+        )).collect(Collectors.joining("\n"));
+
+        String system = """
+                Sos un asistente legal colombiano experto en gestión de procesos judiciales.
+                Analizá los expedientes y sugerí tareas judiciales concretas y accionables para cada uno.
+
+                REGLAS:
+                1. Para cada expediente sugerí entre 3 y 5 tareas relevantes según su especialidad y estado
+                2. Prioridad: ALTA si el proceso está activo con riesgo, MEDIA en general, BAJA para preparación
+                3. Fechas de vencimiento razonables a partir de hoy (%s) en formato YYYY-MM-DD
+                4. Incluí el expedienteId correspondiente en cada tarea
+                5. Respondé ÚNICAMENTE con el array JSON, sin texto adicional
+
+                Formato de cada tarea:
+                {"id":null,"titulo":"string","descripcion":"string","estado":"PENDIENTE","prioridad":"MEDIA","fechaVencimiento":"YYYY-MM-DD","sugeridaPorIa":true,"asignadoAId":null,"expedienteId":1}
+                """.formatted(LocalDate.now());
+
+        try {
+            String raw = chatClient.prompt()
+                    .system(system)
+                    .user("Expedientes:\n" + contexto)
+                    .call()
+                    .content();
+            String json = limpiarJson(raw);
+            return objectMapper.readValue(json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, TareaDTO.class));
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<TareaDTO> extraerTareasDesdeChat(String prompt, List<Long> expedienteIds) {
+        String system = """
+                Sos un extractor de tareas legales. El usuario describe las tareas que quiere crear para uno o más expedientes.
+                Extraé SOLO las tareas que el usuario menciona explícitamente — no inventes ni agregués tareas adicionales.
+
+                IDs de expedientes disponibles: %s
+
+                Para cada tarea mencionada extraé:
+                - titulo: lo que el usuario describe (obligatorio)
+                - descripcion: detalle adicional si lo menciona, sino null
+                - estado: PENDIENTE por defecto
+                - prioridad: ALTA | MEDIA | BAJA según el usuario indique, sino MEDIA
+                - fechaVencimiento: si el usuario menciona una fecha (YYYY-MM-DD), sino null
+                - expedienteId: el que el usuario indique; si no especifica, usá el primer ID disponible
+                - sugeridaPorIa: false (las crea el usuario)
+
+                Respondé ÚNICAMENTE con el array JSON (sin texto adicional):
+                [{"id":null,"titulo":"string","descripcion":null,"estado":"PENDIENTE","prioridad":"MEDIA","fechaVencimiento":null,"sugeridaPorIa":false,"asignadoAId":null,"expedienteId":1}]
+                """.formatted(expedienteIds);
+
+        try {
+            String raw = chatClient.prompt()
+                    .system(system)
+                    .user(prompt)
+                    .call()
+                    .content();
+            String json = limpiarJson(raw);
+            return objectMapper.readValue(json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, TareaDTO.class));
+        } catch (Exception e) {
+            return Collections.emptyList();
+        }
+    }
+
+    public FiltroExpedienteDTO extraerFiltrosBusqueda(String prompt) {
+        String system = """
+                Extraé los filtros de búsqueda de expedientes del texto del usuario.
+
+                FILTROS DISPONIBLES:
+                - especialidad: CIVIL | PENAL | LABORAL | ADMINISTRATIVO | FAMILIA (null si no se menciona)
+                - estado: ACTIVO | SUSPENDIDO | CONCILIADO | DESISTIDO | PERENTO | CERRADO | ARCHIVADO (null si no se menciona)
+                - ciudad: nombre de ciudad (null si no se menciona)
+                - despacho: nombre del juzgado o despacho (null si no se menciona)
+
+                Respondé ÚNICAMENTE con este JSON:
+                {"especialidad":null,"estado":null,"ciudad":null,"despacho":null}
+                """;
+        try {
+            String raw = chatClient.prompt()
+                    .system(system)
+                    .user(prompt)
+                    .call()
+                    .content();
+            return parse(raw, FiltroExpedienteDTO.class);
+        } catch (Exception e) {
+            return new FiltroExpedienteDTO(null, null, null, null);
+        }
+    }
+
+    private String limpiarJson(String raw) {
+        String json = raw.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
+        int objStart = json.indexOf('{');
+        int objEnd = json.lastIndexOf('}');
+        int arrStart = json.indexOf('[');
+        int arrEnd = json.lastIndexOf(']');
+        if (arrStart >= 0 && (objStart < 0 || arrStart < objStart)) {
+            return arrEnd > arrStart ? json.substring(arrStart, arrEnd + 1) : json;
+        }
+        return (objStart >= 0 && objEnd > objStart) ? json.substring(objStart, objEnd + 1) : json;
+    }
+
     private <T> T parse(String raw, Class<T> type) {
         try {
-            String json = raw.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
-            return objectMapper.readValue(json, type);
+            return objectMapper.readValue(limpiarJson(raw), type);
         } catch (Exception e) {
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
                     "Error al parsear respuesta de IA: " + raw);

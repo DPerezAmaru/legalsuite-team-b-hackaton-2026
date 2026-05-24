@@ -2,6 +2,7 @@ package com.expedientia.service;
 
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.ExpedienteDTO;
+import com.expedientia.dto.FiltroExpedienteDTO;
 import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Parte;
 import com.expedientia.exception.AppException;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -38,7 +40,7 @@ public class ExpedienteService {
 
     public ExpedienteDTO crear(CreateExpedienteRequest req, Long usuarioId) {
         Expediente exp = new Expediente();
-        exp.setRadicado(req.radicado());
+        exp.setRadicado(req.radicado() != null ? req.radicado() : generarRadicado());
         exp.setTitulo(req.titulo());
         exp.setEspecialidad(req.especialidad());
         exp.setDespacho(req.despacho());
@@ -158,9 +160,24 @@ public class ExpedienteService {
         return new BulkResult(savedExps.stream().map(this::toDTO).toList(), List.of());
     }
 
+    @Transactional(readOnly = true)
+    public List<ExpedienteDTO> buscar(FiltroExpedienteDTO filtros) {
+        return expedienteRepo.findAll().stream()
+                .filter(e -> filtros.especialidad() == null || filtros.especialidad() == e.getEspecialidad())
+                .filter(e -> filtros.estado() == null || filtros.estado() == e.getEstado())
+                .filter(e -> filtros.ciudad() == null || (e.getCiudad() != null && e.getCiudad().equalsIgnoreCase(filtros.ciudad())))
+                .filter(e -> filtros.despacho() == null || (e.getDespacho() != null && e.getDespacho().toLowerCase().contains(filtros.despacho().toLowerCase())))
+                .map(this::toDTO)
+                .toList();
+    }
+
     public void eliminar(Long id) {
         if (!expedienteRepo.existsById(id)) throw new ResourceNotFoundException("Expediente", id);
         expedienteRepo.deleteById(id);
+    }
+
+    private String generarRadicado() {
+        return "S/R-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 
     private Expediente findById(Long id) {

@@ -10,6 +10,7 @@ import com.expedientia.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -83,6 +84,38 @@ public class TareaService {
         }
 
         return toDTO(tareaRepo.save(tarea));
+    }
+
+    @Transactional
+    public List<TareaDTO> crearMasivoDesdeIA(List<TareaDTO> dtos, Long usuarioId) {
+        if (dtos.isEmpty()) return List.of();
+
+        com.expedientia.entity.Usuario usuario = usuarioId != null
+                ? usuarioRepo.findById(usuarioId).orElse(null) : null;
+
+        List<Tarea> tareas = dtos.stream().map(dto -> {
+            Expediente exp = expedienteRepo.findById(dto.expedienteId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Expediente", dto.expedienteId()));
+            Tarea tarea = new Tarea();
+            tarea.setExpediente(exp);
+            tarea.setTitulo(dto.titulo());
+            tarea.setDescripcion(dto.descripcion());
+            tarea.setEstado(dto.estado() != null ? dto.estado() : Tarea.Estado.PENDIENTE);
+            tarea.setPrioridad(dto.prioridad() != null ? dto.prioridad() : Tarea.Prioridad.MEDIA);
+            tarea.setFechaVencimiento(dto.fechaVencimiento());
+            tarea.setSugeridaPorIa(true);
+            if (usuario != null) tarea.setCreadoPor(usuario);
+            return tarea;
+        }).toList();
+
+        return tareaRepo.saveAll(tareas).stream().map(this::toDTO).toList();
+    }
+
+    public List<TareaDTO> listarProximas(int days) {
+        LocalDate deadline = LocalDate.now().plusDays(days);
+        return tareaRepo.findByFechaVencimientoLessThanEqualAndEstadoIn(
+                deadline, List.of(Tarea.Estado.PENDIENTE, Tarea.Estado.EN_PROGRESO))
+                .stream().map(this::toDTO).toList();
     }
 
     @Transactional

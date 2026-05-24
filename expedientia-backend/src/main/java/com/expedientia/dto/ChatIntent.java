@@ -1,8 +1,11 @@
 package com.expedientia.dto;
 
+import java.util.List;
+
 public record ChatIntent(
     Accion accion,
-    String radicado
+    String radicado,
+    List<Long> expedienteIds
 ) {
     public enum Accion {
         CREAR_EXPEDIENTE,
@@ -11,6 +14,13 @@ public record ChatIntent(
         OBTENER_EXPEDIENTE,
         LISTAR_TAREAS,
         SUGERENCIA_JUDICIAL,
+        ASISTENTE_CREACION,
+        SUGERIR_TAREAS,
+        CREAR_TAREAS_EXPEDIENTE,
+        RESUMEN_EXPEDIENTE,
+        ALERTAS_VENCIMIENTO,
+        BUSCAR_EXPEDIENTES,
+        NECESITA_ACLARACION,
         NO_PERMITIDO
     }
 }

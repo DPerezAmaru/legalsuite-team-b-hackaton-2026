@@ -1,33 +1,53 @@
 import { useMutation } from '@tanstack/react-query'
-import { ChatApiResponseSchema } from '../types'
+import { ChatApiResponseSchema, type HistorialEntrada } from '../types'
 
 interface ChatPayload {
   prompt: string
+  modoAsistente: boolean
+  historial: HistorialEntrada[]
   file?: File | null
 }
 
-function formatRespuesta(accion: string, mensaje: string, datos?: { radicado?: string; titulo?: string; especialidad?: string } | null): string {
-  if (accion === 'CREAR_EXPEDIENTE' && datos) {
-    return (
-      `${mensaje}\n\n` +
-      `Radicado: ${datos.radicado ?? '—'}\n` +
-      `Título: ${datos.titulo ?? '—'}\n` +
-      `Especialidad: ${datos.especialidad ?? '—'}`
-    )
-  }
-  return mensaje
+interface ChatResult {
+  content: string
+  actionLink?: { to: string; label: string }
 }
 
-async function enviarChat({ prompt }: ChatPayload): Promise<string> {
-  const res = await fetch('/api/expedientes/chat', {
+function buildResult(accion: string, mensaje: string, datos?: unknown): ChatResult {
+  const ACCION_CREA = accion === 'CREAR_EXPEDIENTE' || accion === 'ASISTENTE_CREACION'
+
+  if (ACCION_CREA && typeof datos === 'object' && datos !== null && !Array.isArray(datos)) {
+    const d = datos as Record<string, unknown>
+    let content = mensaje
+
+    if (d.radicado) {
+      content =
+        `${mensaje}\n\n` +
+        `Radicado: ${d.radicado}\n` +
+        `Título: ${d.titulo ?? '—'}\n` +
+        `Especialidad: ${d.especialidad ?? '—'}`
+    }
+
+    const actionLink = typeof d.id === 'number'
+      ? { to: `/expedientes/${d.id}`, label: 'Ver expediente' }
+      : undefined
+
+    return { content, actionLink }
+  }
+
+  return { content: mensaje }
+}
+
+async function enviarChat({ prompt, modoAsistente, historial }: ChatPayload): Promise<ChatResult> {
+  const res = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, modoAsistente, historial }),
   })
   if (!res.ok) throw new Error(`Error ${res.status}`)
   const json = await res.json()
   const parsed = ChatApiResponseSchema.parse(json)
-  return formatRespuesta(parsed.accion, parsed.mensaje, parsed.datos)
+  return buildResult(parsed.accion, parsed.mensaje, parsed.datos)
 }
 
 export function useAssistenteChat() {

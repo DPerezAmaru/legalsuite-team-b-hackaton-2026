@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { FileText, Sparkle } from '@phosphor-icons/react'
+import { FileText, Sparkle, ArrowSquareOut } from '@phosphor-icons/react'
+import { Link } from '@tanstack/react-router'
 import type { ChatMessage } from '../../types'
 
 interface ChatMessagesProps {
@@ -56,6 +57,18 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             ].join(' ')}
           >
             {message.content}
+          </div>
+        )}
+
+        {message.actionLink && (
+          <div className={isUser ? 'flex justify-end' : 'flex justify-start'}>
+            <Link
+              to={message.actionLink.to}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors"
+            >
+              <ArrowSquareOut size={14} />
+              {message.actionLink.label}
+            </Link>
           </div>
         )}
       </div>

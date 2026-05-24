@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Paperclip, Folder, ArrowRight } from '@phosphor-icons/react'
+import { Paperclip, Robot, ArrowRight } from '@phosphor-icons/react'
 import { FileChip } from './FileChip'
 
 const PLACEHOLDER = 'Pregunte, suba un documento o genere un borrador.'
@@ -12,6 +12,8 @@ interface AssistantInputProps {
   attachedFile?: File | null
   onAttach?: (file: File | null) => void
   isLoading?: boolean
+  modoAsistente?: boolean
+  onToggleModo?: () => void
 }
 
 export function AssistantInput({
@@ -21,6 +23,8 @@ export function AssistantInput({
   attachedFile,
   onAttach,
   isLoading = false,
+  modoAsistente = false,
+  onToggleModo,
 }: AssistantInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -42,7 +46,6 @@ export function AssistantInput({
   const handleFileChange = () => {
     const file = fileInputRef.current?.files?.[0]
     if (file) onAttach?.(file)
-    // reset para permitir seleccionar el mismo archivo de nuevo
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -78,7 +81,19 @@ export function AssistantInput({
             <Paperclip />
             <span className="hidden sm:inline">Adjuntar</span>
           </button>
-          <InputAction icon={<Folder />} label="Expediente" />
+          <button
+            type="button"
+            onClick={onToggleModo}
+            className={[
+              'flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs transition-colors',
+              modoAsistente
+                ? 'bg-cta-bg text-cta-text hover:bg-cta-hover'
+                : 'text-fg-secondary hover:text-fg-body hover:bg-bg-muted',
+            ].join(' ')}
+          >
+            <Robot />
+            <span className="hidden sm:inline">{modoAsistente ? 'Asistente' : 'Conversacional'}</span>
+          </button>
         </div>
         <button
           type="button"
@@ -99,22 +114,5 @@ export function AssistantInput({
         onChange={handleFileChange}
       />
     </div>
-  )
-}
-
-interface InputActionProps {
-  icon: React.ReactNode
-  label: string
-}
-
-function InputAction({ icon, label }: InputActionProps) {
-  return (
-    <button
-      type="button"
-      className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-fg-secondary hover:text-fg-body hover:bg-bg-muted transition-colors"
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </button>
   )
 }

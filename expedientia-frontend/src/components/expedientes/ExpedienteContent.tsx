@@ -4,13 +4,12 @@ import {
   Sparkle, Copy, Check,
   IdentificationCard,
   Gavel,
-  Files,
-  Robot,
 } from '@phosphor-icons/react'
 import type { Expediente } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
 import { AccordionSection } from '../ui/AccordionSection'
 import { TareasSection } from './TareasSection'
+import { ExpedienteChat } from './ExpedienteChat'
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
@@ -58,6 +57,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
 
   return (
     <div className="space-y-3">
+      <ExpedienteChat expedienteId={expediente.id} radicado={expediente.radicado} />
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-fg-primary tracking-tight truncate">
@@ -163,19 +163,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
         <EmptyState message="No hay actuaciones registradas" />
       </AccordionSection>
 
-      <AccordionSection
-        title="Documentos"
-        icon={<Files className="text-fg-secondary" />}
-      >
-        <EmptyState message="No hay documentos adjuntos" />
-      </AccordionSection>
 
-      <AccordionSection
-        title="Preguntarle a la IA"
-        icon={<Robot className="text-fg-secondary" />}
-      >
-        <EmptyState message="Próximamente: consultá la IA sobre este expediente" />
-      </AccordionSection>
     </div>
   )
 }

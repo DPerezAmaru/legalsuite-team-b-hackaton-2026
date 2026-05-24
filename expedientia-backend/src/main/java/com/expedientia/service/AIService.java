@@ -43,7 +43,7 @@ public class AIService {
             - especialidad: CIVIL | PENAL | LABORAL | ADMINISTRATIVO | FAMILIA
             - despacho: nombre del juzgado si se menciona
             - ciudad: ciudad si se menciona
-            - estado: inferí del contexto — ACTIVO | SUSPENDIDO | CONCILIADO | DESISTIDO | PERENTO | CERRADO | ARCHIVADO. Si no hay indicios claros → ACTIVO
+            - estado: inferí del contexto — ACTIVO | CERRADO | ARCHIVADO. Si no hay indicios claros → ACTIVO
             - resumen: descripción breve del caso
             - fechaInicio: null
             - documentoOrigenId: null
@@ -80,13 +80,9 @@ public class AIService {
             FAMILIA      → divorcio, custodia, alimentos, adopción, violencia intrafamiliar, filiación, sucesión familiar, guardas
 
             ESTADO — etapa procesal actual del proceso:
-            ACTIVO      → proceso en trámite, hay actuaciones recientes, audiencias programadas o términos corriendo
-            SUSPENDIDO  → existe auto de suspensión, proceso detenido por acuerdo de partes u orden judicial temporal
-            CONCILIADO  → hay acta de conciliación aprobada o acuerdo conciliatorio entre las partes
-            DESISTIDO   → presentado y aprobado escrito de desistimiento de la demanda o acción
-            PERENTO     → existe auto de perención por inactividad prolongada (Art. 317 CGP)
-            CERRADO     → sentencia ejecutoriada, fallo en firme, proceso terminado por decisión judicial definitiva
-            ARCHIVADO   → auto de archivo, proceso archivado en el despacho
+            ACTIVO    → proceso en trámite, hay actuaciones recientes, audiencias programadas o términos corriendo
+            CERRADO   → sentencia ejecutoriada, fallo en firme, proceso terminado por decisión judicial definitiva, conciliado, desistido, perimido
+            ARCHIVADO → auto de archivo, proceso archivado en el despacho
 
             TÍTULO — formato: "[Radicado o 'S/R'] | [Tipo de proceso] - [mini resumen del caso]"
             El mini resumen debe ser máximo 50 caracteres, directo al punto, sin artículos innecesarios.
@@ -130,16 +126,23 @@ public class AIService {
             Sos un extractor de datos legales colombiano. El usuario te proporciona información de MÚLTIPLES expedientes judiciales en un solo mensaje.
             Extraé CADA expediente y retorná un array JSON con todos ellos.
 
-            REGLAS ABSOLUTAS:
+            REGLAS GENERALES:
             1. Extraé SOLO datos EXPLÍCITAMENTE mencionados — null si no aparece
-            2. NUNCA inventes radicados ni datos ausentes
+            2. NUNCA inventes radicados
             3. Respondé ÚNICAMENTE con un array JSON válido, sin texto adicional
+
+            EXCEPCIÓN — DATOS DE PRUEBA:
+            Si el usuario pide "datos de prueba", "expedientes de ejemplo", "ficticios", "demo", "muestra" o similar,
+            PODÉS inventar datos realistas colombianos. Usá nombres ficticios pero plausibles, ciudades colombianas
+            reales (Bogotá, Medellín, Cali, Barranquilla, Bucaramanga, Cartagena), y variedad de especialidades:
+            CIVIL, PENAL, LABORAL, ADMINISTRATIVO, FAMILIA. Inventá títulos y resúmenes descriptivos.
+            El campo radicado SIEMPRE debe ser null aunque generes el resto.
 
             Formato de cada elemento del array:
             {
               "radicado": null,
               "titulo": null,
-              "especialidad": "CIVIL",
+              "especialidad": null,
               "estado": "ACTIVO",
               "despacho": null,
               "ciudad": null,
@@ -206,6 +209,7 @@ public class AIService {
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
+            log.warn("interpretarMasivoDesdeChat — extracción fallida: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -213,14 +217,76 @@ public class AIService {
     public String generarAclaracion(String prompt) {
         return chatClient.prompt()
                 .system("""
-                        Sos un asistente legal colombiano. El usuario envió un mensaje ambiguo o muy corto.
-                        Explicale amablemente que no entendiste bien qué quería hacer y preguntale qué necesita.
-                        Mencioná brevemente las cosas que podés hacer: crear expedientes, buscarlos, ver tareas, sugerir tareas, generar resúmenes, alertas de vencimiento, o responder preguntas legales.
-                        Máx 60 palabras. Sin introducciones largas.
+                        Sos un asistente legal de ExpedientIA. El usuario envió algo ambiguo o muy corto.
+                        Preguntá qué necesita de forma natural y amable. Mencioná lo que podés hacer:
+                        crear o buscar expedientes, gestionar tareas, alertas de vencimiento, resúmenes, consultas legales o simplemente conversar sobre un caso.
+                        Si el contexto lo permite, ofrecé un ejemplo concreto de cómo formular el pedido.
+                        Tono: profesional y cercano, sin robótico. Sé claro y completo.
                         """)
                 .user("El usuario dijo: \"" + prompt + "\"")
                 .call()
                 .content();
+    }
+
+    public String responderConversacional(String prompt, List<MensajeHistorial> historial) {
+        String contexto = (historial == null || historial.isEmpty()) ? "" :
+                historial.stream()
+                         .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
+                         .collect(Collectors.joining("\n"));
+
+        String userMsg = contexto.isBlank()
+                ? prompt
+                : "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL: " + prompt;
+
+        return chatClient.prompt()
+                .system("""
+                        Sos un asistente legal conversacional de ExpedientIA. El usuario quiere conversar, analizar o reflexionar sobre un tema.
+                        Respondé de forma natural, inteligente y con criterio jurídico colombiano cuando aplique.
+                        Podés hacer preguntas para profundizar, ofrecer perspectivas, analizar situaciones o simplemente acompañar la reflexión.
+                        Tono: profesional y cercano, como un colega experto en derecho. Sin límite de extensión — usá lo que la conversación necesite.
+                        Si en algún momento el usuario pide ejecutar algo concreto (crear expediente, ver tareas, etc.), indicale que puede pedírtelo directamente.
+                        """)
+                .user(userMsg)
+                .call()
+                .content();
+    }
+
+    public String generarRespuestaAsistente(String accion, String infoFaltante,
+                                             String prompt, List<MensajeHistorial> historial) {
+        String contexto = (historial == null || historial.isEmpty()) ? "" :
+                historial.stream()
+                         .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
+                         .collect(Collectors.joining("\n"));
+
+        String system = """
+                Usted es un asistente legal conversacional de ExpedientIA, sistema de gestión \
+                de expedientes judiciales colombianos.
+
+                VOCABULARIO OBLIGATORIO:
+                - Siempre decí "expediente", NUNCA "caso". Sin excepciones.
+
+                ACCIÓN IDENTIFICADA: %s
+                INFORMACIÓN FALTANTE O PRÓXIMO PASO: %s
+
+                TONO:
+                Profesional y cercano — como un colega experto en derecho. \
+                Amable pero directo, sin ser robótico ni burocrático. \
+                Nada de "Estimado usuario" ni frases largas de introducción.
+
+                INSTRUCCIÓN:
+                Generá una respuesta natural que:
+                1. Guíe al usuario con claridad hacia lo que se necesita
+                2. Si corresponde, explicá brevemente qué opciones tiene
+                3. Si la información faltante incluye una lista de expedientes (formato "ID N: titulo") \
+                   → mostrala tal cual en la respuesta, sin resumir ni parafrasear
+                4. Sé conciso pero completo — no truncués si hay contexto relevante
+                """.formatted(accion, infoFaltante);
+
+        String userMsg = contexto.isBlank()
+                ? "MENSAJE ACTUAL: " + prompt
+                : "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL: " + prompt;
+
+        return chatClient.prompt().system(system).user(userMsg).call().content();
     }
 
     public String generarSugerencia(String prompt) {
@@ -247,16 +313,24 @@ public class AIService {
                 Sos un extractor de datos legales colombiano. Extraé los campos del expediente judicial \
                 a partir de la conversación previa y el mensaje actual del usuario.
 
-                REGLAS:
+                REGLAS DE EXTRACCIÓN:
                 - Extraé SOLO lo mencionado EXPLÍCITAMENTE por el usuario
                 - NUNCA inventes datos ni radicados (radicado siempre null)
                 - especialidad: CIVIL | PENAL | LABORAL | ADMINISTRATIVO | FAMILIA — inferí del tipo de proceso mencionado
                 - confirma = true SOLO si el usuario dice claramente: dale, créalo, sí, listo, así está, confirmo
+                - tipoParticipacion valores válidos: DEMANDANTE | DEMANDADO | APODERADO | TERCERO
+                - Si no hay partes mencionadas: "partes":[]
+
+                CAMPO "mensaje" (OBLIGATORIO):
+                Generá un resumen conversacional de todo lo que tenés hasta ahora. Debe:
+                - Listar TODOS los datos recolectados: título, especialidad, partes (nombre y rol), juzgado, ciudad, resumen — lo que haya
+                - Usar tono formal y cercano (usted), como un colega experto
+                - Si confirma=false: cerrar con "¿Desea agregar algo más o procedo a crearlo?"
+                - Si confirma=true: "Perfecto, procedo a crear el expediente."
+                - Máximo 80 palabras
 
                 Respondé ÚNICAMENTE con JSON válido, sin texto adicional:
-                {"titulo":null,"especialidad":null,"despacho":null,"ciudad":null,"resumen":null,"partes":[{"nombre":"string","identificacion":null,"tipoParticipacion":"DEMANDANTE"}],"confirma":false}
-                tipoParticipacion valores válidos: DEMANDANTE | DEMANDADO | APODERADO | TERCERO
-                Si no hay partes mencionadas: "partes":[]
+                {"titulo":null,"especialidad":null,"despacho":null,"ciudad":null,"resumen":null,"partes":[{"nombre":"string","identificacion":null,"tipoParticipacion":"DEMANDANTE"}],"confirma":false,"mensaje":"string"}
                 """;
 
         String userMessage = contexto.isBlank()
@@ -275,29 +349,18 @@ public class AIService {
         } catch (Exception e) {
             log.error("asistirCreacion falló — prompt='{}' error={}", prompt, e.getMessage(), e);
             return new AsistenteCreacionResult("NECESITA_INFO", null,
-                    "¿Podés contarme más? Necesito el nombre del caso y el tipo de proceso.",
-                    List.of("titulo", "especialidad"));
+                    "¿Podría contarme más? ¿Cuál es el nombre del caso?",
+                    List.of("titulo"));
         }
     }
 
     private AsistenteCreacionResult construirFase(ExtraccionWizardDTO ext) {
         boolean tieneTitulo = ext.titulo() != null && !ext.titulo().isBlank();
-        boolean tieneEspecialidad = ext.especialidad() != null;
 
-        if (!tieneTitulo && !tieneEspecialidad) {
-            return new AsistenteCreacionResult("SIN_INFO", null,
-                    "Para crear un expediente necesito al menos el nombre del caso y el tipo de proceso (civil, penal, laboral...). ¿Podés darme esa información?",
-                    List.of("titulo", "especialidad"));
-        }
         if (!tieneTitulo) {
-            return new AsistenteCreacionResult("NECESITA_INFO", null,
-                    "¿Cuál es el nombre o descripción del caso?",
+            return new AsistenteCreacionResult("SIN_INFO", null,
+                    "Para crear el expediente necesito el nombre del caso. ¿Me podría indicar cómo se llama?",
                     List.of("titulo"));
-        }
-        if (!tieneEspecialidad) {
-            return new AsistenteCreacionResult("NECESITA_INFO", null,
-                    "¿A qué rama del derecho pertenece? (civil, penal, laboral, administrativo, familia)",
-                    List.of("especialidad"));
         }
 
         List<CreateExpedienteRequest.ParteRequest> partes = ext.partes() == null ? List.of() :
@@ -314,12 +377,11 @@ public class AIService {
             return new AsistenteCreacionResult("LISTO", expediente, null, List.of());
         }
 
-        String resumen = "Tengo: " + ext.titulo() + " (" + ext.especialidad() + ")"
-                + (ext.despacho() != null ? ", juzgado: " + ext.despacho() : "")
-                + (ext.ciudad() != null ? ", ciudad: " + ext.ciudad() : "")
-                + ". ¿Querés agregar algo más o lo creo así?";
+        String mensajeIA = (ext.mensaje() != null && !ext.mensaje().isBlank())
+                ? ext.mensaje()
+                : "Tengo los datos del expediente. ¿Desea agregar algo más o procedo a crearlo?";
 
-        return new AsistenteCreacionResult("CONFIRMAR", expediente, resumen, List.of());
+        return new AsistenteCreacionResult("CONFIRMAR", expediente, mensajeIA, List.of());
     }
 
     public String generarInforme(Expediente expediente, List<Tarea> tareas) {
@@ -393,21 +455,56 @@ public class AIService {
         }
     }
 
+    public List<Long> resolverExpedientePorDescripcion(String descripcion, List<ExpedienteDTO> expedientes) {
+        if (expedientes.isEmpty()) return List.of();
+        String lista = expedientes.stream()
+                .map(e -> "ID " + e.id() + ": " + e.titulo()
+                        + (e.especialidad() != null ? " (" + e.especialidad() + ")" : "")
+                        + (e.resumen() != null ? " — " + e.resumen() : ""))
+                .collect(Collectors.joining("\n"));
+        String system = """
+                Sos un asistente que encuentra el expediente más relevante según la descripción del usuario.
+                Analizá la descripción y la lista de expedientes, y devolvé los IDs que mejor coincidan.
+                Usá el título, especialidad y resumen para hacer la búsqueda semántica.
+                Si hay una coincidencia clara → devolvé solo ese ID.
+                Si hay varias coincidencias posibles → devolvés todos los IDs relevantes.
+                Si no hay coincidencia → devolvés array vacío.
+                Respondé ÚNICAMENTE con un array JSON de enteros, sin texto adicional. Ejemplo: [1] o [1,3] o []
+                """;
+        try {
+            String raw = chatClient.prompt()
+                    .system(system)
+                    .user("Descripción del usuario: \"" + descripcion + "\"\n\nExpedientes disponibles:\n" + lista)
+                    .call()
+                    .content();
+            String json = limpiarJson(raw);
+            return objectMapper.readValue(json,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, Long.class));
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
     public List<TareaDTO> extraerTareasDesdeChat(String prompt, List<Long> expedienteIds) {
         String system = """
-                Sos un extractor de tareas legales. El usuario describe las tareas que quiere crear para uno o más expedientes.
-                Extraé SOLO las tareas que el usuario menciona explícitamente — no inventes ni agregués tareas adicionales.
+                Sos un extractor de tareas legales. Tu única función es identificar tareas EXPLÍCITAMENTE descritas por el usuario.
+
+                REGLA PRINCIPAL — si el usuario NO mencionó un nombre o descripción concreta de tarea \
+                (por ejemplo solo dijo "crear tarea" o "quiero una tarea"), devolvé ÚNICAMENTE: []
+                NUNCA inventes, generes, ni completes tareas que el usuario no describió.
+
+                Solo extraé si hay un título o descripción explícita de la tarea. Campo obligatorio: titulo.
 
                 IDs de expedientes disponibles: %s
 
-                Para cada tarea mencionada extraé:
-                - titulo: lo que el usuario describe (obligatorio)
+                Para cada tarea mencionada explícitamente extraé:
+                - titulo: descripción concreta de la tarea (OBLIGATORIO — si no está, devolvé [])
                 - descripcion: detalle adicional si lo menciona, sino null
-                - estado: PENDIENTE por defecto
+                - estado: PENDIENTE
                 - prioridad: ALTA | MEDIA | BAJA según el usuario indique, sino MEDIA
-                - fechaVencimiento: si el usuario menciona una fecha (YYYY-MM-DD), sino null
+                - fechaVencimiento: fecha en formato YYYY-MM-DD si la menciona, sino null
                 - expedienteId: el que el usuario indique; si no especifica, usá el primer ID disponible
-                - sugeridaPorIa: false (las crea el usuario)
+                - sugeridaPorIa: false
 
                 Respondé ÚNICAMENTE con el array JSON (sin texto adicional):
                 [{"id":null,"titulo":"string","descripcion":null,"estado":"PENDIENTE","prioridad":"MEDIA","fechaVencimiento":null,"sugeridaPorIa":false,"asignadoAId":null,"expedienteId":1}]
@@ -433,7 +530,7 @@ public class AIService {
 
                 FILTROS DISPONIBLES:
                 - especialidad: CIVIL | PENAL | LABORAL | ADMINISTRATIVO | FAMILIA (null si no se menciona)
-                - estado: ACTIVO | SUSPENDIDO | CONCILIADO | DESISTIDO | PERENTO | CERRADO | ARCHIVADO (null si no se menciona)
+                - estado: ACTIVO | CERRADO | ARCHIVADO (null si no se menciona)
                 - ciudad: nombre de ciudad (null si no se menciona)
                 - despacho: nombre del juzgado o despacho (null si no se menciona)
 
@@ -449,6 +546,34 @@ public class AIService {
             return parse(raw, FiltroExpedienteDTO.class);
         } catch (Exception e) {
             return new FiltroExpedienteDTO(null, null, null, null);
+        }
+    }
+
+    public com.expedientia.dto.UsuarioDTO extraerUsuarioDesdeChat(String prompt, List<MensajeHistorial> historial) {
+        String contexto = (historial == null || historial.isEmpty()) ? "" :
+                historial.stream()
+                         .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
+                         .collect(Collectors.joining("\n"));
+        String system = """
+                Extraé los datos del usuario a crear a partir del texto.
+
+                ROLES DISPONIBLES: ADMIN | ABOGADO | ASISTENTE
+                - Si el usuario dice "abogado" → ABOGADO
+                - Si dice "asistente" o "secretario" → ASISTENTE
+                - Si dice "admin" o "administrador" → ADMIN
+                - Si no se menciona → ABOGADO (valor por defecto)
+
+                Respondé ÚNICAMENTE con este JSON:
+                {"nombre":null,"email":null,"rol":"ABOGADO"}
+                """;
+        String userMsg = contexto.isBlank()
+                ? prompt
+                : "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL: " + prompt;
+        try {
+            String raw = chatClient.prompt().system(system).user(userMsg).call().content();
+            return parse(raw, com.expedientia.dto.UsuarioDTO.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 

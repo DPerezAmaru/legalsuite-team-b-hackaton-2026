@@ -67,7 +67,7 @@ public class TareaService {
     }
 
     public List<TareaDTO> listarPorRadicado(String radicado) {
-        Expediente exp = expedienteRepo.findByRadicado(radicado)
+        Expediente exp = expedienteRepo.findFirstByRadicado(radicado)
                 .orElseThrow(() -> new ResourceNotFoundException("Expediente", 0L));
         return tareaRepo.findByExpediente_Id(exp.getId())
                 .stream().map(this::toDTO).toList();

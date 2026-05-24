@@ -5,7 +5,8 @@ import java.util.List;
 public record ChatIntent(
     Accion accion,
     String radicado,
-    List<Long> expedienteIds
+    List<Long> expedienteIds,
+    String expedienteNombre
 ) {
     public enum Accion {
         CREAR_EXPEDIENTE,
@@ -13,6 +14,7 @@ public record ChatIntent(
         LISTAR_EXPEDIENTES,
         OBTENER_EXPEDIENTE,
         LISTAR_TAREAS,
+        LISTAR_TODAS_TAREAS,
         SUGERENCIA_JUDICIAL,
         ASISTENTE_CREACION,
         SUGERIR_TAREAS,
@@ -20,7 +22,9 @@ public record ChatIntent(
         RESUMEN_EXPEDIENTE,
         ALERTAS_VENCIMIENTO,
         BUSCAR_EXPEDIENTES,
+        CREAR_USUARIO,
         NECESITA_ACLARACION,
-        NO_PERMITIDO
+        NO_PERMITIDO,
+        CONVERSACION_LIBRE
     }
 }

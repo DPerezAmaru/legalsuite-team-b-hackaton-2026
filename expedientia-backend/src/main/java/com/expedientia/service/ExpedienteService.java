@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -40,7 +39,7 @@ public class ExpedienteService {
 
     public ExpedienteDTO crear(CreateExpedienteRequest req, Long usuarioId) {
         Expediente exp = new Expediente();
-        exp.setRadicado(req.radicado() != null ? req.radicado() : generarRadicado());
+        exp.setRadicado(req.radicado());
         exp.setTitulo(req.titulo());
         exp.setEspecialidad(req.especialidad());
         exp.setDespacho(req.despacho());
@@ -87,7 +86,7 @@ public class ExpedienteService {
 
     @Transactional(readOnly = true)
     public ExpedienteDTO obtenerPorRadicado(String radicado) {
-        return toDTO(expedienteRepo.findByRadicado(radicado)
+        return toDTO(expedienteRepo.findFirstByRadicado(radicado)
                 .orElseThrow(() -> new ResourceNotFoundException("Expediente", 0L)));
     }
 
@@ -176,8 +175,10 @@ public class ExpedienteService {
         expedienteRepo.deleteById(id);
     }
 
-    private String generarRadicado() {
-        return "S/R-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+    @Transactional(readOnly = true)
+    public List<ExpedienteDTO> buscarPorNombre(String nombre) {
+        return expedienteRepo.findByTituloContainingIgnoreCase(nombre)
+                .stream().map(this::toDTO).toList();
     }
 
     private Expediente findById(Long id) {

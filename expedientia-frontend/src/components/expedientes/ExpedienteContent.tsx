@@ -37,13 +37,12 @@ interface ExpedienteContentProps {
   headerExtras?: ReactNode
 }
 
+const RESUELVE_LIMIT = 300
+
 export function ExpedienteContent({ expediente, headerExtras }: ExpedienteContentProps) {
   const [copied, setCopied] = useState(false)
+  const [resuelveExpanded, setResuelveExpanded] = useState(false)
 
-  const partesByTipo = expediente.partes.reduce<Record<string, string[]>>(
-    (acc, p) => { ;(acc[p.tipoParticipacion] ??= []).push(p.nombre); return acc },
-    {},
-  )
 
   const subtitulo = [capitalize(expediente.especialidad), expediente.despacho]
     .filter(Boolean)
@@ -107,20 +106,52 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
         icon={<IdentificationCard className="text-fg-secondary" />}
         defaultOpen
       >
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 py-4">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 pt-4 pb-3">
           <Field label="Radicado" value={expediente.radicado} mono />
           <Field label="Especialidad" value={capitalize(expediente.especialidad)} />
           <Field label="Fecha de inicio" value={formatFecha(expediente.fechaInicio)} />
           <Field label="Ciudad" value={expediente.ciudad} />
           <Field label="Despacho" value={expediente.despacho} />
-          {Object.entries(partesByTipo).map(([tipo, nombres]) => (
-            <Field
-              key={tipo}
-              label={`${TIPO_LABELS[tipo] ?? tipo}${nombres.length > 1 ? 's' : ''}`}
-              value={nombres.join(' · ')}
-            />
-          ))}
         </dl>
+        {expediente.partes.length > 0 && (
+          <div className="px-4 pb-4 border-t border-border pt-3">
+            <p className="text-xs text-fg-tertiary mb-2">Partes</p>
+            <ul className="space-y-2">
+              {expediente.partes.map((p, i) => (
+                <li key={p.id ?? i} className="flex items-start gap-2">
+                  <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-bg-muted text-fg-secondary shrink-0 mt-0.5">
+                    {TIPO_LABELS[p.tipoParticipacion] ?? p.tipoParticipacion}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-fg-body">{p.nombre}</p>
+                    {p.identificacion && (
+                      <p className="text-xs text-fg-tertiary">{p.identificacion}</p>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {expediente.resuelve && (
+          <div className="px-4 pb-4 border-t border-border pt-3">
+            <p className="text-xs text-fg-tertiary mb-1">Resuelve</p>
+            <p className="text-sm text-fg-body leading-relaxed whitespace-pre-line">
+              {resuelveExpanded || expediente.resuelve.length <= RESUELVE_LIMIT
+                ? expediente.resuelve
+                : `${expediente.resuelve.slice(0, RESUELVE_LIMIT).trimEnd()}…`}
+            </p>
+            {expediente.resuelve.length > RESUELVE_LIMIT && (
+              <button
+                type="button"
+                onClick={() => setResuelveExpanded(e => !e)}
+                className="mt-2 text-xs text-fg-secondary hover:text-fg-primary transition-colors"
+              >
+                {resuelveExpanded ? 'Ver menos' : 'Ver más'}
+              </button>
+            )}
+          </div>
+        )}
       </AccordionSection>
 
       <AccordionSection

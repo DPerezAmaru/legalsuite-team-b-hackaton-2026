@@ -2,24 +2,34 @@ import { useRef, useState } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
 import { UploadSimple, FileText } from '@phosphor-icons/react'
 
+const MAX_FILES = 5
+
 interface UploadZoneProps {
-  onFile: (file: File) => void
+  onFiles: (files: File[]) => void
 }
 
-export function UploadZone({ onFile }: UploadZoneProps) {
+export function UploadZone({ onFiles }: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
+
+  function pickPdfs(fileList: FileList | null): File[] {
+    if (!fileList) return []
+    return Array.from(fileList)
+      .filter(f => f.type === 'application/pdf')
+      .slice(0, MAX_FILES)
+  }
 
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file?.type === 'application/pdf') onFile(file)
+    const files = pickPdfs(e.dataTransfer.files)
+    if (files.length) onFiles(files)
   }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) onFile(file)
+    const files = pickPdfs(e.target.files ?? null)
+    if (files.length) onFiles(files)
+    if (inputRef.current) inputRef.current.value = ''
   }
 
   return (
@@ -40,19 +50,20 @@ export function UploadZone({ onFile }: UploadZoneProps) {
       </div>
       <div className="text-center space-y-1">
         <p className="text-sm font-medium text-fg-primary">
-          {isDragging ? 'Soltá el PDF acá' : 'Arrastrá el documento acá'}
+          {isDragging ? 'Soltá los PDFs acá' : 'Arrastrá uno o varios documentos acá'}
         </p>
-        <p className="text-xs text-fg-tertiary">o hacé clic para seleccionarlo</p>
-        <p className="text-xs text-fg-tertiary pt-1">Solo archivos PDF · máx. 10 MB</p>
+        <p className="text-xs text-fg-tertiary">o hacé clic para seleccionarlos</p>
+        <p className="text-xs text-fg-tertiary pt-1">Solo PDFs · hasta {MAX_FILES} archivos · máx. 10 MB c/u</p>
       </div>
       <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-muted border border-border">
         <FileText className="text-fg-secondary shrink-0" />
-        <span className="text-xs text-fg-body">Seleccionar PDF</span>
+        <span className="text-xs text-fg-body">Seleccionar PDFs</span>
       </div>
       <input
         ref={inputRef}
         type="file"
         accept="application/pdf"
+        multiple
         className="hidden"
         onChange={handleChange}
       />

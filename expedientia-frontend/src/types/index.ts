@@ -41,6 +41,7 @@ export const ExpedienteSchema = z.object({
   ciudad: z.string().nullable().optional(),
   estado: EstadoExpedienteSchema,
   resumen: z.string().nullable().optional(),
+  resuelve: z.string().nullable().optional(),
   fechaInicio: z.string().nullable().optional(),
   createdAt: z.string(),
   creadoPorId: z.number().nullable().optional(),
@@ -58,14 +59,22 @@ export const ProcesoSugeridoSchema = z.object({
   despacho: z.string().nullish().transform(v => v ?? ''),
   ciudad: z.string().nullish().transform(v => v ?? ''),
   resumen: z.string().nullish().transform(v => v ?? ''),
+  resuelve: z.string().nullish().transform(v => v ?? ''),
   partes: z.array(ParteSchema).default([]),
 })
 
+export const BulkProcesoSchema = z.object({
+  indice: z.number(),
+  archivoOrigen: z.string(),
+  datos: ProcesoSugeridoSchema,
+})
+
 export const ProcesarDocumentoResponseSchema = z.object({
-  numeroExpedientesEncontrados: z.number().default(0),
-  sugerenciaTexto: z.string().nullish().transform(v => v ?? ''),
-  procesos: z.array(ProcesoSugeridoSchema).default([]),
-  promptsSugeridos: z.array(z.string()).default([]),
+  totalArchivos: z.number().default(0),
+  totalProcesosEncontrados: z.number().default(0),
+  procesos: z.array(BulkProcesoSchema).default([]),
+  omitidos: z.array(z.string()).default([]),
+  promptCombinado: z.string().nullish().transform(v => v ?? ''),
 })
 
 // Tipos inferidos
@@ -79,6 +88,7 @@ export type Parte = z.infer<typeof ParteSchema>
 export type Tarea = z.infer<typeof TareaSchema>
 export type Expediente = z.infer<typeof ExpedienteSchema>
 export type ProcesoSugerido = z.infer<typeof ProcesoSugeridoSchema>
+export type BulkProceso = z.infer<typeof BulkProcesoSchema>
 export type ProcesarDocumentoResponse = z.infer<typeof ProcesarDocumentoResponseSchema>
 
 // ─── CHAT API (respuesta de /api/expedientes/chat) ────────────────────────────
@@ -136,10 +146,33 @@ export const DocumentoFormStateSchema = z.object({
   despacho: z.string(),
   ciudad: z.string(),
   resumen: z.string(),
+  resuelve: z.string(),
   fechaInicio: z.string().optional(),
   partes: z.array(ParteSchema),
 })
 export type DocumentoFormState = z.infer<typeof DocumentoFormStateSchema>
+
+export const BulkConfirmarResponseSchema = z.object({
+  totalCreados: z.number(),
+  totalOmitidos: z.number(),
+  expedientes: z.array(ExpedienteSchema).default([]),
+  omitidos: z.array(z.unknown()).default([]),
+})
+export type BulkConfirmarResponse = z.infer<typeof BulkConfirmarResponseSchema>
+
+export type TareaSugerida = {
+  id: number
+  texto: string
+  prioridad: 'ALTA' | 'MEDIA' | 'BAJA'
+}
+
+export type ExpedienteCreadoConTareas = {
+  expedienteId: number
+  titulo: string
+  radicado: string
+  especialidad: Especialidad
+  tareasSugeridas: TareaSugerida[]
+}
 
 // ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
 

@@ -1,10 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { ChatMessage, ConsultaReciente, ExpedienteReciente } from '../../types'
+import type { ChatMessage } from '../../types'
 import { AssistantInput } from './AssistantInput'
 import { AssistantSuggestions } from './AssistantSuggestions'
 import { DocumentUploadCard } from './DocumentUploadCard'
-import { RecentConsultations } from './RecentConsultations'
-import { RecentExpedientes } from './RecentExpedientes'
 import { ChatMessages } from './ChatMessages'
 import { useAssistenteChat } from '../../hooks/useAssistenteChat'
 import { useCommandBar } from '../../store/commandBarStore'
@@ -16,18 +14,6 @@ function getGreeting(): string {
   return 'Buenas noches'
 }
 
-const CONSULTAS_MOCK: ConsultaReciente[] = [
-  { id: '1', titulo: 'Resumir auto admisorio · García y Asoc.', tipo: 'Resumen',  timestamp: 'Hace 14 min' },
-  { id: '2', titulo: '¿Qué actuaciones vencen esta semana?',    tipo: 'Consulta', timestamp: 'Hoy 09:12'  },
-  { id: '3', titulo: 'Generar contestación · Constructora L.A.', tipo: 'Borrador', timestamp: 'Ayer'      },
-  { id: '4', titulo: 'Informe de cartera por especialidad',      tipo: 'Informe',  timestamp: 'Lun'       },
-]
-
-const EXPEDIENTES_MOCK: ExpedienteReciente[] = [
-  { id: '1', nombre: 'García y Asociados S.A.', especialidad: 'CIVIL',   estadoDisplay: 'Activo',       timestamp: 'hace 2 h' },
-  { id: '2', nombre: 'Constructora Los Andes',  especialidad: 'CIVIL',   estadoDisplay: 'En revisión',  timestamp: 'hace 5 h' },
-  { id: '3', nombre: 'Ramírez Mora, Carlos',    especialidad: 'LABORAL', estadoDisplay: 'Vence pronto', timestamp: '19 may'   },
-]
 
 export function AssistantPage() {
   const [inputValue, setInputValue] = useState('')
@@ -143,10 +129,8 @@ export function AssistantPage() {
           <DocumentUploadCard />
         </div>
 
-        <RecentConsultations items={CONSULTAS_MOCK} />
-        <RecentExpedientes   items={EXPEDIENTES_MOCK} />
 
-      </div>
+</div>
     </div>
   )
 }

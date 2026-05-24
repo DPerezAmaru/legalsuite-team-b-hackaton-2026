@@ -37,11 +37,13 @@ public class TareaController {
         return ResponseEntity.ok(tareaService.obtener(id));
     }
 
-    @Operation(summary = "Listar tareas por expediente")
+    @Operation(summary = "Listar tareas", description = "Sin filtros retorna todas. Con expedienteId filtra por expediente.")
     @GetMapping
     public ResponseEntity<List<TareaDTO>> listar(
-            @Parameter(description = "ID del expediente", required = true) @RequestParam Long expedienteId) {
-        return ResponseEntity.ok(tareaService.listarPorExpediente(expedienteId));
+            @Parameter(description = "ID del expediente (opcional)") @RequestParam(required = false) Long expedienteId) {
+        return ResponseEntity.ok(expedienteId != null
+                ? tareaService.listarPorExpediente(expedienteId)
+                : tareaService.listar());
     }
 
     @Operation(summary = "Actualizar tarea", description = "Actualiza los campos enviados. Los campos null se ignoran.")

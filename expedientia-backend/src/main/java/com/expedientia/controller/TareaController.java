@@ -37,6 +37,12 @@ public class TareaController {
         return ResponseEntity.ok(tareaService.obtener(id));
     }
 
+    @Operation(summary = "Listar todas las tareas")
+    @GetMapping("/todas")
+    public ResponseEntity<List<TareaDTO>> listarTodas() {
+        return ResponseEntity.ok(tareaService.listar());
+    }
+
     @Operation(summary = "Listar tareas por expediente")
     @GetMapping
     public ResponseEntity<List<TareaDTO>> listar(

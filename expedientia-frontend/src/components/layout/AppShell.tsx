@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { List, SidebarSimple } from '@phosphor-icons/react'
+import { List } from '@phosphor-icons/react'
 import { Sidebar } from './Sidebar'
 import { CommandBar } from './CommandBar'
 import { useSidebar } from '../../hooks/useSidebar'
@@ -9,7 +9,7 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { isOpen, open, close } = useSidebar()
+  const { isOpen, open } = useSidebar()
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-base">
@@ -25,20 +25,6 @@ export function AppShell({ children }: AppShellProps) {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Desktop: botón para reabrir el sidebar cuando está colapsado */}
-        {!isOpen && (
-          <div className="hidden lg:flex items-center px-3 py-2.5 border-b border-border shrink-0">
-            <button
-              type="button"
-              onClick={open}
-              className="p-1 rounded text-fg-secondary hover:text-fg-primary hover:bg-bg-muted transition-colors"
-              aria-label="Abrir panel"
-            >
-              <SidebarSimple />
-            </button>
-          </div>
-        )}
-
         {/* Mobile: top bar con hamburguesa */}
         <header className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-border bg-bg-base shrink-0">
           <button

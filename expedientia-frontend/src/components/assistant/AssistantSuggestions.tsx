@@ -3,10 +3,10 @@ interface AssistantSuggestionsProps {
 }
 
 const SUGGESTIONS = [
-  'Resumir un auto admisorio',
-  'Generar contestación de demanda',
-  'Buscar vencimientos esta semana',
-  'Informe de cartera por especialidad',
+  'Quiero crear un nuevo expediente',
+  '¿Qué tareas vencen próximamente?',
+  'Generame el resumen de un expediente',
+  'Sugerí tareas para un expediente',
 ] as const
 
 export function AssistantSuggestions({ onSelect }: AssistantSuggestionsProps) {

@@ -22,12 +22,14 @@ export const ParteSchema = z.object({
 export const TareaSchema = z.object({
   id: z.number(),
   titulo: z.string(),
-  descripcion: z.string().optional(),
+  descripcion: z.string().nullable().optional(),
   estado: EstadoTareaSchema,
   prioridad: PrioridadSchema,
-  fechaVencimiento: z.string().optional(),
-  sugeridaPorIA: z.boolean(),
-  createdAt: z.string(),
+  fechaVencimiento: z.string().nullable().optional(),
+  sugeridaPorIa: z.boolean(),
+  asignadoAId: z.number().nullable().optional(),
+  expedienteId: z.number().optional(),
+  createdAt: z.string().optional(),
 })
 
 // Expediente

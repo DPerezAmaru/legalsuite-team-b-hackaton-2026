@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import {
   Sparkle, Copy, Check,
   IdentificationCard,
-  CheckSquare,
   Gavel,
   Files,
   Robot,
@@ -11,6 +10,7 @@ import {
 import type { Expediente } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
 import { AccordionSection } from '../ui/AccordionSection'
+import { TareasSection } from './TareasSection'
 
 function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
@@ -154,12 +154,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
         )}
       </AccordionSection>
 
-      <AccordionSection
-        title="Tareas"
-        icon={<CheckSquare className="text-fg-secondary" />}
-      >
-        <EmptyState message="No hay tareas para este expediente" />
-      </AccordionSection>
+      <TareasSection expedienteId={expediente.id} />
 
       <AccordionSection
         title="Actuaciones"
@@ -209,3 +204,4 @@ function EmptyState({ message }: { message: string }) {
     </div>
   )
 }
+

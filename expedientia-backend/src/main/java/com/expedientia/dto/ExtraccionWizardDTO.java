@@ -13,6 +13,7 @@ public record ExtraccionWizardDTO(
     @JsonProperty("despacho") String despacho,
     @JsonProperty("ciudad") String ciudad,
     @JsonProperty("resumen") String resumen,
+    @JsonProperty("resuelve") String resuelve,
     @JsonProperty("partes") List<ParteWizard> partes,
     @JsonProperty("confirma") Boolean confirma,
     @JsonProperty("mensaje") String mensaje

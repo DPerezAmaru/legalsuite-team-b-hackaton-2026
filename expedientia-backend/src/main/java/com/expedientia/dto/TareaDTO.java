@@ -14,5 +14,6 @@ public record TareaDTO(
     LocalDate fechaVencimiento,
     Boolean sugeridaPorIa,
     Long asignadoAId,
-    Long expedienteId
+    Long expedienteId,
+    String expedienteTitulo
 ) {}

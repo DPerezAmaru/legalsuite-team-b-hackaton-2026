@@ -8,7 +8,15 @@ export function CommandBar() {
   const navigate = useNavigate()
   const { isOpen, open, close, toggle, setPendingPrompt } = useCommandBar()
   const [value, setValue] = useState('')
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Limpiar input al cerrar — patrón "adjust state during render" para evitar
+  // set-state-in-effect (la regla nueva de React 19 prohíbe setState en cuerpo de effect).
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen)
+    if (!isOpen) setValue('')
+  }
 
   useEffect(() => {
     function onKey(e: globalThis.KeyboardEvent) {
@@ -31,8 +39,6 @@ export function CommandBar() {
     if (isOpen) {
       // delay focus to next tick so the input is mounted
       requestAnimationFrame(() => textareaRef.current?.focus())
-    } else {
-      setValue('')
     }
   }, [isOpen])
 

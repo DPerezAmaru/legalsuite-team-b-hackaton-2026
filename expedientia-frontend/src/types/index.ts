@@ -81,6 +81,11 @@ export const ProcesarDocumentoResponseSchema = z.object({
 
 // Tipos inferidos
 
+// Colecciones reutilizables
+
+export const ExpedientesListSchema = z.array(ExpedienteSchema)
+export const TareasListSchema = z.array(TareaSchema)
+
 export type Especialidad = z.infer<typeof EspecialidadSchema>
 export type EstadoExpediente = z.infer<typeof EstadoExpedienteSchema>
 export type TipoParticipacion = z.infer<typeof TipoParticipacionSchema>

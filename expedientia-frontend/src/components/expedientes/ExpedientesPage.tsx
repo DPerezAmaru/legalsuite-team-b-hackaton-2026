@@ -30,6 +30,7 @@ export function ExpedientesPage() {
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<Tab>('todos')
   const [lastOpenedId, setLastOpenedId] = useState<number | null>(null)
+  const [prevDrawerId, setPrevDrawerId] = useState<number | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -39,9 +40,11 @@ export function ExpedientesPage() {
 
   const closeDrawer = () => navigate({ to: '/expedientes', search: {} })
 
-  useEffect(() => {
+  // Recordar el último drawerId no-null sin caer en set-state-in-effect.
+  if (drawerId !== prevDrawerId) {
+    setPrevDrawerId(drawerId)
     if (drawerId !== null) setLastOpenedId(drawerId)
-  }, [drawerId])
+  }
 
   // Close drawer if the open expediente was deleted
   useEffect(() => {

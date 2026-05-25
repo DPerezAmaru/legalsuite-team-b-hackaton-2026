@@ -85,9 +85,11 @@ export function DocumentosPage() {
 
   useEffect(() => {
     const files = consumePendingFiles()
-    if (files.length) handleFiles(files)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (!files.length) return
+    // Defer: handleFiles dispara setState y la regla set-state-in-effect lo prohíbe.
+    const id = setTimeout(() => handleFiles(files), 0)
+    return () => clearTimeout(id)
+  }, [consumePendingFiles, handleFiles])
 
   useEffect(() => {
     if (state.stage !== 'review') return

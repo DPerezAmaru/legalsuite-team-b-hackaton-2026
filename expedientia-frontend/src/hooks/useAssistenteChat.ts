@@ -2,10 +2,11 @@ import { useMutation } from '@tanstack/react-query'
 import {
   ChatApiResponseSchema,
   type AccionChat,
-  type ChatApiResponse,
   type ChatArchivo,
   type HistorialEntrada,
 } from '../types'
+import { request } from '../lib/http'
+import { apiEndpoints } from '../lib/api-endpoints'
 
 interface ChatPayload {
   prompt: string
@@ -22,15 +23,6 @@ export interface ChatResult {
   esperaRespuesta: boolean
 }
 
-function toResult(parsed: ChatApiResponse): ChatResult {
-  return {
-    accion: parsed.accion,
-    mensaje: parsed.mensaje,
-    datos: parsed.datos ?? null,
-    esperaRespuesta: parsed.esperaRespuesta ?? false,
-  }
-}
-
 async function enviarChat({
   prompt,
   modoAsistente,
@@ -38,19 +30,21 @@ async function enviarChat({
   archivos,
   usuarioId,
 }: ChatPayload): Promise<ChatResult> {
-  const url = usuarioId ? `/api/chat?usuarioId=${usuarioId}` : '/api/chat'
   const body: Record<string, unknown> = { prompt, modoAsistente, historial }
   if (archivos && archivos.length > 0) body.archivos = archivos
 
-  const res = await fetch(url, {
+  const parsed = await request(apiEndpoints.chat.send(usuarioId), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body,
+    schema: ChatApiResponseSchema,
   })
-  if (!res.ok) throw new Error(`Error ${res.status}`)
-  const json = await res.json()
-  const parsed = ChatApiResponseSchema.parse(json)
-  return toResult(parsed)
+
+  return {
+    accion: parsed.accion,
+    mensaje: parsed.mensaje,
+    datos: parsed.datos ?? null,
+    esperaRespuesta: parsed.esperaRespuesta ?? false,
+  }
 }
 
 export function useAssistenteChat() {

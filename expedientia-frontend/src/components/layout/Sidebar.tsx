@@ -1,17 +1,10 @@
-import { HouseIcon, FolderIcon, ListChecksIcon, SparkleIcon, SidebarSimpleIcon, XIcon } from '@phosphor-icons/react'
+import { FolderIcon, ListChecksIcon, SparkleIcon, SidebarSimpleIcon, XIcon } from '@phosphor-icons/react'
 import { SidebarNavItem } from './SidebarNavItem'
 import { ThemeToggle } from './ThemeToggle'
 import { useSidebar } from '../../hooks/useSidebar'
-import { useCommandBar } from '../../store/commandBarStore'
-
-function modKey(): string {
-  if (typeof navigator === 'undefined') return 'Ctrl'
-  return /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? '⌘' : 'Ctrl'
-}
 
 export function Sidebar() {
   const { isOpen, close, toggle } = useSidebar()
-  const openCommandBar = useCommandBar(s => s.open)
 
   return (
     <aside
@@ -55,36 +48,9 @@ export function Sidebar() {
         )}
       </div>
 
-      {/* Ask Anywhere */}
-      <div className="px-2 pb-2">
-        <button
-          type="button"
-          onClick={openCommandBar}
-          className={[
-            'flex items-center w-full h-9 rounded-md text-xs transition-colors',
-            isOpen
-              ? 'text-(--sidebar-text) bg-(--sidebar-hover) hover:text-fg-primary'
-              : 'text-(--sidebar-text) hover:bg-(--sidebar-hover) hover:text-fg-primary',
-          ].join(' ')}
-          aria-label="Abrir asistente"
-        >
-          <span className="flex items-center justify-center w-10 shrink-0 text-base">
-            <SparkleIcon size={18} />
-          </span>
-          {isOpen && (
-            <>
-              <span className="truncate">Pregunta al asistente</span>
-              <span className="ml-auto pr-2 font-mono text-[10px] tracking-wide opacity-70 whitespace-nowrap">
-                {modKey()}K
-              </span>
-            </>
-          )}
-        </button>
-      </div>
-
       {/* Nav principal */}
       <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden">
-        <SidebarNavItem to="/" icon={<HouseIcon size={18} />} label="Asistente" exact collapsed={!isOpen} />
+        <SidebarNavItem to="/" icon={<SparkleIcon size={18} />} label="Asistente" exact collapsed={!isOpen} />
         <SidebarNavItem to="/expedientes" icon={<FolderIcon size={18} />} label="Expedientes" collapsed={!isOpen} />
         <SidebarNavItem to="/tareas" icon={<ListChecksIcon size={18} />} label="Tareas" collapsed={!isOpen} />
       </nav>

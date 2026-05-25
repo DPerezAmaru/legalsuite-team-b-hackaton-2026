@@ -127,6 +127,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
   return (
     <>
       {/* FAB */}
+      {/*
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -135,6 +136,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
       >
         <BrainIcon size={20} />
       </button>
+      */}
 
       {/* Panel */}
       {open && (

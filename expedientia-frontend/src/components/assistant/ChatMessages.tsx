@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { FileText, Sparkle, ArrowSquareOut } from '@phosphor-icons/react'
-import { Link } from '@tanstack/react-router'
+import { FileText, Sparkle } from '@phosphor-icons/react'
 import type { ChatMessage } from '../../types'
+import { MessageDatos } from './MessageDatos'
+import { MessageMarkdown } from './MessageMarkdown'
 
 interface ChatMessagesProps {
   messages: ChatMessage[]
@@ -50,26 +51,18 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {message.content && (
           <div
             className={[
-              'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-line',
+              'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
               isUser
-                ? 'bg-cta-bg text-cta-text rounded-tr-sm'
+                ? 'bg-cta-bg text-cta-text rounded-tr-sm whitespace-pre-line'
                 : 'bg-bg-subtle border border-border text-fg-body rounded-tl-sm',
             ].join(' ')}
           >
-            {message.content}
+            {isUser ? message.content : <MessageMarkdown>{message.content}</MessageMarkdown>}
           </div>
         )}
 
-        {message.actionLink && (
-          <div className={isUser ? 'flex justify-end' : 'flex justify-start'}>
-            <Link
-              to={message.actionLink.to}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors"
-            >
-              <ArrowSquareOut size={14} />
-              {message.actionLink.label}
-            </Link>
-          </div>
+        {!isUser && message.accion && message.datos != null && (
+          <MessageDatos accion={message.accion} datos={message.datos} />
         )}
       </div>
     </div>

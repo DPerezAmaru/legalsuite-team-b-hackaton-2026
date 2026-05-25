@@ -14,6 +14,21 @@ export default defineConfig({
       '/api': {
         target: process.env.API_URL ?? 'https://legalsuite-team-b-hackaton-2026-production.up.railway.app',
         changeOrigin: true,
+        secure: true,
+        // Subida de PDFs puede tardar más que el default; evita 502 por timeout.
+        timeout: 120_000,
+        proxyTimeout: 120_000,
+        configure: (proxy) => {
+          proxy.on('error', (err, req) => {
+            console.error('[vite-proxy] ERROR', req.method, req.url, '→', err.message)
+          })
+          proxy.on('proxyReq', (_proxyReq, req) => {
+            console.log('[vite-proxy] →', req.method, req.url)
+          })
+          proxy.on('proxyRes', (proxyRes, req) => {
+            console.log('[vite-proxy] ←', proxyRes.statusCode, req.method, req.url)
+          })
+        },
       },
     },
   },

@@ -95,10 +95,31 @@ export type ProcesarDocumentoResponse = z.infer<typeof ProcesarDocumentoResponse
 
 // ─── CHAT API (respuesta de /api/chat) ───────────────────────────────────────
 
+export const AccionChatSchema = z.enum([
+  'CONVERSACION_LIBRE',
+  'NECESITA_ACLARACION',
+  'ASISTENTE_CREACION',
+  'CREAR_EXPEDIENTES_MASIVO',
+  'LISTAR_EXPEDIENTES',
+  'OBTENER_EXPEDIENTE',
+  'LISTAR_TAREAS',
+  'LISTAR_TODAS_TAREAS',
+  'SUGERIR_TAREAS',
+  'CREAR_TAREAS_EXPEDIENTE',
+  'RESUMEN_EXPEDIENTE',
+  'ALERTAS_VENCIMIENTO',
+  'BUSCAR_EXPEDIENTES',
+  'SUGERENCIA_JUDICIAL',
+  'CREAR_USUARIO',
+  'NO_PERMITIDO',
+])
+export type AccionChat = z.infer<typeof AccionChatSchema>
+
 export const ChatApiResponseSchema = z.object({
   accion: z.string(),
   mensaje: z.string(),
-  datos: z.unknown().optional(),
+  datos: z.unknown().nullish(),
+  esperaRespuesta: z.boolean().optional().default(false),
 })
 export type ChatApiResponse = z.infer<typeof ChatApiResponseSchema>
 
@@ -106,13 +127,19 @@ export type ChatApiResponse = z.infer<typeof ChatApiResponseSchema>
 
 export type ChatRole = 'user' | 'assistant'
 
+export interface ChatArchivo {
+  nombreDocumento: string
+  contenido: string
+}
+
 export interface ChatMessage {
   id: string
   role: ChatRole
   content: string
   attachmentName?: string
   timestamp: Date
-  actionLink?: { to: string; label: string }
+  accion?: AccionChat | string
+  datos?: unknown
 }
 
 // ─── DOCUMENTOS / CREAR EXPEDIENTE ────────────────────────────────────────────
@@ -170,6 +197,15 @@ export type ExpedienteCreadoConTareas = {
 // ─── CHAT HISTORIAL ──────────────────────────────────────────────────────────
 
 export interface HistorialEntrada {
-  rol: 'usuario' | 'asistente'
+  rol: ChatRole
   contenido: string
 }
+
+// ─── DOCUMENTO CONTEXTO (POST /api/documentos/contexto) ──────────────────────
+
+export const DocumentoContextoResponseSchema = z.object({
+  nombreDocumento: z.string(),
+  contenido: z.string().nullable(),
+  error: z.string().nullable(),
+})
+export type DocumentoContextoResponse = z.infer<typeof DocumentoContextoResponseSchema>

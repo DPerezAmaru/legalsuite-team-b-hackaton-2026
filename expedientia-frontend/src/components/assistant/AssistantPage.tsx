@@ -1,11 +1,13 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { ChatMessage, HistorialEntrada } from '../../types'
+import type { ChatArchivo, ChatMessage, HistorialEntrada } from '../../types'
 import { AssistantInput } from './AssistantInput'
 import { AssistantSuggestions } from './AssistantSuggestions'
 import { DocumentUploadCard } from './DocumentUploadCard'
 import { ChatMessages } from './ChatMessages'
 import { useAssistenteChat } from '../../hooks/useAssistenteChat'
+import { useDocumentoContexto } from '../../hooks/useDocumentoContexto'
 import { useCommandBar } from '../../store/commandBarStore'
+import { useUsuarioStore } from '../../store/usuarioStore'
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -15,8 +17,8 @@ function getGreeting(): string {
 }
 
 function buildHistorial(messages: ChatMessage[]): HistorialEntrada[] {
-  return messages.map(m => ({
-    rol: m.role === 'user' ? 'usuario' : 'asistente',
+  return messages.map((m) => ({
+    rol: m.role,
     contenido: m.content,
   }))
 }
@@ -24,42 +26,82 @@ function buildHistorial(messages: ChatMessage[]): HistorialEntrada[] {
 export function AssistantPage() {
   const [inputValue, setInputValue] = useState('')
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
+  const [archivoContexto, setArchivoContexto] = useState<ChatArchivo | null>(null)
+  const [attachError, setAttachError] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [modoAsistente, setModoAsistente] = useState(false)
 
-  const { mutateAsync: sendChat, isPending } = useAssistenteChat()
-  const consumePendingPrompt = useCommandBar(s => s.consumePendingPrompt)
+  const { mutateAsync: sendChat, isPending: isChatPending } = useAssistenteChat()
+  const { mutateAsync: extraerContexto, isPending: isExtracting } = useDocumentoContexto()
+  const consumePendingPrompt = useCommandBar((s) => s.consumePendingPrompt)
+  const usuarioId = useUsuarioStore((s) => s.usuarioId)
+
+  const handleAttach = useCallback(
+    async (file: File | null) => {
+      setAttachError(null)
+      if (!file) {
+        setAttachedFile(null)
+        setArchivoContexto(null)
+        return
+      }
+      setAttachedFile(file)
+      try {
+        const res = await extraerContexto(file)
+        if (res.error || !res.contenido) {
+          setAttachError(res.error ?? 'No se pudo procesar el documento')
+          setAttachedFile(null)
+          setArchivoContexto(null)
+          return
+        }
+        setArchivoContexto({ nombreDocumento: res.nombreDocumento, contenido: res.contenido })
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Error al procesar el documento'
+        setAttachError(msg)
+        setAttachedFile(null)
+        setArchivoContexto(null)
+      }
+    },
+    [extraerContexto],
+  )
 
   const sendPrompt = useCallback(
-    async (prompt: string, file: File | null) => {
-      if (!prompt.trim() && !file) return
+    async (prompt: string) => {
+      const trimmed = prompt.trim()
+      if (!trimmed && !archivoContexto) return
 
       const historialActual = buildHistorial(messages)
+      const archivos = archivoContexto ? [archivoContexto] : undefined
 
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: prompt,
-        attachmentName: file?.name,
+        content: trimmed,
+        attachmentName: archivoContexto?.nombreDocumento,
         timestamp: new Date(),
       }
-
-      setMessages(prev => [...prev, userMsg])
+      setMessages((prev) => [...prev, userMsg])
 
       try {
-        const response = await sendChat({ prompt, file, modoAsistente, historial: historialActual })
-        setMessages(prev => [
+        const response = await sendChat({
+          prompt: trimmed,
+          modoAsistente,
+          historial: historialActual,
+          archivos,
+          usuarioId,
+        })
+        setMessages((prev) => [
           ...prev,
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: response.content,
-            actionLink: response.actionLink,
+            content: response.mensaje,
+            accion: response.accion,
+            datos: response.datos,
             timestamp: new Date(),
           },
         ])
       } catch {
-        setMessages(prev => [
+        setMessages((prev) => [
           ...prev,
           {
             id: crypto.randomUUID(),
@@ -70,22 +112,21 @@ export function AssistantPage() {
         ])
       }
     },
-    [sendChat, messages, modoAsistente],
+    [sendChat, messages, modoAsistente, archivoContexto, usuarioId],
   )
 
   const handleSubmit = useCallback(async () => {
     const prompt = inputValue
-    const file = attachedFile
     setInputValue('')
-    setAttachedFile(null)
-    await sendPrompt(prompt, file)
-  }, [inputValue, attachedFile, sendPrompt])
+    await sendPrompt(prompt)
+  }, [inputValue, sendPrompt])
 
   useEffect(() => {
     const pending = consumePendingPrompt()
-    if (pending) sendPrompt(pending, null)
+    if (pending) sendPrompt(pending)
   }, [consumePendingPrompt, sendPrompt])
 
+  const isPending = isChatPending || isExtracting
   const isChat = messages.length > 0
 
   const inputBar = (
@@ -94,10 +135,12 @@ export function AssistantPage() {
       onChange={setInputValue}
       onSubmit={handleSubmit}
       attachedFile={attachedFile}
-      onAttach={setAttachedFile}
+      onAttach={handleAttach}
+      attachError={attachError}
+      isExtracting={isExtracting}
       isLoading={isPending}
       modoAsistente={modoAsistente}
-      onToggleModo={() => setModoAsistente(v => !v)}
+      onToggleModo={() => setModoAsistente((v) => !v)}
     />
   )
 
@@ -106,14 +149,12 @@ export function AssistantPage() {
       <div className="flex flex-col h-full">
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
-            <ChatMessages messages={messages} isLoading={isPending} />
+            <ChatMessages messages={messages} isLoading={isChatPending} />
           </div>
         </div>
 
         <div className="bg-bg-base">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">
-            {inputBar}
-          </div>
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">{inputBar}</div>
         </div>
       </div>
     )

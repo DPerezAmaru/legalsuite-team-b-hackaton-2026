@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, PencilSimple, Check, X } from '@phosphor-icons/react'
+import { PlusIcon, PencilSimpleIcon, CheckIcon, XIcon } from '@phosphor-icons/react'
 import type { Parte, TipoParticipacion } from '../../types'
 
 const TIPOS: { value: TipoParticipacion; label: string }[] = [
@@ -44,7 +44,7 @@ export function PartesEditor({ partes, onChange }: PartesEditorProps) {
                 onClick={() => addOfType(value)}
                 className="flex items-center gap-1 text-[11px] text-fg-secondary hover:text-fg-primary transition-colors"
               >
-                <Plus />
+                <PlusIcon />
                 Agregar
               </button>
             </div>
@@ -115,7 +115,7 @@ function ParteRow({ parte, onChange, onRemove }: ParteRowProps) {
             onClick={commit}
             className="p-1 rounded text-cta-bg hover:bg-bg-muted transition-colors shrink-0"
           >
-            <Check />
+            <CheckIcon />
           </button>
         </div>
       ) : (
@@ -139,7 +139,7 @@ function ParteRow({ parte, onChange, onRemove }: ParteRowProps) {
             className="p-1 rounded opacity-0 group-hover:opacity-100 text-fg-tertiary hover:text-fg-secondary transition-all shrink-0"
             aria-label="Editar"
           >
-            <PencilSimple />
+            <PencilSimpleIcon />
           </button>
           <button
             type="button"
@@ -147,7 +147,7 @@ function ParteRow({ parte, onChange, onRemove }: ParteRowProps) {
             className="p-1 rounded opacity-0 group-hover:opacity-100 text-fg-tertiary hover:text-fg-primary transition-all shrink-0"
             aria-label="Eliminar"
           >
-            <X />
+            <XIcon />
           </button>
         </>
       )}

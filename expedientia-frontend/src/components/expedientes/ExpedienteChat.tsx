@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Brain, X, ArrowRight, Paperclip, CircleNotch, Warning } from '@phosphor-icons/react'
+import { BrainIcon, XIcon, ArrowRightIcon, PaperclipIcon, CircleNotchIcon, WarningIcon } from '@phosphor-icons/react'
 import type { ChatArchivo, ChatMessage, HistorialEntrada } from '../../types'
 import { useAssistenteChat } from '../../hooks/useAssistenteChat'
 import { useDocumentoContexto } from '../../hooks/useDocumentoContexto'
@@ -133,7 +133,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         aria-label="Abrir asistente del expediente"
         className="fixed bottom-6 right-6 z-40 p-3.5 rounded-full bg-cta-bg text-cta-text shadow-lg hover:bg-cta-hover transition-colors"
       >
-        <Brain size={20} />
+        <BrainIcon size={20} />
       </button>
 
       {/* Panel */}
@@ -144,7 +144,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         >
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
-            <Brain size={15} className="text-ai-text shrink-0" />
+            <BrainIcon size={15} className="text-ai-text shrink-0" />
             <span className="text-sm font-medium text-fg-primary flex-1">Asistente</span>
             <span className="text-xs text-fg-tertiary font-mono">{radicado}</span>
             <button
@@ -152,7 +152,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
               onClick={() => setOpen(false)}
               className="p-1 rounded text-fg-tertiary hover:text-fg-primary hover:bg-bg-muted transition-colors ml-1"
             >
-              <X size={14} />
+              <XIcon size={14} />
             </button>
           </div>
 
@@ -177,7 +177,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
               )}
               {attachError && (
                 <div className="flex items-center gap-1.5 text-xs text-status-urgent-text">
-                  <Warning size={12} />
+                  <WarningIcon size={12} />
                   <span>{attachError}</span>
                 </div>
               )}
@@ -194,9 +194,9 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
               aria-label="Adjuntar PDF"
             >
               {isExtracting ? (
-                <CircleNotch size={14} className="animate-spin" />
+                <CircleNotchIcon size={14} className="animate-spin" />
               ) : (
-                <Paperclip size={14} />
+                <PaperclipIcon size={14} />
               )}
             </button>
             <input
@@ -219,7 +219,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
               disabled={!canSend}
               className="p-1.5 rounded bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-40 shrink-0"
             >
-              <ArrowRight size={14} />
+              <ArrowRightIcon size={14} />
             </button>
             <input
               ref={fileInputRef}

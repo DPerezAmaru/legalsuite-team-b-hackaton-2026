@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckSquare, PlusCircle, Sparkle } from '@phosphor-icons/react'
+import { CheckSquareIcon, PlusCircleIcon, SparkleIcon } from '@phosphor-icons/react'
 import { AccordionSection } from '../ui/AccordionSection'
 import { Tooltip } from '../ui/Tooltip'
 import type { Tarea, EstadoTarea, Prioridad } from '../../types'
@@ -64,7 +64,7 @@ export function TareasSection({ expedienteId }: { expedienteId: number }) {
   return (
     <AccordionSection
       title="Tareas"
-      icon={<CheckSquare className="text-fg-secondary" />}
+      icon={<CheckSquareIcon className="text-fg-secondary" />}
       badge={
         tareas.length > 0 ? (
           <span className="text-xs text-fg-tertiary tabular-nums mr-1">{tareas.length}</span>
@@ -79,7 +79,7 @@ export function TareasSection({ expedienteId }: { expedienteId: number }) {
               disabled={iaLoading}
               className="p-1.5 rounded text-ai-text hover:bg-ai-tint transition-colors disabled:opacity-50"
             >
-              <Sparkle size={16} className={iaLoading ? 'animate-spin' : ''} />
+              <SparkleIcon size={16} className={iaLoading ? 'animate-spin' : ''} />
             </button>
           </Tooltip>
           <Tooltip content="Nueva tarea">
@@ -88,7 +88,7 @@ export function TareasSection({ expedienteId }: { expedienteId: number }) {
               onClick={handleShowForm}
               className="p-1.5 rounded text-fg-secondary hover:bg-bg-muted hover:text-fg-primary transition-colors"
             >
-              <PlusCircle size={16} />
+              <PlusCircleIcon size={16} />
             </button>
           </Tooltip>
         </div>

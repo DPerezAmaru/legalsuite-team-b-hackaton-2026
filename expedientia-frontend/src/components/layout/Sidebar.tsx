@@ -1,4 +1,4 @@
-import { House, Folder, ListChecks, Sparkle, SidebarSimple, X } from '@phosphor-icons/react'
+import { HouseIcon, FolderIcon, ListChecksIcon, SparkleIcon, SidebarSimpleIcon, XIcon } from '@phosphor-icons/react'
 import { SidebarNavItem } from './SidebarNavItem'
 import { ThemeToggle } from './ThemeToggle'
 import { useSidebar } from '../../hooks/useSidebar'
@@ -32,7 +32,7 @@ export function Sidebar() {
           className="hidden lg:flex items-center justify-center w-14 h-10 shrink-0 text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
           aria-label={isOpen ? 'Colapsar panel' : 'Expandir panel'}
         >
-          <SidebarSimple size={18} />
+          <SidebarSimpleIcon size={18} />
         </button>
 
         {/* Título solo cuando está abierto */}
@@ -50,7 +50,7 @@ export function Sidebar() {
             className="lg:hidden ml-auto mr-3 p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
             aria-label="Cerrar menú"
           >
-            <X size={18} />
+            <XIcon size={18} />
           </button>
         )}
       </div>
@@ -69,7 +69,7 @@ export function Sidebar() {
           aria-label="Abrir asistente"
         >
           <span className="flex items-center justify-center w-10 shrink-0 text-base">
-            <Sparkle size={18} />
+            <SparkleIcon size={18} />
           </span>
           {isOpen && (
             <>
@@ -84,9 +84,9 @@ export function Sidebar() {
 
       {/* Nav principal */}
       <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden">
-        <SidebarNavItem to="/" icon={<House size={18} />} label="Asistente" exact collapsed={!isOpen} />
-        <SidebarNavItem to="/expedientes" icon={<Folder size={18} />} label="Expedientes" collapsed={!isOpen} />
-        <SidebarNavItem to="/tareas" icon={<ListChecks size={18} />} label="Tareas" collapsed={!isOpen} />
+        <SidebarNavItem to="/" icon={<HouseIcon size={18} />} label="Asistente" exact collapsed={!isOpen} />
+        <SidebarNavItem to="/expedientes" icon={<FolderIcon size={18} />} label="Expedientes" collapsed={!isOpen} />
+        <SidebarNavItem to="/tareas" icon={<ListChecksIcon size={18} />} label="Tareas" collapsed={!isOpen} />
       </nav>
 
       {/* Nav inferior */}

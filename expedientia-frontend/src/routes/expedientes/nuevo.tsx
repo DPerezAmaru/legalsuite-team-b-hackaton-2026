@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { CaretRight, Sparkle } from '@phosphor-icons/react'
+import { CaretRightIcon, SparkleIcon } from '@phosphor-icons/react'
 import { PageContainer } from '../../components/layout/PageContainer'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { DocumentUploadCard } from '../../components/assistant/DocumentUploadCard'
@@ -13,7 +13,7 @@ function NuevoExpedientePage() {
         <Link to="/expedientes" className="hover:text-fg-secondary transition-colors">
           Expedientes
         </Link>
-        <CaretRight />
+        <CaretRightIcon />
         <span className="text-fg-secondary">Nuevo</span>
       </nav>
 
@@ -31,7 +31,7 @@ function NuevoExpedientePage() {
           className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-bg-subtle hover:border-border-strong hover:bg-bg-muted transition-colors text-left"
         >
           <div className="shrink-0 w-8 h-8 rounded-lg bg-bg-muted border border-border flex items-center justify-center">
-            <Sparkle className="text-fg-secondary" />
+            <SparkleIcon className="text-fg-secondary" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-fg-primary leading-tight">

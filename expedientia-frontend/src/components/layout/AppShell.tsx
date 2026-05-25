@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { List } from '@phosphor-icons/react'
+import { ListIcon } from '@phosphor-icons/react'
 import { Sidebar } from './Sidebar'
 import { CommandBar } from './CommandBar'
 import { useSidebar } from '../../hooks/useSidebar'
@@ -33,7 +33,7 @@ export function AppShell({ children }: AppShellProps) {
             className="p-1 rounded text-fg-secondary hover:text-fg-primary hover:bg-bg-muted transition-colors"
             aria-label="Abrir menú"
           >
-            <List />
+            <ListIcon />
           </button>
           <span className="font-semibold text-sm text-fg-primary">ExpedientiA</span>
         </header>

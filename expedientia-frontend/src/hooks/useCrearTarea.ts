@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { TareaSchema, type EstadoTarea, type Prioridad } from '../types'
+import { request } from '../lib/http'
+import { apiEndpoints } from '../lib/api-endpoints'
 
 export interface CrearTareaPayload {
   titulo: string
@@ -12,20 +14,15 @@ export interface CrearTareaPayload {
   asignadoAId?: number
 }
 
-async function crearTarea(payload: CrearTareaPayload) {
-  const res = await fetch('/api/tareas', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error(`Error ${res.status}`)
-  return TareaSchema.parse(await res.json())
-}
-
 export function useCrearTarea(expedienteId: number) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: crearTarea,
+    mutationFn: (payload: CrearTareaPayload) =>
+      request(apiEndpoints.tareas.create, {
+        method: 'POST',
+        body: payload,
+        schema: TareaSchema,
+      }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tareas', expedienteId] }),
   })
 }

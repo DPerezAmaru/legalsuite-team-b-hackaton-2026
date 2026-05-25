@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { FileText } from '@phosphor-icons/react'
+import { FileTextIcon } from '@phosphor-icons/react'
 import type { Expediente, Parte, TipoParticipacion } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
 
@@ -61,7 +61,7 @@ export function ExpedienteRow({ expediente, isActive = false, isSelected, onTogg
         ) : (
           <span className="w-3.5 shrink-0" aria-hidden="true" />
         )}
-        <FileText className="shrink-0 text-fg-tertiary" />
+        <FileTextIcon className="shrink-0 text-fg-tertiary" />
         <div className="min-w-0">
           <p className="font-medium text-fg-primary truncate">{expediente.titulo}</p>
           {expediente.radicado && (

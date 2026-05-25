@@ -175,8 +175,9 @@ public class AIService {
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
+            log.error("extraerProcesos failed: {}", e.getMessage(), e);
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
-                    "No se pudo extraer la información del documento PDF: " + e.getMessage());
+                    "No se pudo extraer la información del documento PDF.");
         }
     }
 
@@ -191,8 +192,9 @@ public class AIService {
         } catch (AppException e) {
             throw e;
         } catch (Exception e) {
+            log.error("interpretarDesdeChat failed: {}", e.getMessage(), e);
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
-                    "No se pudo extraer la información del expediente: " + e.getMessage());
+                    "No se pudo extraer la información del expediente.");
         }
     }
 
@@ -336,8 +338,10 @@ public class AIService {
                 - Si confirma=true: "Perfecto, procedo a crear el expediente."
                 - Máximo 80 palabras
 
+                CAMPO "resuelve": si el documento adjunto contiene una sección "Resuelve", "Parte Resolutiva" o similar → copiá el texto LITERAL. Si no hay documento o no tiene parte resolutiva → null. NUNCA inventes.
+
                 Respondé ÚNICAMENTE con JSON válido, sin texto adicional:
-                {"titulo":null,"especialidad":null,"despacho":null,"ciudad":null,"resumen":null,"partes":[{"nombre":"string","identificacion":null,"tipoParticipacion":"DEMANDANTE"}],"confirma":false,"mensaje":"string"}
+                {"titulo":null,"especialidad":null,"despacho":null,"ciudad":null,"resumen":null,"resuelve":null,"partes":[{"nombre":"string","identificacion":null,"tipoParticipacion":"DEMANDANTE"}],"confirma":false,"mensaje":"string"}
                 """;
 
         String userMessage = contexto.isBlank()
@@ -382,7 +386,7 @@ public class AIService {
         CreateExpedienteRequest expediente = new CreateExpedienteRequest(
                 null, ext.titulo(), ext.especialidad(),
                 ext.despacho(), ext.ciudad(), null,
-                ext.resumen(), null, null, null, partes);
+                ext.resumen(), ext.resuelve(), null, null, partes);
 
         if (Boolean.TRUE.equals(ext.confirma())) {
             return new AsistenteCreacionResult("LISTO", expediente, null, List.of());
@@ -604,8 +608,9 @@ public class AIService {
         try {
             return objectMapper.readValue(limpiarJson(raw), type);
         } catch (Exception e) {
+            log.error("AI response parse failed. Raw: {}", raw);
             throw new AppException(AppException.Code.AI_EXTRACTION_FAILED,
-                    "Error al parsear respuesta de IA: " + raw);
+                    "No se pudo procesar la respuesta del asistente.");
         }
     }
 }

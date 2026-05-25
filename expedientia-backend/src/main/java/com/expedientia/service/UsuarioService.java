@@ -2,8 +2,10 @@ package com.expedientia.service;
 
 import com.expedientia.dto.UsuarioDTO;
 import com.expedientia.entity.Usuario;
+import com.expedientia.exception.AppException;
 import com.expedientia.exception.ResourceNotFoundException;
 import com.expedientia.repository.UsuarioRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +35,12 @@ public class UsuarioService {
         usuario.setNombre(dto.nombre());
         usuario.setEmail(dto.email());
         usuario.setRol(dto.rol());
-        return toDTO(usuarioRepo.save(usuario));
+        try {
+            return toDTO(usuarioRepo.save(usuario));
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(AppException.Code.DUPLICATE_EMAIL,
+                    "Ya existe un usuario con el email '" + dto.email() + "'.");
+        }
     }
 
     @Transactional
@@ -42,7 +49,12 @@ public class UsuarioService {
         if (dto.nombre() != null) usuario.setNombre(dto.nombre());
         if (dto.email() != null) usuario.setEmail(dto.email());
         if (dto.rol() != null) usuario.setRol(dto.rol());
-        return toDTO(usuarioRepo.save(usuario));
+        try {
+            return toDTO(usuarioRepo.save(usuario));
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(AppException.Code.DUPLICATE_EMAIL,
+                    "Ya existe un usuario con el email '" + dto.email() + "'.");
+        }
     }
 
     @Transactional

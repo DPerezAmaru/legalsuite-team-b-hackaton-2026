@@ -1,8 +1,8 @@
 import '../../lib/pdfWorker'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
-import { X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus } from '@phosphor-icons/react'
+import { XIcon, CaretLeftIcon, CaretRightIcon, MagnifyingGlassPlusIcon, MagnifyingGlassMinusIcon } from '@phosphor-icons/react'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -102,10 +102,9 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
     setPage(1)
   }, [])
 
-  const customTextRenderer = useCallback(
-    buildRenderer(highlightValues),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [highlightValues.join('|')],
+  const customTextRenderer = useMemo(
+    () => buildRenderer(highlightValues),
+    [highlightValues],
   )
 
   return (
@@ -121,7 +120,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
           onClick={onReplace}
           className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-fg-secondary hover:text-fg-primary border border-border hover:border-border-strong rounded-lg transition-colors shrink-0"
         >
-          <X />
+          <XIcon />
           Reemplazar
         </button>
       </div>
@@ -157,7 +156,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             disabled={page <= 1 || numPages === 0}
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
           >
-            <CaretLeft />
+            <CaretLeftIcon />
           </button>
           <span className="text-xs text-fg-secondary tabular-nums px-1">
             {numPages > 0 ? `${page} / ${numPages}` : '—'}
@@ -168,7 +167,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             disabled={page >= numPages || numPages === 0}
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
           >
-            <CaretRight />
+            <CaretRightIcon />
           </button>
         </div>
 
@@ -181,7 +180,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
             aria-label="Reducir zoom"
           >
-            <MagnifyingGlassMinus />
+            <MagnifyingGlassMinusIcon />
           </button>
           <span className="text-xs text-fg-secondary tabular-nums w-10 text-center">
             {Math.round(zoom * 100)}%
@@ -193,7 +192,7 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
             className="p-1 rounded text-fg-secondary hover:text-fg-primary disabled:opacity-30 transition-colors"
             aria-label="Aumentar zoom"
           >
-            <MagnifyingGlassPlus />
+            <MagnifyingGlassPlusIcon />
           </button>
         </div>
       </div>

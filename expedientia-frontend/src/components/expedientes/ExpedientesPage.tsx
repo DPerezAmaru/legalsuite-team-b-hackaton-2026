@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Plus, MagnifyingGlass, Trash } from '@phosphor-icons/react'
+import { PlusIcon, MagnifyingGlassIcon, TrashIcon } from '@phosphor-icons/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useExpedientes } from '../../hooks/useExpedientes'
 import type { EstadoExpediente, Expediente } from '../../types'
@@ -30,6 +30,7 @@ export function ExpedientesPage() {
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<Tab>('todos')
   const [lastOpenedId, setLastOpenedId] = useState<number | null>(null)
+  const [prevDrawerId, setPrevDrawerId] = useState<number | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -39,9 +40,11 @@ export function ExpedientesPage() {
 
   const closeDrawer = () => navigate({ to: '/expedientes', search: {} })
 
-  useEffect(() => {
+  // Recordar el último drawerId no-null sin caer en set-state-in-effect.
+  if (drawerId !== prevDrawerId) {
+    setPrevDrawerId(drawerId)
     if (drawerId !== null) setLastOpenedId(drawerId)
-  }, [drawerId])
+  }
 
   // Close drawer if the open expediente was deleted
   useEffect(() => {
@@ -145,7 +148,7 @@ export function ExpedientesPage() {
                 onClick={() => navigate({ to: '/expedientes/nuevo' })}
                 className="flex items-center gap-1.5 text-sm font-medium bg-cta-bg text-cta-text hover:bg-cta-hover px-3 py-1.5 rounded-lg transition-colors"
               >
-                <Plus />
+                <PlusIcon />
                 Nuevo expediente
               </button>
             }
@@ -154,7 +157,7 @@ export function ExpedientesPage() {
           <PageToolbar
             search={
               <div className="relative">
-                <MagnifyingGlass
+                <MagnifyingGlassIcon
                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-tertiary"
                 />
                 <input
@@ -299,7 +302,7 @@ export function ExpedientesPage() {
             disabled={isDeleting}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
           >
-            <Trash size={12} />
+            <TrashIcon size={12} />
             {isDeleting ? 'Eliminando…' : 'Eliminar'}
           </button>
         </div>

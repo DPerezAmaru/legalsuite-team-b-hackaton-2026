@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import {
-  Briefcase,
-  CheckSquare,
-  Clock,
-  Lightbulb,
-  Scales,
-  User,
-  Warning,
+  BriefcaseIcon,
+  CheckSquareIcon,
+  ClockIcon,
+  LightbulbIcon,
+  ScalesIcon,
+  UserIcon,
+  WarningIcon,
 } from '@phosphor-icons/react'
 import type {
   AccionChat,
@@ -34,6 +34,7 @@ export function MessageDatos({ accion, datos }: MessageDatosProps) {
 
     case 'OBTENER_EXPEDIENTE':
     case 'RESUMEN_EXPEDIENTE':
+    case 'ELIMINAR_EXPEDIENTE':
       return <ExpedienteCard expediente={asObject<Expediente>(datos)} />
 
     case 'ASISTENTE_CREACION':
@@ -43,6 +44,11 @@ export function MessageDatos({ accion, datos }: MessageDatosProps) {
     case 'LISTAR_TODAS_TAREAS':
     case 'CREAR_TAREAS_EXPEDIENTE':
       return <TareasList tareas={asArray<Tarea>(datos)} />
+
+    case 'ELIMINAR_TAREA': {
+      const t = asObject<Tarea>(datos)
+      return t ? <TareasList tareas={[t]} /> : null
+    }
 
     case 'SUGERIR_TAREAS':
       return <TareasList tareas={asArray<Tarea>(datos)} variant="sugeridas" />
@@ -93,7 +99,7 @@ function ExpedientesList({
           className="block px-3 py-2.5 rounded-lg bg-bg-base border border-border hover:border-border-strong transition-colors"
         >
           <div className="flex items-start gap-2.5">
-            <Briefcase size={16} className="text-fg-secondary shrink-0 mt-0.5" />
+            <BriefcaseIcon size={16} className="text-fg-secondary shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-2">
                 <span className="text-sm font-medium text-fg-primary truncate">{exp.titulo}</span>
@@ -122,7 +128,7 @@ function ExpedienteCard({ expediente }: { expediente: Expediente | null }) {
       className="block mt-2 p-3 rounded-lg bg-bg-base border border-border hover:border-border-strong transition-colors"
     >
       <div className="flex items-baseline gap-2 mb-1.5">
-        <Briefcase size={16} className="text-fg-secondary shrink-0" />
+        <BriefcaseIcon size={16} className="text-fg-secondary shrink-0" />
         <span className="text-sm font-medium text-fg-primary flex-1">{expediente.titulo}</span>
         <StatusPill estado={expediente.estado} />
       </div>
@@ -155,7 +161,7 @@ function ExpedientePreview({
   return (
     <div className="mt-2 p-3 rounded-lg bg-ai-tint border border-ai-border">
       <div className="flex items-center gap-2 mb-1.5">
-        <Scales size={15} className="text-ai-text shrink-0" />
+        <ScalesIcon size={15} className="text-ai-text shrink-0" />
         <span className="text-xs font-medium text-ai-text uppercase tracking-wide">
           Borrador en construcción
         </span>
@@ -199,7 +205,7 @@ function TareasList({
   if (tareas.length === 0) return null
 
   const headerIcon =
-    variant === 'sugeridas' ? Lightbulb : variant === 'vencimiento' ? Warning : CheckSquare
+    variant === 'sugeridas' ? LightbulbIcon : variant === 'vencimiento' ? WarningIcon : CheckSquareIcon
   const HeaderIcon = headerIcon
   const headerLabel =
     variant === 'sugeridas'
@@ -222,7 +228,7 @@ function TareasList({
           className="px-3 py-2 rounded-lg bg-bg-base border border-border"
         >
           <div className="flex items-start gap-2.5">
-            <CheckSquare
+            <CheckSquareIcon
               size={15}
               weight={t.estado === 'COMPLETADA' ? 'fill' : 'regular'}
               className="text-fg-secondary shrink-0 mt-0.5"
@@ -237,7 +243,7 @@ function TareasList({
               )}
               {t.fechaVencimiento && (
                 <div className="flex items-center gap-1 text-xs text-fg-tertiary mt-1">
-                  <Clock size={11} />
+                  <ClockIcon size={11} />
                   <span>{t.fechaVencimiento}</span>
                 </div>
               )}
@@ -257,7 +263,7 @@ function UsuarioCard({
   if (!usuario) return null
   return (
     <div className="mt-2 px-3 py-2.5 rounded-lg bg-bg-base border border-border flex items-center gap-2.5">
-      <User size={16} className="text-fg-secondary shrink-0" />
+      <UserIcon size={16} className="text-fg-secondary shrink-0" />
       <div className="min-w-0">
         <div className="text-sm font-medium text-fg-primary">{usuario.nombre ?? '—'}</div>
         <div className="text-xs text-fg-tertiary">

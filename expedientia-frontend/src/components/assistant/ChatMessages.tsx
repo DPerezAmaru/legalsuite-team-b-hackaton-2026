@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { FileText, Sparkle } from '@phosphor-icons/react'
+import { FileTextIcon, SparkleIcon } from '@phosphor-icons/react'
 import type { ChatMessage } from '../../types'
 import { MessageDatos } from './MessageDatos'
 import { MessageMarkdown } from './MessageMarkdown'
@@ -34,7 +34,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
     <div className={['flex gap-3', isUser ? 'justify-end' : 'justify-start'].join(' ')}>
       {!isUser && (
         <div className="w-7 h-7 rounded-full bg-ai-tint border border-ai-border flex items-center justify-center shrink-0 mt-0.5">
-          <Sparkle className="text-ai-text" />
+          <SparkleIcon className="text-ai-text" />
         </div>
       )}
 
@@ -42,7 +42,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         {isUser && message.attachmentName && (
           <div className="flex justify-end">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-muted border border-border text-xs text-fg-secondary">
-              <FileText />
+              <FileTextIcon />
               <span className="truncate max-w-[160px]">{message.attachmentName}</span>
             </div>
           </div>
@@ -73,7 +73,7 @@ function TypingIndicator() {
   return (
     <div className="flex gap-3 justify-start">
       <div className="w-7 h-7 rounded-full bg-ai-tint border border-ai-border flex items-center justify-center shrink-0">
-        <Sparkle className="text-ai-text" />
+        <SparkleIcon className="text-ai-text" />
       </div>
       <div className="px-3.5 py-3 rounded-2xl rounded-tl-sm bg-bg-subtle border border-border flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full bg-fg-tertiary animate-bounce [animation-delay:0ms]" />

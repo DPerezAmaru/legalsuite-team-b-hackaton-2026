@@ -56,7 +56,7 @@ public class PromptSanitizerService {
         String lower = clean.toLowerCase();
         for (String pattern : INJECTION_PATTERNS) {
             if (lower.contains(pattern)) {
-                throw new AppException(AppException.Code.PROMPT_INJECTION, "Patrón no permitido detectado: " + pattern);
+                throw new AppException(AppException.Code.PROMPT_INJECTION, "El contenido enviado no está permitido.");
             }
         }
 

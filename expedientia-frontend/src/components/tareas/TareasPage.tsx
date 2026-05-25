@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import {
-  MagnifyingGlass, PencilSimple, Trash, Check, X,
+  MagnifyingGlassIcon, PencilSimpleIcon, TrashIcon, CheckIcon, XIcon,
 } from '@phosphor-icons/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { TareaSchema } from '../../types'
@@ -154,7 +154,7 @@ function TareaRow({
             onClick={onEdit}
             className="p-1.5 rounded text-fg-tertiary hover:text-fg-primary hover:bg-bg-muted transition-colors"
           >
-            <PencilSimple size={14} />
+            <PencilSimpleIcon size={14} />
           </button>
         </Tooltip>
         <Tooltip content="Eliminar">
@@ -163,7 +163,7 @@ function TareaRow({
             onClick={() => setConfirmando(true)}
             className="p-1.5 rounded text-fg-tertiary hover:text-red-600 hover:bg-red-50 transition-colors"
           >
-            <Trash size={14} />
+            <TrashIcon size={14} />
           </button>
         </Tooltip>
       </div>
@@ -211,14 +211,14 @@ function EditRow({
         disabled={loading}
         className="p-1.5 rounded bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-50 shrink-0"
       >
-        <Check size={12} />
+        <CheckIcon size={12} />
       </button>
       <button
         type="button"
         onClick={onCancel}
         className="p-1.5 rounded text-fg-secondary hover:bg-bg-muted transition-colors shrink-0"
       >
-        <X size={12} />
+        <XIcon size={12} />
       </button>
     </div>
   )
@@ -298,7 +298,7 @@ export function TareasPage() {
       <PageToolbar
         search={
           <div className="relative">
-            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-tertiary" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-tertiary" />
             <input
               type="text"
               placeholder="Buscar tareas"

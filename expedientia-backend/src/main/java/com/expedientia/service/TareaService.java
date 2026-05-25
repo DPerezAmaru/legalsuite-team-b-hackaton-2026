@@ -143,7 +143,8 @@ public class TareaService {
                 t.getFechaVencimiento(),
                 t.getSugeridaPorIa(),
                 t.getAsignadoA() != null ? t.getAsignadoA().getId() : null,
-                t.getExpediente().getId()
+                t.getExpediente().getId(),
+                t.getExpediente().getTitulo()
         );
     }
 }

@@ -13,7 +13,8 @@ public class AppException extends RuntimeException {
         PDF_INVALID             (HttpStatus.BAD_REQUEST,           "Archivo PDF inválido"),
         PDF_SCANNED             (HttpStatus.UNPROCESSABLE_ENTITY,  "PDF escaneado no procesable"),
         PDF_TOO_LARGE           (HttpStatus.PAYLOAD_TOO_LARGE,     "Archivo demasiado grande"),
-        BULK_LIMIT_EXCEEDED     (HttpStatus.BAD_REQUEST,           "Límite de archivos excedido");
+        BULK_LIMIT_EXCEEDED     (HttpStatus.BAD_REQUEST,           "Límite de archivos excedido"),
+        DUPLICATE_EMAIL         (HttpStatus.CONFLICT,              "Email duplicado");
 
         public final HttpStatus status;
         public final String title;

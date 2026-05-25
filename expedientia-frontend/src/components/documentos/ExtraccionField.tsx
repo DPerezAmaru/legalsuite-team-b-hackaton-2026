@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { PencilSimple, Check } from '@phosphor-icons/react'
+import { PencilSimpleIcon, CheckIcon } from '@phosphor-icons/react'
 
 interface ExtraccionFieldProps {
   label: string
@@ -18,8 +18,16 @@ export function ExtraccionField({
 }: ExtraccionFieldProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
+  const [prevValue, setPrevValue] = useState(value)
   const inputRef = useRef<HTMLInputElement>(null)
   const selectRef = useRef<HTMLSelectElement>(null)
+
+  // Sincronizar draft cuando la prop value cambia desde afuera.
+  // Patrón oficial React 19: ajustar state durante render con guard, no en effect.
+  if (value !== prevValue) {
+    setPrevValue(value)
+    setDraft(value)
+  }
 
   useEffect(() => {
     if (editing) {
@@ -27,10 +35,6 @@ export function ExtraccionField({
       selectRef.current?.focus()
     }
   }, [editing])
-
-  useEffect(() => {
-    setDraft(value)
-  }, [value])
 
   const commit = () => {
     onChange(draft)
@@ -65,7 +69,7 @@ export function ExtraccionField({
             className="p-1 rounded opacity-0 group-hover:opacity-100 text-fg-tertiary hover:text-fg-secondary transition-all shrink-0"
             aria-label={`Editar ${label}`}
           >
-            <PencilSimple />
+            <PencilSimpleIcon />
           </button>
         )}
       </div>
@@ -101,7 +105,7 @@ export function ExtraccionField({
             onClick={commit}
             className="p-1 rounded text-cta-bg hover:bg-bg-muted transition-colors shrink-0"
           >
-            <Check />
+            <CheckIcon />
           </button>
         </div>
       ) : (

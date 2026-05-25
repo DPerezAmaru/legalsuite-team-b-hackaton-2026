@@ -6,7 +6,11 @@ public record ChatIntent(
     Accion accion,
     String radicado,
     List<Long> expedienteIds,
-    String expedienteNombre
+    String expedienteNombre,
+    Long tareaId,
+    String tareaNombre,
+    Boolean confirmaOperacionPendiente,
+    String contextoRequerido
 ) {
     public enum Accion {
         CREAR_EXPEDIENTE,
@@ -25,6 +29,9 @@ public record ChatIntent(
         CREAR_USUARIO,
         NECESITA_ACLARACION,
         NO_PERMITIDO,
-        CONVERSACION_LIBRE
+        CONVERSACION_LIBRE,
+        ELIMINAR_EXPEDIENTE,
+        ELIMINAR_TAREA,
+        ANALISIS_CONTEXTUAL
     }
 }

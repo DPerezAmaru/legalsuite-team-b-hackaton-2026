@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import type { DragEvent, ChangeEvent } from 'react'
-import { UploadSimple, FileText } from '@phosphor-icons/react'
+import { UploadSimpleIcon, FileTextIcon } from '@phosphor-icons/react'
 
 const MAX_FILES = 5
 
@@ -46,7 +46,7 @@ export function UploadZone({ onFiles }: UploadZoneProps) {
       ].join(' ')}
     >
       <div className="w-12 h-12 rounded-full bg-bg-muted flex items-center justify-center">
-        <UploadSimple className="text-fg-secondary" />
+        <UploadSimpleIcon className="text-fg-secondary" />
       </div>
       <div className="text-center space-y-1">
         <p className="text-sm font-medium text-fg-primary">
@@ -56,7 +56,7 @@ export function UploadZone({ onFiles }: UploadZoneProps) {
         <p className="text-xs text-fg-tertiary pt-1">Solo PDFs · hasta {MAX_FILES} archivos · máx. 10 MB c/u</p>
       </div>
       <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-muted border border-border">
-        <FileText className="text-fg-secondary shrink-0" />
+        <FileTextIcon className="text-fg-secondary shrink-0" />
         <span className="text-xs text-fg-body">Seleccionar PDFs</span>
       </div>
       <input

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { X, ArrowSquareOut } from '@phosphor-icons/react'
+import { XIcon, ArrowSquareOutIcon } from '@phosphor-icons/react'
 import { useExpediente } from '../../hooks/useExpediente'
 import { ExpedienteContent } from './ExpedienteContent'
 
@@ -20,7 +20,7 @@ export function ExpedienteDrawer({ expedienteId, onClose }: ExpedienteDrawerProp
           className="p-1.5 rounded-md text-fg-secondary hover:text-fg-primary hover:bg-bg-muted transition-colors"
           aria-label="Cerrar"
         >
-          <X />
+          <XIcon />
         </button>
 
         {expediente && (
@@ -30,7 +30,7 @@ export function ExpedienteDrawer({ expedienteId, onClose }: ExpedienteDrawerProp
             className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-fg-secondary hover:text-fg-primary hover:bg-bg-muted transition-colors"
           >
             Abrir página
-            <ArrowSquareOut />
+            <ArrowSquareOutIcon />
           </Link>
         )}
       </div>

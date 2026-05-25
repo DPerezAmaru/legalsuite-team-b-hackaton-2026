@@ -157,9 +157,10 @@ public class ChatController {
             }
         }
 
+        String documentHint = buildDocumentHint(request.archivos());
         ChatIntent intent = (request.historial() != null && !request.historial().isEmpty())
-                ? intentRouter.classify(clean, request.historial())
-                : intentRouter.classify(clean);
+                ? intentRouter.classify(clean, request.historial(), documentHint)
+                : intentRouter.classify(clean, null, documentHint);
 
         return switch (intent.accion()) {
             case CREAR_EXPEDIENTES_MASIVO -> {
@@ -588,6 +589,14 @@ public class ChatController {
                 .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
                 .collect(Collectors.joining("\n"));
         return "CONVERSACIÓN PREVIA:\n" + ctx + "\n\nMENSAJE ACTUAL: " + prompt;
+    }
+
+    private static String buildDocumentHint(List<DocumentoContextoInput> archivos) {
+        if (archivos == null || archivos.isEmpty()) return null;
+        String nombres = archivos.stream()
+                .map(DocumentoContextoInput::nombreDocumento)
+                .collect(Collectors.joining(", "));
+        return "[El usuario adjuntó " + archivos.size() + " documento(s): " + nombres + "]";
     }
 
     private String buildDocumentContext(List<DocumentoContextoInput> archivos) {

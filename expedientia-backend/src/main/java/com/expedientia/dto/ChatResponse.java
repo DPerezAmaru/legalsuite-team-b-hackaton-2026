@@ -5,4 +5,5 @@ public record ChatResponse(
     String mensaje,
     Object datos,
     boolean esperaRespuesta
-) {}
+) {
+}

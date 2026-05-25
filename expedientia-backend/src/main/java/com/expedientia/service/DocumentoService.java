@@ -5,6 +5,7 @@ import com.expedientia.dto.BulkConfirmarRequest;
 import com.expedientia.dto.BulkConfirmarResponse;
 import com.expedientia.dto.CreateExpedienteRequest;
 import com.expedientia.dto.DocumentoAnalisisResponse;
+import com.expedientia.dto.DocumentoContextoResponse;
 import com.expedientia.dto.ExpedienteDTO;
 import com.expedientia.dto.ProcesoSugeridoDTO;
 import com.expedientia.entity.Documento;
@@ -16,8 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 
 @Service
 @Transactional
@@ -151,6 +157,29 @@ public class DocumentoService {
         });
 
         return new BulkConfirmarResponse(result.creados().size(), omitidos.size(), result.creados(), omitidos);
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentoContextoResponse extraerContexto(MultipartFile file) {
+        String filename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "sin-nombre";
+        try {
+            PdfTextExtractorService.ExtractionResult result = extractor.extract(file);
+            return new DocumentoContextoResponse(filename, gzipBase64(result.textForSummary()), null);
+        } catch (AppException e) {
+            return DocumentoContextoResponse.error(filename, e.getDetail());
+        }
+    }
+
+    private String gzipBase64(String texto) {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            try (GZIPOutputStream gzip = new GZIPOutputStream(bos)) {
+                gzip.write(texto.getBytes(StandardCharsets.UTF_8));
+            }
+            return Base64.getEncoder().encodeToString(bos.toByteArray());
+        } catch (IOException e) {
+            throw new RuntimeException("Error al comprimir contenido del documento", e);
+        }
     }
 
     private FileResult processFileSingle(MultipartFile file) {

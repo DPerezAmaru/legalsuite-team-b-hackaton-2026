@@ -1,17 +1,34 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 export interface CrearTareaPayload {
   expedienteId: number
   tareas: { texto: string; prioridad: 'ALTA' | 'MEDIA' | 'BAJA' }[]
 }
 
-// TODO: replace with real API call when backend is ready
-// POST /api/tareas/bulk
 async function crearTareasBulk(payload: CrearTareaPayload[]): Promise<void> {
-  await new Promise((resolve) => setTimeout(resolve, 600))
-  console.log('[mock] Tareas a crear:', payload)
+  await Promise.all(
+    payload.flatMap(({ expedienteId, tareas }) =>
+      tareas.map(t =>
+        fetch('/api/tareas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            titulo: t.texto,
+            prioridad: t.prioridad,
+            estado: 'PENDIENTE',
+            sugeridaPorIa: true,
+            expedienteId,
+          }),
+        }).then(res => { if (!res.ok) throw new Error(`Error ${res.status}`) }),
+      ),
+    ),
+  )
 }
 
 export function useCrearTareasBulk() {
-  return useMutation({ mutationFn: crearTareasBulk })
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: crearTareasBulk,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tareas'] }),
+  })
 }

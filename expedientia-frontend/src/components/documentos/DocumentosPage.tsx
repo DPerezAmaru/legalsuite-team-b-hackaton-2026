@@ -176,9 +176,9 @@ export function DocumentosPage() {
       const expedientesCreadosConTareas: ExpedienteCreadoConTareas[] = result.expedientes.map((exp) => ({
         expedienteId: exp.id,
         titulo: exp.titulo,
-        radicado: exp.radicado,
+        radicado: exp.radicado ?? '',
         especialidad: exp.especialidad,
-        tareasSugeridas: mockTareasSugeridas(exp.especialidad),
+        tareasSugeridas: [],
       }))
       setState({ stage: 'created', expedientes: expedientesCreadosConTareas })
     } finally {

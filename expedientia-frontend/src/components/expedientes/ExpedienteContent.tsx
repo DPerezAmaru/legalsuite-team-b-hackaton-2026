@@ -56,7 +56,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
 
   return (
     <div className="space-y-3">
-      <ExpedienteChat expedienteId={expediente.id} radicado={expediente.radicado} nombre={expediente.titulo} />
+      <ExpedienteChat expedienteId={expediente.id} radicado={expediente.radicado ?? ''} nombre={expediente.titulo} />
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-fg-primary tracking-tight truncate">

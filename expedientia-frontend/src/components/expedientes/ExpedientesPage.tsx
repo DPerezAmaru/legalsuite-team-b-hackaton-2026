@@ -43,6 +43,13 @@ export function ExpedientesPage() {
     if (drawerId !== null) setLastOpenedId(drawerId)
   }, [drawerId])
 
+  // Close drawer if the open expediente was deleted
+  useEffect(() => {
+    if (drawerId === null || !data) return
+    if (!data.some(e => e.id === drawerId)) closeDrawer()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, drawerId])
+
   useEffect(() => {
     if (!isDrawerOpen) return
     function onKey(e: KeyboardEvent) {
@@ -70,7 +77,7 @@ export function ExpedientesPage() {
       e.partes.find(p => p.tipoParticipacion === 'DEMANDANTE')?.nombre ?? e.titulo
     return (
       nombre.toLowerCase().includes(q) ||
-      e.radicado.toLowerCase().includes(q) ||
+      e.radicado?.toLowerCase().includes(q) ||
       e.titulo.toLowerCase().includes(q)
     )
   })
@@ -94,16 +101,17 @@ export function ExpedientesPage() {
 
   async function handleDelete() {
     if (isDeleting || selectedIds.size === 0) return
+    const toDelete = new Set(selectedIds)
     setIsDeleting(true)
     try {
-      await Promise.all(
-        Array.from(selectedIds).map(id =>
+      await Promise.allSettled(
+        Array.from(toDelete).map(id =>
           fetch(`/api/expedientes/${id}`, { method: 'DELETE' }),
         ),
       )
-      await qc.invalidateQueries({ queryKey: ['expedientes'] })
-      setSelectedIds(new Set())
+      qc.invalidateQueries({ queryKey: ['expedientes'] })
     } finally {
+      setSelectedIds(new Set())
       setIsDeleting(false)
     }
   }

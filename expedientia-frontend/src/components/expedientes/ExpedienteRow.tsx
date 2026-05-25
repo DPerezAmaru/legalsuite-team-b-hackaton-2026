@@ -63,10 +63,10 @@ export function ExpedienteRow({ expediente, isActive = false, isSelected, onTogg
         )}
         <FileText className="shrink-0 text-fg-tertiary" />
         <div className="min-w-0">
-          <p className="font-medium text-fg-primary truncate tabular-nums">
-            {expediente.radicado}
-          </p>
-          <p className="text-xs text-fg-tertiary truncate">{expediente.titulo}</p>
+          <p className="font-medium text-fg-primary truncate">{expediente.titulo}</p>
+          {expediente.radicado && (
+            <p className="text-xs text-fg-tertiary truncate tabular-nums">{expediente.radicado}</p>
+          )}
         </div>
       </div>
 

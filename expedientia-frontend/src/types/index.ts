@@ -36,7 +36,7 @@ export const TareaSchema = z.object({
 
 export const ExpedienteSchema = z.object({
   id: z.number(),
-  radicado: z.string(),
+  radicado: z.string().nullable().optional(),
   titulo: z.string(),
   especialidad: EspecialidadSchema,
   despacho: z.string().nullable().optional(),

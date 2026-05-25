@@ -5,6 +5,7 @@ import com.expedientia.dto.ChatExpedienteRequest;
 import com.expedientia.dto.ChatIntent;
 import com.expedientia.dto.ChatResponse;
 import com.expedientia.dto.CreateExpedienteRequest;
+import com.expedientia.dto.DocumentoContextoInput;
 import com.expedientia.dto.ExpedienteDTO;
 import com.expedientia.dto.FiltroExpedienteDTO;
 import com.expedientia.dto.MensajeHistorial;
@@ -33,8 +34,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 @Tag(name = "Chat", description = "Interfaz conversacional con IA para gestión de expedientes legales")
 @RestController
@@ -118,6 +124,7 @@ public class ChatController {
             @RequestParam(required = false) Long usuarioId) {
 
         String clean = sanitizerService.sanitize(request.prompt());
+        String contextoDocumentos = buildDocumentContext(request.archivos());
 
         ChatIntent intent = (request.historial() != null && !request.historial().isEmpty())
                 ? intentRouter.classify(clean, request.historial())
@@ -126,7 +133,7 @@ public class ChatController {
         return switch (intent.accion()) {
             case CREAR_EXPEDIENTE -> {
                 if (request.historial() != null && !request.historial().isEmpty()) {
-                    AsistenteCreacionResult resultado = aiService.asistirCreacion(clean, request.historial());
+                    AsistenteCreacionResult resultado = aiService.asistirCreacion(clean, request.historial(), contextoDocumentos);
                     if (!resultado.listo()) {
                         yield ResponseEntity.ok(ask("ASISTENTE_CREACION",
                                 resultado.pregunta(), resultado.expediente()));
@@ -214,7 +221,7 @@ public class ChatController {
                 yield ResponseEntity.ok(done("SUGERENCIA_JUDICIAL", sugerencia, null));
             }
             case ASISTENTE_CREACION -> {
-                AsistenteCreacionResult resultado = aiService.asistirCreacion(clean, request.historial());
+                AsistenteCreacionResult resultado = aiService.asistirCreacion(clean, request.historial(), contextoDocumentos);
                 if (!resultado.listo()) {
                     yield ResponseEntity.ok(ask("ASISTENTE_CREACION", resultado.pregunta(),
                             resultado.expediente()));
@@ -372,7 +379,8 @@ public class ChatController {
             case NO_PERMITIDO -> ResponseEntity.ok(ask("NO_PERMITIDO",
                     "Solo puedo ayudarte con temas legales y gestión de expedientes. ¿En qué te puedo asistir?"));
             case CONVERSACION_LIBRE -> {
-                String respuesta = aiService.responderConversacional(clean, request.historial());
+                String respuesta = aiService.responderConversacional(clean, request.historial(),
+                        contextoDocumentos);
                 yield ResponseEntity.ok(done("CONVERSACION_LIBRE", respuesta, null));
             }
         };
@@ -407,4 +415,30 @@ public class ChatController {
                 .collect(Collectors.joining("\n"));
         return "CONVERSACIÓN PREVIA:\n" + ctx + "\n\nMENSAJE ACTUAL: " + prompt;
     }
+
+    private String buildDocumentContext(List<DocumentoContextoInput> archivos) {
+        if (archivos == null || archivos.isEmpty()) return null;
+        StringBuilder sb = new StringBuilder("=== DOCUMENTOS ADJUNTOS (solo informativos — el usuario decide qué hacer) ===\n");
+        int idx = 1;
+        for (DocumentoContextoInput doc : archivos) {
+            if (doc.contenido() == null || doc.contenido().isBlank()) continue;
+            sb.append("[DOC ").append(idx++).append(": ").append(doc.nombreDocumento()).append("]\n");
+            sb.append(descomprimir(doc.contenido())).append("\n");
+            sb.append("[/DOC]\n");
+        }
+        sb.append("=== FIN DOCUMENTOS ===");
+        return sb.toString();
+    }
+
+    private String descomprimir(String base64Gzip) {
+        try {
+            byte[] compressed = Base64.getDecoder().decode(base64Gzip);
+            try (GZIPInputStream gzip = new GZIPInputStream(new ByteArrayInputStream(compressed))) {
+                return new String(gzip.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            return "[Error al descomprimir documento]";
+        }
+    }
+
 }

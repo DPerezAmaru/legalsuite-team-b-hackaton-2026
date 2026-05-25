@@ -3,6 +3,7 @@ package com.expedientia.controller;
 import com.expedientia.dto.BulkAnalisisResponse;
 import com.expedientia.dto.BulkConfirmarRequest;
 import com.expedientia.dto.BulkConfirmarResponse;
+import com.expedientia.dto.DocumentoContextoResponse;
 import com.expedientia.service.DocumentoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,6 +50,25 @@ public class DocumentoController {
             @Parameter(description = "Archivos PDF (máximo 5)", required = true)
             @RequestParam("files") List<MultipartFile> files) {
         return ResponseEntity.ok(documentoService.bulkAnalizar(files));
+    }
+
+    @Operation(
+        summary = "Extraer contenido de un PDF para uso en chat",
+        description = """
+            Recibe un PDF, extrae y limpia su texto (ETL, sin IA) y lo devuelve comprimido
+            (GZIP + Base64). El frontend almacena el campo 'contenido' y puede enviarlo al chat
+            para que la IA trabaje sobre el documento. No escribe nada en BD.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Contenido extraído o error informado",
+            content = @Content(schema = @Schema(implementation = DocumentoContextoResponse.class)))
+    })
+    @PostMapping(value = "/contexto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DocumentoContextoResponse> extraerContexto(
+            @Parameter(description = "Archivo PDF", required = true)
+            @RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok(documentoService.extraerContexto(file));
     }
 
     @Operation(

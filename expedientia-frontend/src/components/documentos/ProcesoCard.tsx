@@ -1,6 +1,6 @@
 import { useState, forwardRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { CaretDown, CaretRight, CheckCircle, Check } from '@phosphor-icons/react'
+import { CaretDownIcon, CaretRightIcon, CheckCircleIcon, CheckIcon } from '@phosphor-icons/react'
 import { ExtraccionField } from './ExtraccionField'
 import { PartesEditor } from './PartesEditor'
 import type {
@@ -73,7 +73,7 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
                   : 'bg-bg-base border-border hover:border-border-strong',
               ].join(' ')}
             >
-              {isSelected && <Check size={10} weight="bold" className="text-cta-text" />}
+              {isSelected && <CheckIcon size={10} weight="bold" className="text-cta-text" />}
             </button>
           </div>
         )}
@@ -83,8 +83,8 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
           className="flex-1 flex items-center gap-2 px-3.5 py-3 text-left hover:bg-bg-subtle transition-colors min-w-0"
         >
           {open
-            ? <CaretDown className="text-fg-tertiary shrink-0" />
-            : <CaretRight className="text-fg-tertiary shrink-0" />}
+            ? <CaretDownIcon className="text-fg-tertiary shrink-0" />
+            : <CaretRightIcon className="text-fg-tertiary shrink-0" />}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium text-fg-primary">Proceso {numero}</span>
@@ -93,7 +93,7 @@ export const ProcesoCard = forwardRef<HTMLDivElement, ProcesoCardProps>(function
               </span>
               {isCreated && (
                 <span className="flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-cta-bg/10 text-cta-bg">
-                  <CheckCircle /> Creado
+                  <CheckCircleIcon /> Creado
                 </span>
               )}
             </div>

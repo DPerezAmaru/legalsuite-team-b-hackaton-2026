@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Paperclip, Brain, ArrowRight, CircleNotch, Warning } from '@phosphor-icons/react'
+import { PaperclipIcon, BrainIcon, ArrowRightIcon, CircleNotchIcon, WarningIcon } from '@phosphor-icons/react'
 import { FileChip } from './FileChip'
 
 const PLACEHOLDER = 'Pregunte, suba un documento o genere un borrador.'
@@ -89,7 +89,7 @@ export function AssistantInput({
               disabled={isExtracting}
               className="flex items-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-fg-secondary hover:text-fg-body hover:bg-bg-muted transition-colors disabled:opacity-60"
             >
-              {isExtracting ? <CircleNotch className="animate-spin" /> : <Paperclip />}
+              {isExtracting ? <CircleNotchIcon className="animate-spin" /> : <PaperclipIcon />}
               <span className="hidden sm:inline">
                 {isExtracting ? 'Procesando…' : 'Adjuntar'}
               </span>
@@ -104,7 +104,7 @@ export function AssistantInput({
                   : 'text-fg-secondary hover:text-fg-body hover:bg-bg-muted',
               ].join(' ')}
             >
-              <Brain />
+              <BrainIcon />
               <span className="hidden sm:inline">
                 {modoAsistente ? 'Asistente' : 'Conversacional'}
               </span>
@@ -117,7 +117,7 @@ export function AssistantInput({
             className="p-2 rounded-lg bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Consultar"
           >
-            <ArrowRight />
+            <ArrowRightIcon />
           </button>
         </div>
 
@@ -132,7 +132,7 @@ export function AssistantInput({
 
       {attachError && (
         <div className="flex items-center gap-1.5 px-1 text-xs text-status-urgent-text">
-          <Warning size={13} />
+          <WarningIcon size={13} />
           <span>{attachError}</span>
         </div>
       )}

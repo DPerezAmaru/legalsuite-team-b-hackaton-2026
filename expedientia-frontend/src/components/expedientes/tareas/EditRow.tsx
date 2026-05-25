@@ -1,4 +1,4 @@
-import { Check, X } from '@phosphor-icons/react'
+import { CheckIcon, XIcon } from '@phosphor-icons/react'
 import { Select } from '../../ui/Select'
 import type { EstadoTarea, Prioridad } from '../../../types'
 
@@ -42,14 +42,14 @@ export function EditRow({
         disabled={loading}
         className="p-1.5 rounded bg-cta-bg text-cta-text hover:bg-cta-hover transition-colors disabled:opacity-50 shrink-0"
       >
-        <Check size={12} />
+        <CheckIcon size={12} />
       </button>
       <button
         type="button"
         onClick={onCancel}
         className="p-1.5 rounded text-fg-secondary hover:bg-bg-muted transition-colors shrink-0"
       >
-        <X size={12} />
+        <XIcon size={12} />
       </button>
     </li>
   )

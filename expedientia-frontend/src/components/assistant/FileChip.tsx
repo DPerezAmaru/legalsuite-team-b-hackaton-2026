@@ -1,4 +1,4 @@
-import { FileText, X, CircleNotch } from '@phosphor-icons/react'
+import { FileTextIcon, XIcon, CircleNotchIcon } from '@phosphor-icons/react'
 
 interface FileChipProps {
   file: File
@@ -15,9 +15,9 @@ export function FileChip({ file, onRemove, loading = false }: FileChipProps) {
   return (
     <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-bg-base border border-border max-w-xs">
       {loading ? (
-        <CircleNotch className="text-fg-secondary shrink-0 animate-spin" />
+        <CircleNotchIcon className="text-fg-secondary shrink-0 animate-spin" />
       ) : (
-        <FileText className="text-fg-secondary shrink-0" />
+        <FileTextIcon className="text-fg-secondary shrink-0" />
       )}
       <div className="flex items-baseline gap-1.5 min-w-0">
         <span className="text-xs font-medium text-fg-body truncate">{file.name}</span>
@@ -30,7 +30,7 @@ export function FileChip({ file, onRemove, loading = false }: FileChipProps) {
         className="p-0.5 rounded text-fg-tertiary hover:text-fg-secondary transition-colors shrink-0 disabled:opacity-40"
         aria-label="Quitar archivo"
       >
-        <X />
+        <XIcon />
       </button>
     </div>
   )

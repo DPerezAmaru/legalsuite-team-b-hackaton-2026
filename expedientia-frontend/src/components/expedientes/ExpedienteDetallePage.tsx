@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { CaretRight } from '@phosphor-icons/react'
+import { CaretRightIcon } from '@phosphor-icons/react'
 import { useExpediente } from '../../hooks/useExpediente'
 import { PageContainer } from '../layout/PageContainer'
 import { ExpedienteContent } from './ExpedienteContent'
@@ -43,7 +43,7 @@ export function ExpedienteDetallePage({ expedienteId }: ExpedienteDetallePagePro
         <Link to="/expedientes" className="hover:text-fg-secondary transition-colors">
           Expedientes
         </Link>
-        <CaretRight />
+        <CaretRightIcon />
         <span className="text-fg-secondary truncate">{nombreDemandante}</span>
       </nav>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { PencilSimple, Trash } from '@phosphor-icons/react'
+import { PencilSimpleIcon, TrashIcon } from '@phosphor-icons/react'
 import { Tooltip } from '../../ui/Tooltip'
 import type { Tarea } from '../../../types'
 import {
@@ -83,7 +83,7 @@ export function TareaRow({ tarea, onEdit, onDelete }: TareaRowProps) {
               onClick={onEdit}
               className="p-1 rounded text-fg-tertiary hover:text-fg-primary hover:bg-bg-muted transition-colors"
             >
-              <PencilSimple size={15} />
+              <PencilSimpleIcon size={15} />
             </button>
           </Tooltip>
           <Tooltip content="Eliminar">
@@ -92,7 +92,7 @@ export function TareaRow({ tarea, onEdit, onDelete }: TareaRowProps) {
               onClick={() => setConfirmando(true)}
               className="p-1 rounded text-fg-tertiary hover:text-red-600 hover:bg-red-50 transition-colors"
             >
-              <Trash size={15} />
+              <TrashIcon size={15} />
             </button>
           </Tooltip>
         </div>

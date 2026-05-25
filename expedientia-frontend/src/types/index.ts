@@ -93,6 +93,10 @@ export type ProcesoSugerido = z.infer<typeof ProcesoSugeridoSchema>
 export type BulkProceso = z.infer<typeof BulkProcesoSchema>
 export type ProcesarDocumentoResponse = z.infer<typeof ProcesarDocumentoResponseSchema>
 
+// ─── UI ──────────────────────────────────────────────────────────────────────
+
+export type EstadoDisplay = 'Activo' | 'En revisión' | 'Vence pronto'
+
 // ─── CHAT API (respuesta de /api/chat) ───────────────────────────────────────
 
 export const AccionChatSchema = z.enum([

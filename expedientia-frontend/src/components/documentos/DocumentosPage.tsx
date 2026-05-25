@@ -13,43 +13,7 @@ import type {
   ProcesoSugerido,
   ProcesarDocumentoResponse,
   ExpedienteCreadoConTareas,
-  TareaSugerida,
 } from '../../types'
-
-let _tareaIdCounter = 1
-
-const TAREAS_POR_ESPECIALIDAD: Record<string, { texto: string; prioridad: TareaSugerida['prioridad'] }[]> = {
-  CIVIL: [
-    { texto: 'Notificar auto admisorio a las partes', prioridad: 'ALTA' },
-    { texto: 'Verificar términos de traslado del proceso', prioridad: 'MEDIA' },
-    { texto: 'Revisar poderes de representación', prioridad: 'BAJA' },
-  ],
-  PENAL: [
-    { texto: 'Verificar términos de prescripción de la acción', prioridad: 'ALTA' },
-    { texto: 'Revisar medidas cautelares vigentes', prioridad: 'ALTA' },
-    { texto: 'Notificar fecha de audiencia preliminar', prioridad: 'MEDIA' },
-  ],
-  LABORAL: [
-    { texto: 'Verificar liquidación de prestaciones sociales', prioridad: 'ALTA' },
-    { texto: 'Notificar convocatoria a audiencia de conciliación', prioridad: 'MEDIA' },
-    { texto: 'Revisar constancias de pago de nómina', prioridad: 'BAJA' },
-  ],
-  ADMINISTRATIVO: [
-    { texto: 'Verificar caducidad de la acción contenciosa', prioridad: 'ALTA' },
-    { texto: 'Solicitar historia administrativa al ente demandado', prioridad: 'MEDIA' },
-    { texto: 'Revisar agotamiento de vía gubernativa', prioridad: 'MEDIA' },
-  ],
-  FAMILIA: [
-    { texto: 'Notificar demanda a todas las partes', prioridad: 'ALTA' },
-    { texto: 'Verificar cuota alimentaria vigente', prioridad: 'MEDIA' },
-    { texto: 'Programar audiencia de conciliación', prioridad: 'MEDIA' },
-  ],
-}
-
-function mockTareasSugeridas(especialidad: string): TareaSugerida[] {
-  const plantillas = TAREAS_POR_ESPECIALIDAD[especialidad] ?? TAREAS_POR_ESPECIALIDAD.CIVIL
-  return plantillas.map((t) => ({ ...t, id: _tareaIdCounter++ }))
-}
 
 type PageState =
   | { stage: 'idle' }

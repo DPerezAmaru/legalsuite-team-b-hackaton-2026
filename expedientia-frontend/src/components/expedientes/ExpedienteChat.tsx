@@ -4,6 +4,7 @@ import type { ChatArchivo, ChatMessage, HistorialEntrada } from '../../types'
 import { useAssistenteChat } from '../../hooks/useAssistenteChat'
 import { useDocumentoContexto } from '../../hooks/useDocumentoContexto'
 import { useUsuarioStore } from '../../store/usuarioStore'
+import { useChatStore } from '../../store/chatStore'
 import { ChatMessages } from '../assistant/ChatMessages'
 import { FileChip } from '../assistant/FileChip'
 
@@ -19,8 +20,10 @@ function buildHistorial(messages: ChatMessage[]): HistorialEntrada[] {
 
 export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteChatProps) {
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
+
+  const messages = useChatStore((s) => s.conversations[expedienteId]) ?? []
+  const addMessages = useChatStore((s) => s.addMessages)
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const [archivoContexto, setArchivoContexto] = useState<ChatArchivo | null>(null)
   const [attachError, setAttachError] = useState<string | null>(null)
@@ -87,7 +90,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
     }
 
     setInput('')
-    setMessages((prev) => [...prev, userMsg])
+    addMessages(expedienteId, [userMsg])
 
     try {
       const response = await sendChat({
@@ -97,8 +100,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         archivos,
         usuarioId,
       })
-      setMessages((prev) => [
-        ...prev,
+      addMessages(expedienteId, [
         {
           id: crypto.randomUUID(),
           role: 'assistant',
@@ -109,8 +111,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         },
       ])
     } catch {
-      setMessages((prev) => [
-        ...prev,
+      addMessages(expedienteId, [
         {
           id: crypto.randomUUID(),
           role: 'assistant',
@@ -119,7 +120,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         },
       ])
     }
-  }, [input, isPending, messages, expedienteId, radicado, nombre, archivoContexto, sendChat, usuarioId])
+  }, [input, isPending, messages, expedienteId, radicado, nombre, archivoContexto, sendChat, usuarioId, addMessages])
 
   const canSend = (input.trim().length > 0 || !!archivoContexto) && !isPending && !isExtracting
 

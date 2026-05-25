@@ -22,19 +22,21 @@ export const ParteSchema = z.object({
 export const TareaSchema = z.object({
   id: z.number(),
   titulo: z.string(),
-  descripcion: z.string().optional(),
+  descripcion: z.string().nullable().optional(),
   estado: EstadoTareaSchema,
   prioridad: PrioridadSchema,
-  fechaVencimiento: z.string().optional(),
-  sugeridaPorIA: z.boolean(),
-  createdAt: z.string(),
+  fechaVencimiento: z.string().nullable().optional(),
+  sugeridaPorIa: z.boolean(),
+  asignadoAId: z.number().nullable().optional(),
+  expedienteId: z.number().optional(),
+  createdAt: z.string().optional(),
 })
 
 // Expediente
 
 export const ExpedienteSchema = z.object({
   id: z.number(),
-  radicado: z.string(),
+  radicado: z.string().nullable().optional(),
   titulo: z.string(),
   especialidad: EspecialidadSchema,
   despacho: z.string().nullable().optional(),
@@ -91,22 +93,12 @@ export type ProcesoSugerido = z.infer<typeof ProcesoSugeridoSchema>
 export type BulkProceso = z.infer<typeof BulkProcesoSchema>
 export type ProcesarDocumentoResponse = z.infer<typeof ProcesarDocumentoResponseSchema>
 
-// ─── CHAT API (respuesta de /api/expedientes/chat) ────────────────────────────
+// ─── CHAT API (respuesta de /api/chat) ───────────────────────────────────────
 
 export const ChatApiResponseSchema = z.object({
   accion: z.string(),
   mensaje: z.string(),
-  datos: z
-    .object({
-      id: z.number(),
-      radicado: z.string(),
-      titulo: z.string(),
-      especialidad: EspecialidadSchema,
-      estado: EstadoExpedienteSchema,
-    })
-    .passthrough()
-    .nullable()
-    .optional(),
+  datos: z.unknown().optional(),
 })
 export type ChatApiResponse = z.infer<typeof ChatApiResponseSchema>
 
@@ -120,6 +112,7 @@ export interface ChatMessage {
   content: string
   attachmentName?: string
   timestamp: Date
+  actionLink?: { to: string; label: string }
 }
 
 // ─── DOCUMENTOS / CREAR EXPEDIENTE ────────────────────────────────────────────
@@ -174,27 +167,9 @@ export type ExpedienteCreadoConTareas = {
   tareasSugeridas: TareaSugerida[]
 }
 
-// ─── ASSISTANT PAGE ───────────────────────────────────────────────────────────
+// ─── CHAT HISTORIAL ──────────────────────────────────────────────────────────
 
-export const ConsultaTipoSchema = z.enum(['Resumen', 'Consulta', 'Borrador', 'Informe'])
-export type ConsultaTipo = z.infer<typeof ConsultaTipoSchema>
-
-export const ConsultaRecienteSchema = z.object({
-  id: z.string(),
-  titulo: z.string(),
-  tipo: ConsultaTipoSchema,
-  timestamp: z.string(),
-})
-export type ConsultaReciente = z.infer<typeof ConsultaRecienteSchema>
-
-export const EstadoDisplaySchema = z.enum(['Activo', 'En revisión', 'Vence pronto'])
-export type EstadoDisplay = z.infer<typeof EstadoDisplaySchema>
-
-export const ExpedienteRecienteSchema = z.object({
-  id: z.string(),
-  nombre: z.string(),
-  especialidad: EspecialidadSchema,
-  estadoDisplay: EstadoDisplaySchema,
-  timestamp: z.string(),
-})
-export type ExpedienteReciente = z.infer<typeof ExpedienteRecienteSchema>
+export interface HistorialEntrada {
+  rol: 'usuario' | 'asistente'
+  contenido: string
+}

@@ -1,5 +1,6 @@
 import { House, Folder, ListChecks, Sparkle, SidebarSimple, X } from '@phosphor-icons/react'
 import { SidebarNavItem } from './SidebarNavItem'
+import { ThemeToggle } from './ThemeToggle'
 import { useSidebar } from '../../hooks/useSidebar'
 import { useCommandBar } from '../../store/commandBarStore'
 
@@ -15,73 +16,94 @@ export function Sidebar() {
   return (
     <aside
       className={[
-        'fixed inset-y-0 left-0 z-50 w-52 h-screen flex flex-col shrink-0',
-        'bg-sidebar-bg transition-transform duration-200 ease-in-out',
-        'lg:relative lg:z-auto',
-        isOpen ? 'translate-x-0' : '-translate-x-full lg:hidden',
+        'fixed inset-y-0 left-0 z-50 h-screen flex flex-col shrink-0 overflow-hidden',
+        'bg-sidebar-bg transition-[width] duration-200 ease-in-out',
+        'lg:relative lg:z-auto lg:translate-x-0',
+        isOpen ? 'w-52 translate-x-0' : 'w-52 -translate-x-full lg:w-14',
       ].join(' ')}
       style={{ borderRight: '1px solid var(--sidebar-border)' }}
     >
       {/* Header */}
-      <div className="px-3 pt-4 pb-3 flex items-center justify-between">
-        <span className="font-semibold text-sm text-fg-primary tracking-tight">ExpedientiA</span>
-        <div className="flex items-center gap-1">
-          {/* Desktop: colapsa el sidebar */}
-          <button
-            type="button"
-            onClick={toggle}
-            className="hidden lg:flex items-center p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
-            aria-label="Colapsar panel"
-          >
-            <SidebarSimple />
-          </button>
+      <div className="flex items-center h-12 shrink-0">
+        {/* Desktop toggle anclado al slot fijo de 56px */}
+        <button
+          type="button"
+          onClick={toggle}
+          className="hidden lg:flex items-center justify-center w-14 h-10 shrink-0 text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
+          aria-label={isOpen ? 'Colapsar panel' : 'Expandir panel'}
+        >
+          <SidebarSimple size={18} />
+        </button>
 
-          {/* Mobile: cierra el drawer */}
+        {/* Título solo cuando está abierto */}
+        {isOpen && (
+          <span className="font-semibold text-sm text-fg-primary tracking-tight ml-3 lg:ml-0 whitespace-nowrap">
+            ExpedientiA
+          </span>
+        )}
+
+        {/* Cierre móvil */}
+        {isOpen && (
           <button
             type="button"
             onClick={close}
-            className="lg:hidden p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
+            className="lg:hidden ml-auto mr-3 p-1 rounded text-(--sidebar-text) hover:bg-(--sidebar-hover) transition-colors"
             aria-label="Cerrar menú"
           >
-            <X />
+            <X size={18} />
           </button>
-        </div>
+        )}
       </div>
 
-      {/* Ask Anywhere — disparador del CommandBar (Cmd/Ctrl+K) */}
+      {/* Ask Anywhere */}
       <div className="px-2 pb-2">
         <button
           type="button"
           onClick={openCommandBar}
-          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-(--sidebar-text) bg-(--sidebar-hover) hover:bg-(--sidebar-hover) hover:text-fg-primary transition-colors"
+          className={[
+            'flex items-center w-full h-9 rounded-md text-xs transition-colors',
+            isOpen
+              ? 'text-(--sidebar-text) bg-(--sidebar-hover) hover:text-fg-primary'
+              : 'text-(--sidebar-text) hover:bg-(--sidebar-hover) hover:text-fg-primary',
+          ].join(' ')}
           aria-label="Abrir asistente"
         >
-          <Sparkle />
-          <span className="truncate">Preguntá al asistente</span>
-          <span className="ml-auto font-mono text-[10px] tracking-wide opacity-70">
-            {modKey()}K
+          <span className="flex items-center justify-center w-10 shrink-0 text-base">
+            <Sparkle size={18} />
           </span>
+          {isOpen && (
+            <>
+              <span className="truncate">Preguntá al asistente</span>
+              <span className="ml-auto pr-2 font-mono text-[10px] tracking-wide opacity-70 whitespace-nowrap">
+                {modKey()}K
+              </span>
+            </>
+          )}
         </button>
       </div>
 
       {/* Nav principal */}
-      <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
-        <SidebarNavItem to="/" icon={<House />} label="Asistente" exact />
-        <SidebarNavItem to="/expedientes" icon={<Folder />} label="Expedientes" />
-        <SidebarNavItem to="/tareas" icon={<ListChecks />} label="Tareas" />
+      <nav className="flex-1 px-2 space-y-1 overflow-y-auto overflow-x-hidden">
+        <SidebarNavItem to="/" icon={<House size={18} />} label="Asistente" exact collapsed={!isOpen} />
+        <SidebarNavItem to="/expedientes" icon={<Folder size={18} />} label="Expedientes" collapsed={!isOpen} />
+        <SidebarNavItem to="/tareas" icon={<ListChecks size={18} />} label="Tareas" collapsed={!isOpen} />
       </nav>
 
       {/* Nav inferior */}
-      <div className="px-2 pb-3" style={{ borderTop: '1px solid var(--sidebar-border)' }}>
-        {/* User */}
-        <div className="pt-2 flex items-center gap-2 px-2">
-          <div className="w-6 h-6 rounded-full bg-fg-primary flex items-center justify-center shrink-0">
-            <span className="text-[10px] font-semibold text-fg-inverse">JG</span>
-          </div>
-          <span className="text-[10px] text-(--sidebar-text) truncate leading-tight">
-            juan.garcia@despacho.co
-          </span>
+      <div className="px-2 pb-2" style={{ borderTop: '1px solid var(--sidebar-border)' }}>
+        <div className="pt-2">
+          <ThemeToggle collapsed={!isOpen} />
         </div>
+        {isOpen && (
+          <div className="pt-2 flex items-center gap-2 px-2">
+            <div className="w-6 h-6 rounded-full bg-fg-primary flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-semibold text-fg-inverse">JG</span>
+            </div>
+            <span className="text-[10px] text-(--sidebar-text) truncate leading-tight">
+              juan.garcia@despacho.co
+            </span>
+          </div>
+        )}
       </div>
     </aside>
   )

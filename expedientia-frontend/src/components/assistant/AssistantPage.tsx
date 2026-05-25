@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import type { ChatMessage } from '../../types'
+import type { ChatMessage, HistorialEntrada } from '../../types'
 import { AssistantInput } from './AssistantInput'
 import { AssistantSuggestions } from './AssistantSuggestions'
 import { DocumentUploadCard } from './DocumentUploadCard'
@@ -14,11 +14,18 @@ function getGreeting(): string {
   return 'Buenas noches'
 }
 
+function buildHistorial(messages: ChatMessage[]): HistorialEntrada[] {
+  return messages.map(m => ({
+    rol: m.role === 'user' ? 'usuario' : 'asistente',
+    contenido: m.content,
+  }))
+}
 
 export function AssistantPage() {
   const [inputValue, setInputValue] = useState('')
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [modoAsistente, setModoAsistente] = useState(false)
 
   const { mutateAsync: sendChat, isPending } = useAssistenteChat()
   const consumePendingPrompt = useCommandBar(s => s.consumePendingPrompt)
@@ -26,6 +33,8 @@ export function AssistantPage() {
   const sendPrompt = useCallback(
     async (prompt: string, file: File | null) => {
       if (!prompt.trim() && !file) return
+
+      const historialActual = buildHistorial(messages)
 
       const userMsg: ChatMessage = {
         id: crypto.randomUUID(),
@@ -38,13 +47,14 @@ export function AssistantPage() {
       setMessages(prev => [...prev, userMsg])
 
       try {
-        const response = await sendChat({ prompt, file })
+        const response = await sendChat({ prompt, file, modoAsistente, historial: historialActual })
         setMessages(prev => [
           ...prev,
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: response,
+            content: response.content,
+            actionLink: response.actionLink,
             timestamp: new Date(),
           },
         ])
@@ -54,14 +64,13 @@ export function AssistantPage() {
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content:
-              'Lo siento, no pude procesar tu consulta en este momento. Intentá de nuevo.',
+            content: 'Lo siento, no pude procesar tu consulta en este momento. Intentá de nuevo.',
             timestamp: new Date(),
           },
         ])
       }
     },
-    [sendChat],
+    [sendChat, messages, modoAsistente],
   )
 
   const handleSubmit = useCallback(async () => {
@@ -79,27 +88,31 @@ export function AssistantPage() {
 
   const isChat = messages.length > 0
 
+  const inputBar = (
+    <AssistantInput
+      value={inputValue}
+      onChange={setInputValue}
+      onSubmit={handleSubmit}
+      attachedFile={attachedFile}
+      onAttach={setAttachedFile}
+      isLoading={isPending}
+      modoAsistente={modoAsistente}
+      onToggleModo={() => setModoAsistente(v => !v)}
+    />
+  )
+
   if (isChat) {
     return (
       <div className="flex flex-col h-full">
-        {/* Mensajes */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
             <ChatMessages messages={messages} isLoading={isPending} />
           </div>
         </div>
 
-        {/* Input fijo abajo */}
         <div className="bg-bg-base">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 space-y-3">
-            <AssistantInput
-              value={inputValue}
-              onChange={setInputValue}
-              onSubmit={handleSubmit}
-              attachedFile={attachedFile}
-              onAttach={setAttachedFile}
-              isLoading={isPending}
-            />
+            {inputBar}
           </div>
         </div>
       </div>
@@ -109,7 +122,6 @@ export function AssistantPage() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-fg-primary">
             {getGreeting()}, Juan.
@@ -117,20 +129,11 @@ export function AssistantPage() {
         </div>
 
         <div className="space-y-3">
-          <AssistantInput
-            value={inputValue}
-            onChange={setInputValue}
-            onSubmit={handleSubmit}
-            attachedFile={attachedFile}
-            onAttach={setAttachedFile}
-            isLoading={isPending}
-          />
+          {inputBar}
           <AssistantSuggestions onSelect={setInputValue} />
           <DocumentUploadCard />
         </div>
-
-
-</div>
+      </div>
     </div>
   )
 }

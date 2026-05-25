@@ -23,7 +23,6 @@ export function ExpedientesTableHeader({ allSelected, someSelected, onToggleAll 
             ref={checkboxRef}
             type="checkbox"
             checked={allSelected ?? false}
-            onClick={e => e.stopPropagation()}
             onChange={onToggleAll}
             className="w-3.5 h-3.5 shrink-0 cursor-pointer accent-cta-bg"
             aria-label="Seleccionar todos"

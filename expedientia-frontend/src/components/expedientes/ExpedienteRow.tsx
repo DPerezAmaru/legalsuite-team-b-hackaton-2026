@@ -53,12 +53,8 @@ export function ExpedienteRow({ expediente, isActive = false, isSelected, onTogg
           <input
             type="checkbox"
             checked={isSelected ?? false}
-            onClick={e => {
-              e.stopPropagation()
-              e.preventDefault()
-              onToggle()
-            }}
-            onChange={() => {}}
+            onChange={() => onToggle?.()}
+            onClick={e => e.stopPropagation()}
             className="w-3.5 h-3.5 shrink-0 cursor-pointer accent-cta-bg"
             aria-label={`Seleccionar expediente ${expediente.radicado}`}
           />

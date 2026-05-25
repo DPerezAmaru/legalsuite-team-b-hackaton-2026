@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import type { KeyboardEvent } from 'react'
-import { Paperclip, Robot, ArrowRight } from '@phosphor-icons/react'
+import { Paperclip, Brain, ArrowRight } from '@phosphor-icons/react'
 import { FileChip } from './FileChip'
 
 const PLACEHOLDER = 'Pregunte, suba un documento o genere un borrador.'
@@ -91,7 +91,7 @@ export function AssistantInput({
                 : 'text-fg-secondary hover:text-fg-body hover:bg-bg-muted',
             ].join(' ')}
           >
-            <Robot />
+            <Brain />
             <span className="hidden sm:inline">{modoAsistente ? 'Asistente' : 'Conversacional'}</span>
           </button>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Robot, X, ArrowRight } from '@phosphor-icons/react'
+import { Brain, X, ArrowRight } from '@phosphor-icons/react'
 import type { ChatMessage, HistorialEntrada } from '../../types'
 import { useAssistenteChat } from '../../hooks/useAssistenteChat'
 import { ChatMessages } from '../assistant/ChatMessages'
@@ -80,7 +80,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         aria-label="Abrir asistente del expediente"
         className="fixed bottom-6 right-6 z-40 p-3.5 rounded-full bg-cta-bg text-cta-text shadow-lg hover:bg-cta-hover transition-colors"
       >
-        <Robot size={20} />
+        <Brain size={20} />
       </button>
 
       {/* Panel */}
@@ -90,7 +90,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
         >
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-border shrink-0">
-            <Robot size={15} className="text-ai-text shrink-0" />
+            <Brain size={15} className="text-ai-text shrink-0" />
             <span className="text-sm font-medium text-fg-primary flex-1">Asistente</span>
             <span className="text-xs text-fg-tertiary font-mono">{radicado}</span>
             <button

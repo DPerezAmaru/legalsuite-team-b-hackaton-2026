@@ -126,7 +126,7 @@ export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteCha
 
   return (
     <>
-      {/* FAB - Ocultado a petición del usuario */}
+      {/* FAB */}
       {/*
       <button
         type="button"

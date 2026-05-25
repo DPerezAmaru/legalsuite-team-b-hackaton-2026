@@ -38,7 +38,7 @@ export function Sidebar() {
         {/* Título solo cuando está abierto */}
         {isOpen && (
           <span className="font-semibold text-sm text-fg-primary tracking-tight ml-3 lg:ml-0 whitespace-nowrap">
-            ExpedientiA
+            ExpedientIA
           </span>
         )}
 
@@ -73,7 +73,7 @@ export function Sidebar() {
           </span>
           {isOpen && (
             <>
-              <span className="truncate">Preguntá al asistente</span>
+              <span className="truncate">Pregunta al asistente</span>
               <span className="ml-auto pr-2 font-mono text-[10px] tracking-wide opacity-70 whitespace-nowrap">
                 {modKey()}K
               </span>
@@ -97,10 +97,10 @@ export function Sidebar() {
         {isOpen && (
           <div className="pt-2 flex items-center gap-2 px-2">
             <div className="w-6 h-6 rounded-full bg-fg-primary flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-semibold text-fg-inverse">JG</span>
+              <span className="text-[10px] font-semibold text-fg-inverse">DP</span>
             </div>
             <span className="text-[10px] text-(--sidebar-text) truncate leading-tight">
-              juan.garcia@despacho.co
+              daniel.perez@expedientia.com
             </span>
           </div>
         )}

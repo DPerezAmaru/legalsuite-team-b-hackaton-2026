@@ -29,7 +29,7 @@ export function AssistantPage() {
   const [archivoContexto, setArchivoContexto] = useState<ChatArchivo | null>(null)
   const [attachError, setAttachError] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [modoAsistente, setModoAsistente] = useState(false)
+  const [modoAsistente, setModoAsistente] = useState(true)
 
   const { mutateAsync: sendChat, isPending: isChatPending } = useAssistenteChat()
   const { mutateAsync: extraerContexto, isPending: isExtracting } = useDocumentoContexto()
@@ -165,7 +165,7 @@ export function AssistantPage() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-fg-primary">
-            {getGreeting()}, Juan.
+            {getGreeting()}, Daniel
           </h1>
         </div>
 

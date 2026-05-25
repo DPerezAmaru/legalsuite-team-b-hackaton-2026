@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import {
-  CaretDown, CaretRight, CheckSquare, PlusCircle, Sparkle,
+  CheckSquare, PlusCircle, Sparkle,
   PencilSimple, Trash, Check, X,
 } from '@phosphor-icons/react'
+import { AccordionSection } from '../ui/AccordionSection'
 import type { Tarea, EstadoTarea, Prioridad } from '../../types'
 import { useTareas } from '../../hooks/useTareas'
 import { useCrearTarea, type CrearTareaPayload } from '../../hooks/useCrearTarea'
@@ -405,7 +406,7 @@ function SugerenciasPanel({
 // ── TareasSection principal ────────────────────────────────────────────────
 
 export function TareasSection({ expedienteId }: { expedienteId: number }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(true)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editEstado, setEditEstado] = useState<EstadoTarea>('PENDIENTE')
   const [editPrioridad, setEditPrioridad] = useState<Prioridad>('MEDIA')
@@ -460,26 +461,15 @@ export function TareasSection({ expedienteId }: { expedienteId: number }) {
   }
 
   return (
-    <div className="border border-border rounded-xl bg-bg-base overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center">
-        <button
-          type="button"
-          onClick={() => setOpen(o => !o)}
-          className="flex-1 flex items-center gap-2.5 px-3.5 py-3 text-left hover:bg-bg-subtle transition-colors"
-        >
-          {open
-            ? <CaretDown className="text-fg-tertiary shrink-0" />
-            : <CaretRight className="text-fg-tertiary shrink-0" />}
-          <CheckSquare className="text-fg-secondary shrink-0" />
-          <span className="flex-1 text-sm font-medium text-fg-primary">Tareas</span>
-          {tareas.length > 0 && (
-            <span className="text-xs text-fg-tertiary tabular-nums mr-1">{tareas.length}</span>
-          )}
-        </button>
-
+    <AccordionSection
+      title="Tareas"
+      icon={<CheckSquare className="text-fg-secondary" />}
+      badge={tareas.length > 0 ? (
+        <span className="text-xs text-fg-tertiary tabular-nums mr-1">{tareas.length}</span>
+      ) : undefined}
+      headerExtras={
         <div className="px-2 flex items-center gap-0.5">
-          <Tooltip content="Sugerir con IA" >
+          <Tooltip content="Sugerir con IA">
             <button
               type="button"
               onClick={handleIa}
@@ -489,7 +479,7 @@ export function TareasSection({ expedienteId }: { expedienteId: number }) {
               <Sparkle size={16} className={iaLoading ? 'animate-spin' : ''} />
             </button>
           </Tooltip>
-          <Tooltip content="Nueva tarea" >
+          <Tooltip content="Nueva tarea">
             <button
               type="button"
               onClick={handleShowForm}
@@ -499,66 +489,63 @@ export function TareasSection({ expedienteId }: { expedienteId: number }) {
             </button>
           </Tooltip>
         </div>
-      </div>
-
-      {/* Content */}
-      {open && (
-        <div className="border-t border-border">
-          {isLoading ? (
-            <div className="px-4 py-6 space-y-2">
-              {[1, 2].map(i => (
-                <div key={i} className="h-4 bg-bg-muted rounded animate-pulse" />
-              ))}
-            </div>
-          ) : tareas.length === 0 && !showForm ? (
-            <div className="px-4 py-6 text-center">
-              <p className="text-sm text-fg-tertiary">No hay tareas para este expediente</p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {tareas.map(tarea =>
-                editingId === tarea.id ? (
-                  <EditRow
-                    key={tarea.id}
-                    titulo={tarea.titulo}
-                    estado={editEstado}
-                    prioridad={editPrioridad}
-                    onEstado={setEditEstado}
-                    onPrioridad={setEditPrioridad}
-                    onConfirm={confirmEdit}
-                    onCancel={() => setEditingId(null)}
-                    loading={actualizando}
-                  />
-                ) : (
-                  <TareaRow
-                    key={tarea.id}
-                    tarea={tarea}
-                    onEdit={() => startEdit(tarea)}
-                    onDelete={() => eliminar(tarea.id)}
-                  />
-                ),
-              )}
-            </ul>
-          )}
-
-          {showForm && (
-            <CrearTareaForm
-              expedienteId={expedienteId}
-              onCrear={crear}
-              onClose={() => setShowForm(false)}
-            />
-          )}
-
-          {sugerencias && (
-            <SugerenciasPanel
-              sugerencias={sugerencias}
-              expedienteId={expedienteId}
-              onCrear={crear}
-              onClose={() => setSugerencias(null)}
-            />
-          )}
+      }
+      open={open}
+      onOpenChange={setOpen}
+    >
+      {isLoading ? (
+        <div className="px-4 py-6 space-y-2">
+          {[1, 2].map(i => (
+            <div key={i} className="h-4 bg-bg-muted rounded animate-pulse" />
+          ))}
         </div>
+      ) : tareas.length === 0 && !showForm ? (
+        <div className="px-4 py-6 text-center">
+          <p className="text-sm text-fg-tertiary">No hay tareas para este expediente</p>
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {tareas.map(tarea =>
+            editingId === tarea.id ? (
+              <EditRow
+                key={tarea.id}
+                titulo={tarea.titulo}
+                estado={editEstado}
+                prioridad={editPrioridad}
+                onEstado={setEditEstado}
+                onPrioridad={setEditPrioridad}
+                onConfirm={confirmEdit}
+                onCancel={() => setEditingId(null)}
+                loading={actualizando}
+              />
+            ) : (
+              <TareaRow
+                key={tarea.id}
+                tarea={tarea}
+                onEdit={() => startEdit(tarea)}
+                onDelete={() => eliminar(tarea.id)}
+              />
+            ),
+          )}
+        </ul>
       )}
-    </div>
+
+      {showForm && (
+        <CrearTareaForm
+          expedienteId={expedienteId}
+          onCrear={crear}
+          onClose={() => setShowForm(false)}
+        />
+      )}
+
+      {sugerencias && (
+        <SugerenciasPanel
+          sugerencias={sugerencias}
+          expedienteId={expedienteId}
+          onCrear={crear}
+          onClose={() => setSugerencias(null)}
+        />
+      )}
+    </AccordionSection>
   )
 }

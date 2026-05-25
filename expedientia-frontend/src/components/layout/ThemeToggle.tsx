@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor } from '@phosphor-icons/react'
+import { SunIcon, MoonIcon, MonitorIcon } from '@phosphor-icons/react'
 import { useTheme } from '../../store/themeStore'
 import { Tooltip } from '../ui/Tooltip'
 
@@ -13,9 +13,9 @@ const labels = {
 } as const
 
 const icons = {
-  light: Sun,
-  dark: Moon,
-  system: Monitor,
+  light: SunIcon,
+  dark: MoonIcon,
+  system: MonitorIcon,
 } as const
 
 const nextLabels = {

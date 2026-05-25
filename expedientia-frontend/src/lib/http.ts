@@ -2,11 +2,13 @@ import type { ZodType } from 'zod'
 
 export class HttpError extends Error {
   readonly status: number
+  readonly code?: string
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message)
     this.name = 'HttpError'
     this.status = status
+    this.code = code
   }
 }
 
@@ -20,12 +22,22 @@ interface RequestConfig<T> {
   headers?: HeadersInit
 }
 
-async function readError(res: Response): Promise<string> {
+interface ErrorBody {
+  detail?: string
+  message?: string
+  error?: string
+  title?: string
+  code?: string
+}
+
+async function readError(res: Response): Promise<{ message: string; code?: string }> {
   try {
-    const data = (await res.json()) as { message?: string; error?: string }
-    return data?.message ?? data?.error ?? `Error ${res.status}`
+    const data = (await res.json()) as ErrorBody
+    const message =
+      data?.detail ?? data?.message ?? data?.error ?? data?.title ?? `Error ${res.status}`
+    return { message, code: data?.code }
   } catch {
-    return `Error ${res.status}`
+    return { message: `Error ${res.status}` }
   }
 }
 
@@ -56,7 +68,10 @@ export async function request<T = unknown>(
 ): Promise<T> {
   const res = await fetch(url, buildRequestInit(method, body, headers, signal))
 
-  if (!res.ok) throw new HttpError(res.status, await readError(res))
+  if (!res.ok) {
+    const { message, code } = await readError(res)
+    throw new HttpError(res.status, message, code)
+  }
   if (res.status === 204) return undefined as T
 
   const json: unknown = await res.json()

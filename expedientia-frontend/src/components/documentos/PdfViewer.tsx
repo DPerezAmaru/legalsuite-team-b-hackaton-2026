@@ -1,5 +1,5 @@
 import '../../lib/pdfWorker'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { Document, Page } from 'react-pdf'
 import 'react-pdf/dist/Page/TextLayer.css'
 import { X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus } from '@phosphor-icons/react'
@@ -102,10 +102,9 @@ export function PdfViewer({ file, onReplace, highlightValues = [] }: PdfViewerPr
     setPage(1)
   }, [])
 
-  const customTextRenderer = useCallback(
-    buildRenderer(highlightValues),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [highlightValues.join('|')],
+  const customTextRenderer = useMemo(
+    () => buildRenderer(highlightValues),
+    [highlightValues],
   )
 
   return (

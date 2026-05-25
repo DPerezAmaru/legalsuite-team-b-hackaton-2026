@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import {
-  Sparkle, Copy, Check,
-  IdentificationCard,
-  Gavel,
+  SparkleIcon, CopyIcon, CheckIcon,
+  IdentificationCardIcon,
 } from '@phosphor-icons/react'
 import type { Expediente } from '../../types'
 import { EstadoBadge } from './EstadoBadge'
@@ -57,7 +56,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
 
   return (
     <div className="space-y-3">
-      <ExpedienteChat expedienteId={expediente.id} radicado={expediente.radicado} />
+      <ExpedienteChat expedienteId={expediente.id} radicado={expediente.radicado} nombre={expediente.titulo} />
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold text-fg-primary tracking-tight truncate">
@@ -75,7 +74,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
 
       <AccordionSection
         title="Resumen IA"
-        icon={<Sparkle className="text-ai-text" />}
+        icon={<SparkleIcon className="text-ai-text" />}
         defaultOpen
       >
         <div className="bg-ai-tint px-4 py-3">
@@ -88,7 +87,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
                   className="p-1 rounded text-ai-text hover:bg-ai-border transition-colors"
                   aria-label="Copiar resumen"
                 >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
                 </button>
               </div>
               <p className="text-sm text-fg-body leading-relaxed">{expediente.resumen}</p>
@@ -103,7 +102,7 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
 
       <AccordionSection
         title="Información del expediente"
-        icon={<IdentificationCard className="text-fg-secondary" />}
+        icon={<IdentificationCardIcon className="text-fg-secondary" />}
         defaultOpen
       >
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-4 pt-4 pb-3">
@@ -156,14 +155,6 @@ export function ExpedienteContent({ expediente, headerExtras }: ExpedienteConten
 
       <TareasSection expedienteId={expediente.id} />
 
-      <AccordionSection
-        title="Actuaciones"
-        icon={<Gavel className="text-fg-secondary" />}
-      >
-        <EmptyState message="No hay actuaciones registradas" />
-      </AccordionSection>
-
-
     </div>
   )
 }
@@ -184,12 +175,3 @@ function Field({ label, value, mono = false }: FieldProps) {
     </div>
   )
 }
-
-function EmptyState({ message }: { message: string }) {
-  return (
-    <div className="px-4 py-6 text-center">
-      <p className="text-sm text-fg-tertiary">{message}</p>
-    </div>
-  )
-}
-

@@ -1,7 +1,36 @@
-export function ExpedientesTableHeader() {
+import { useRef, useEffect } from 'react'
+
+interface ExpedientesTableHeaderProps {
+  allSelected?: boolean
+  someSelected?: boolean
+  onToggleAll?: () => void
+}
+
+export function ExpedientesTableHeader({ allSelected, someSelected, onToggleAll }: ExpedientesTableHeaderProps = {}) {
+  const checkboxRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (checkboxRef.current) {
+      checkboxRef.current.indeterminate = !!(someSelected && !allSelected)
+    }
+  }, [someSelected, allSelected])
+
   return (
     <div className="flex items-center gap-4 px-3 py-2 text-[11px] font-medium text-fg-tertiary uppercase tracking-wider border-b border-border">
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        {onToggleAll ? (
+          <input
+            ref={checkboxRef}
+            type="checkbox"
+            checked={allSelected ?? false}
+            onClick={e => e.stopPropagation()}
+            onChange={onToggleAll}
+            className="w-3.5 h-3.5 shrink-0 cursor-pointer accent-cta-bg"
+            aria-label="Seleccionar todos"
+          />
+        ) : (
+          <span className="w-3.5 shrink-0" aria-hidden="true" />
+        )}
         <span className="w-3.75 shrink-0" aria-hidden="true" />
         <span>Expediente</span>
       </div>

@@ -1,5 +1,6 @@
 import { House, Folder, ListChecks, Sparkle, SidebarSimple, X } from '@phosphor-icons/react'
 import { SidebarNavItem } from './SidebarNavItem'
+import { ThemeToggle } from './ThemeToggle'
 import { useSidebar } from '../../hooks/useSidebar'
 import { useCommandBar } from '../../store/commandBarStore'
 
@@ -89,8 +90,11 @@ export function Sidebar() {
       </nav>
 
       {/* Nav inferior */}
-      {isOpen && (
-        <div className="px-2 pb-3" style={{ borderTop: '1px solid var(--sidebar-border)' }}>
+      <div className="px-2 pb-2" style={{ borderTop: '1px solid var(--sidebar-border)' }}>
+        <div className="pt-2">
+          <ThemeToggle collapsed={!isOpen} />
+        </div>
+        {isOpen && (
           <div className="pt-2 flex items-center gap-2 px-2">
             <div className="w-6 h-6 rounded-full bg-fg-primary flex items-center justify-center shrink-0">
               <span className="text-[10px] font-semibold text-fg-inverse">JG</span>
@@ -99,8 +103,8 @@ export function Sidebar() {
               juan.garcia@despacho.co
             </span>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   )
 }

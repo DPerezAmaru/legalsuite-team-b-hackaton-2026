@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Plus, MagnifyingGlass } from '@phosphor-icons/react'
+import { Plus, MagnifyingGlass, Trash } from '@phosphor-icons/react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useExpedientes } from '../../hooks/useExpedientes'
 import type { EstadoExpediente, Expediente } from '../../types'
 import { PageContainer } from '../layout/PageContainer'
@@ -25,9 +26,12 @@ export function ExpedientesPage() {
   const { data, isLoading, isError } = useExpedientes()
   const navigate = useNavigate()
   const { caso } = useSearch({ from: '/expedientes/' })
+  const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<Tab>('todos')
   const [lastOpenedId, setLastOpenedId] = useState<number | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const drawerId = caso ?? null
   const isDrawerOpen = drawerId !== null
@@ -71,11 +75,47 @@ export function ExpedientesPage() {
     )
   })
 
+  function toggleSelection(id: number) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    setSelectedIds(
+      selectedIds.size === visible.length
+        ? new Set()
+        : new Set(visible.map(e => e.id)),
+    )
+  }
+
+  async function handleDelete() {
+    if (isDeleting || selectedIds.size === 0) return
+    setIsDeleting(true)
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map(id =>
+          fetch(`/api/expedientes/${id}`, { method: 'DELETE' }),
+        ),
+      )
+      await qc.invalidateQueries({ queryKey: ['expedientes'] })
+      setSelectedIds(new Set())
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const tabs: { id: Tab; label: string; count: number }[] = [
     { id: 'todos', label: 'Todos', count: expedientes.length },
     { id: 'activos', label: 'Activos', count: activos },
     { id: 'archivados', label: 'Archivados', count: archivados },
   ]
+
+  const allSelected = visible.length > 0 && selectedIds.size === visible.length
+  const someSelected = selectedIds.size > 0 && !allSelected
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -140,7 +180,11 @@ export function ExpedientesPage() {
           />
 
           <div className="@container/table">
-            <ExpedientesTableHeader />
+            <ExpedientesTableHeader
+              allSelected={allSelected}
+              someSelected={someSelected}
+              onToggleAll={toggleAll}
+            />
 
             <div className="divide-y divide-border">
               {isLoading &&
@@ -184,7 +228,13 @@ export function ExpedientesPage() {
               {!isLoading &&
                 !isError &&
                 visible.map(expediente => (
-                  <ExpedienteRow key={expediente.id} expediente={expediente} isActive={expediente.id === drawerId} />
+                  <ExpedienteRow
+                    key={expediente.id}
+                    expediente={expediente}
+                    isActive={expediente.id === drawerId}
+                    isSelected={selectedIds.has(expediente.id)}
+                    onToggle={() => toggleSelection(expediente.id)}
+                  />
                 ))}
             </div>
           </div>
@@ -205,6 +255,45 @@ export function ExpedientesPage() {
           {panelId !== null && (
             <ExpedienteDrawer expedienteId={panelId} onClose={closeDrawer} />
           )}
+        </div>
+      </div>
+
+      {/* Floating selection bar */}
+      <div
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-200 ${
+          selectedIds.size > 0
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center gap-4 px-4 py-3 bg-bg-base border border-border rounded-2xl shadow-2xl text-sm whitespace-nowrap">
+          <span className="font-medium text-fg-primary">
+            {selectedIds.size} {selectedIds.size === 1 ? 'seleccionado' : 'seleccionados'}
+          </span>
+          <button
+            type="button"
+            onClick={toggleAll}
+            className="text-xs text-fg-tertiary hover:text-fg-secondary transition-colors"
+          >
+            {allSelected ? 'Quitar todos' : 'Seleccionar todos'}
+          </button>
+          <div className="w-px h-4 bg-border" />
+          <button
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs text-fg-secondary hover:text-fg-primary transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            <Trash size={12} />
+            {isDeleting ? 'Eliminando…' : 'Eliminar'}
+          </button>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { ChatMessages } from '../assistant/ChatMessages'
 interface ExpedienteChatProps {
   expedienteId: number
   radicado: string
+  nombre: string
 }
 
 function buildHistorial(messages: ChatMessage[]): HistorialEntrada[] {
@@ -16,7 +17,7 @@ function buildHistorial(messages: ChatMessage[]): HistorialEntrada[] {
   }))
 }
 
-export function ExpedienteChat({ expedienteId, radicado }: ExpedienteChatProps) {
+export function ExpedienteChat({ expedienteId, radicado, nombre }: ExpedienteChatProps) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -32,7 +33,7 @@ export function ExpedienteChat({ expedienteId, radicado }: ExpedienteChatProps) 
     const text = input.trim()
     if (!text || isPending) return
 
-    const prompt = `${text} (expediente ${expedienteId})`
+    const prompt = `${text} (expediente ID: ${expedienteId}, nombre: "${nombre}")`
     const historialActual = buildHistorial(messages)
 
     const userMsg: ChatMessage = {

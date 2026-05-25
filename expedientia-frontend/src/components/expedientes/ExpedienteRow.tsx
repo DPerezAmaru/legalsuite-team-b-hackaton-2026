@@ -26,9 +26,11 @@ function capitalize(s: string): string {
 interface ExpedienteRowProps {
   expediente: Expediente
   isActive?: boolean
+  isSelected?: boolean
+  onToggle?: () => void
 }
 
-export function ExpedienteRow({ expediente, isActive = false }: ExpedienteRowProps) {
+export function ExpedienteRow({ expediente, isActive = false, isSelected, onToggle }: ExpedienteRowProps) {
   const navigate = useNavigate()
   const demandante = findParte(expediente.partes, 'DEMANDANTE')
   const demandado = findParte(expediente.partes, 'DEMANDADO')
@@ -47,6 +49,22 @@ export function ExpedienteRow({ expediente, isActive = false }: ExpedienteRowPro
       className={['flex items-center gap-4 px-3 py-3 text-sm transition-colors', isActive ? 'bg-bg-muted' : 'hover:bg-bg-subtle'].join(' ')}
     >
       <div className="flex items-center gap-2.5 flex-1 min-w-0">
+        {onToggle !== undefined ? (
+          <input
+            type="checkbox"
+            checked={isSelected ?? false}
+            onClick={e => {
+              e.stopPropagation()
+              e.preventDefault()
+              onToggle()
+            }}
+            onChange={() => {}}
+            className="w-3.5 h-3.5 shrink-0 cursor-pointer accent-cta-bg"
+            aria-label={`Seleccionar expediente ${expediente.radicado}`}
+          />
+        ) : (
+          <span className="w-3.5 shrink-0" aria-hidden="true" />
+        )}
         <FileText className="shrink-0 text-fg-tertiary" />
         <div className="min-w-0">
           <p className="font-medium text-fg-primary truncate tabular-nums">

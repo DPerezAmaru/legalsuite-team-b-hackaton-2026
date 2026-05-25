@@ -29,8 +29,13 @@
   --color-ink-10: #0c0c0d;
 }
 
-/* ─── TOKENS SEMÁNTICOS ─── */
-@theme inline {
+/* ─── TOKENS SEMÁNTICOS ───
+ * NOTA: sin `inline`. Necesitamos las variables en runtime para que los
+ * overrides de [data-theme="dark"] propaguen a los utility classes. Con
+ * `inline`, Tailwind v4 inlinea los valores directamente en cada utility
+ * y los overrides no tienen efecto.
+ */
+@theme {
   /* Fondos */
   --color-bg-base:   var(--color-ink-0);
   --color-bg-subtle: var(--color-ink-1);
@@ -79,10 +84,68 @@
 
 /* ─── VALORES NO TEORIZABLES (rgba, gradientes) ─── */
 :root {
+  /* color-scheme avisa al browser para que renderice scrollbars,
+   * form controls nativos y text selection en el modo correcto */
+  color-scheme: light;
+
   /* Sidebar claro con active oscuro invertido */
   --sidebar-active:      #1a1a1a;
   --sidebar-hover:       rgba(0, 0, 0, 0.05);
   --sidebar-text:        rgba(0, 0, 0, 0.70);
   --sidebar-text-active: #ffffff;
   --sidebar-border:      rgba(0, 0, 0, 0.07);
+}
+
+/* ─── DARK MODE ───
+ * Activar con `data-theme="dark"` en <html>.
+ * Sobreescribe los tokens semánticos y los del sidebar.
+ * La escala ink sigue siendo la fuente de verdad.
+ */
+[data-theme="dark"] {
+  /* Scrollbars, form controls nativos y selection en modo oscuro */
+  color-scheme: dark;
+
+  /* Fondos: invertidos contra la escala ink */
+  --color-bg-base:   var(--color-ink-10);
+  --color-bg-subtle: var(--color-ink-9);
+  --color-bg-muted:  var(--color-ink-8);
+
+  /* Bordes: bajos en contraste para no rayar la vista */
+  --color-border:        var(--color-ink-8);
+  --color-border-strong: var(--color-ink-7);
+
+  /* Texto: off-white para reducir fatiga visual */
+  --color-fg-primary:   var(--color-ink-1);
+  --color-fg-body:      var(--color-ink-3);
+  --color-fg-secondary: var(--color-ink-4);
+  --color-fg-tertiary:  var(--color-ink-5);
+  --color-fg-inverse:   var(--color-ink-9);
+
+  /* Sidebar: levemente más claro que el bg principal para separación visual */
+  --color-sidebar-bg: var(--color-ink-9);
+
+  /* CTA: invertido. Botón claro sobre fondo oscuro */
+  --color-cta-bg:    var(--color-ink-0);
+  --color-cta-hover: var(--color-ink-1);
+  --color-cta-text:  var(--color-ink-9);
+
+  /* Superficies IA */
+  --color-ai-tint:   var(--color-ink-8);
+  --color-ai-border: var(--color-ink-7);
+  --color-ai-text:   var(--color-ink-3);
+
+  /* Status badges: texto claro sobre fondo translúcido del mismo tono */
+  --color-status-active-text:  #86efac;
+  --color-status-active-bg:    rgba(34, 197, 94, 0.15);
+  --color-status-review-text:  #fdba74;
+  --color-status-review-bg:    rgba(249, 115, 22, 0.15);
+  --color-status-urgent-text:  #fca5a5;
+  --color-status-urgent-bg:    rgba(239, 68, 68, 0.15);
+
+  /* Sidebar tokens: highlight claro sobre sidebar oscuro */
+  --sidebar-active:      var(--color-ink-1);
+  --sidebar-hover:       rgba(255, 255, 255, 0.06);
+  --sidebar-text:        rgba(255, 255, 255, 0.70);
+  --sidebar-text-active: var(--color-ink-9);
+  --sidebar-border:      rgba(255, 255, 255, 0.08);
 }

@@ -123,7 +123,11 @@ export function AssistantPage() {
 
   useEffect(() => {
     const pending = consumePendingPrompt()
-    if (pending) sendPrompt(pending)
+    if (!pending) return
+    // Defer al microtask siguiente: sendPrompt dispara setState y la regla
+    // react-hooks/set-state-in-effect lo prohíbe dentro del cuerpo del effect.
+    const id = setTimeout(() => sendPrompt(pending), 0)
+    return () => clearTimeout(id)
   }, [consumePendingPrompt, sendPrompt])
 
   const isPending = isChatPending || isExtracting

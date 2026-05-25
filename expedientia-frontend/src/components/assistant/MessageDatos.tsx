@@ -34,6 +34,7 @@ export function MessageDatos({ accion, datos }: MessageDatosProps) {
 
     case 'OBTENER_EXPEDIENTE':
     case 'RESUMEN_EXPEDIENTE':
+    case 'ELIMINAR_EXPEDIENTE':
       return <ExpedienteCard expediente={asObject<Expediente>(datos)} />
 
     case 'ASISTENTE_CREACION':
@@ -43,6 +44,11 @@ export function MessageDatos({ accion, datos }: MessageDatosProps) {
     case 'LISTAR_TODAS_TAREAS':
     case 'CREAR_TAREAS_EXPEDIENTE':
       return <TareasList tareas={asArray<Tarea>(datos)} />
+
+    case 'ELIMINAR_TAREA': {
+      const t = asObject<Tarea>(datos)
+      return t ? <TareasList tareas={[t]} /> : null
+    }
 
     case 'SUGERIR_TAREAS':
       return <TareasList tareas={asArray<Tarea>(datos)} variant="sugeridas" />

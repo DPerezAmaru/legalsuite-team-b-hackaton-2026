@@ -81,6 +81,11 @@ export const ProcesarDocumentoResponseSchema = z.object({
 
 // Tipos inferidos
 
+// Colecciones reutilizables
+
+export const ExpedientesListSchema = z.array(ExpedienteSchema)
+export const TareasListSchema = z.array(TareaSchema)
+
 export type Especialidad = z.infer<typeof EspecialidadSchema>
 export type EstadoExpediente = z.infer<typeof EstadoExpedienteSchema>
 export type TipoParticipacion = z.infer<typeof TipoParticipacionSchema>
@@ -106,14 +111,17 @@ export const AccionChatSchema = z.enum([
   'CREAR_EXPEDIENTES_MASIVO',
   'LISTAR_EXPEDIENTES',
   'OBTENER_EXPEDIENTE',
+  'ELIMINAR_EXPEDIENTE',
   'LISTAR_TAREAS',
   'LISTAR_TODAS_TAREAS',
   'SUGERIR_TAREAS',
   'CREAR_TAREAS_EXPEDIENTE',
+  'ELIMINAR_TAREA',
   'RESUMEN_EXPEDIENTE',
   'ALERTAS_VENCIMIENTO',
   'BUSCAR_EXPEDIENTES',
   'SUGERENCIA_JUDICIAL',
+  'ANALISIS_CONTEXTUAL',
   'CREAR_USUARIO',
   'NO_PERMITIDO',
 ])

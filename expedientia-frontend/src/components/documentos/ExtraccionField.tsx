@@ -18,8 +18,16 @@ export function ExtraccionField({
 }: ExtraccionFieldProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value)
+  const [prevValue, setPrevValue] = useState(value)
   const inputRef = useRef<HTMLInputElement>(null)
   const selectRef = useRef<HTMLSelectElement>(null)
+
+  // Sincronizar draft cuando la prop value cambia desde afuera.
+  // Patrón oficial React 19: ajustar state durante render con guard, no en effect.
+  if (value !== prevValue) {
+    setPrevValue(value)
+    setDraft(value)
+  }
 
   useEffect(() => {
     if (editing) {
@@ -27,10 +35,6 @@ export function ExtraccionField({
       selectRef.current?.focus()
     }
   }, [editing])
-
-  useEffect(() => {
-    setDraft(value)
-  }, [value])
 
   const commit = () => {
     onChange(draft)

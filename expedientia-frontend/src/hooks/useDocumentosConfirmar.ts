@@ -1,25 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { BulkConfirmarResponseSchema, type BulkConfirmarResponse, type BulkProceso } from '../types'
+import { BulkConfirmarResponseSchema, type BulkProceso } from '../types'
+import { request } from '../lib/http'
+import { apiEndpoints } from '../lib/api-endpoints'
 
 interface BulkConfirmarPayload {
   seleccionados: number[]
   procesos: BulkProceso[]
 }
 
-async function confirmarBulk(payload: BulkConfirmarPayload): Promise<BulkConfirmarResponse> {
-  const res = await fetch('/api/documentos/bulk/confirmar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-  if (!res.ok) throw new Error(`Error ${res.status}: no se pudieron crear los expedientes`)
-  return BulkConfirmarResponseSchema.parse(await res.json())
-}
-
 export function useDocumentosConfirmar() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: confirmarBulk,
+    mutationFn: (payload: BulkConfirmarPayload) =>
+      request(apiEndpoints.documentos.bulkConfirmar, {
+        method: 'POST',
+        body: payload,
+        schema: BulkConfirmarResponseSchema,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expedientes'] })
     },

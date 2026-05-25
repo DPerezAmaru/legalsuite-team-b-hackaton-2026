@@ -72,15 +72,18 @@ interface ParteRowProps {
 function ParteRow({ parte, onChange, onRemove }: ParteRowProps) {
   const [editing, setEditing] = useState(parte.nombre === '')
   const [draft, setDraft] = useState(parte.nombre)
+  const [prevNombre, setPrevNombre] = useState(parte.nombre)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Sincronizar draft con la prop sin caer en set-state-in-effect.
+  if (parte.nombre !== prevNombre) {
+    setPrevNombre(parte.nombre)
+    setDraft(parte.nombre)
+  }
 
   useEffect(() => {
     if (editing) inputRef.current?.focus()
   }, [editing])
-
-  useEffect(() => {
-    setDraft(parte.nombre)
-  }, [parte.nombre])
 
   const commit = () => {
     onChange({ ...parte, nombre: draft.trim() })

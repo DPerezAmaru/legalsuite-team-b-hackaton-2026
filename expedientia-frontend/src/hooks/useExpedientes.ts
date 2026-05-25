@@ -1,16 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
-import { ExpedienteSchema } from '../types'
-
-async function fetchExpedientes() {
-  const res = await fetch('/api/expedientes')
-  if (!res.ok) throw new Error(`Error ${res.status}: no se pudieron cargar los expedientes`)
-  return z.array(ExpedienteSchema).parse(await res.json())
-}
+import { ExpedientesListSchema } from '../types'
+import { request } from '../lib/http'
+import { apiEndpoints } from '../lib/api-endpoints'
 
 export function useExpedientes() {
   return useQuery({
     queryKey: ['expedientes'],
-    queryFn: fetchExpedientes,
+    queryFn: ({ signal }) =>
+      request(apiEndpoints.expedientes.list, {
+        schema: ExpedientesListSchema,
+        signal,
+      }),
   })
 }

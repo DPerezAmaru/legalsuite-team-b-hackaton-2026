@@ -85,13 +85,17 @@ public class IntentRouterService {
     }
 
     public ChatIntent classify(String prompt) {
-        return classify(prompt, null);
+        return classify(prompt, null, null);
+    }
+
+    public ChatIntent classify(String prompt, List<MensajeHistorial> historial) {
+        return classify(prompt, historial, null);
     }
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(IntentRouterService.class);
 
-    public ChatIntent classify(String prompt, List<MensajeHistorial> historial) {
-        String userMessage = buildUserMessage(prompt, historial);
+    public ChatIntent classify(String prompt, List<MensajeHistorial> historial, String documentHint) {
+        String userMessage = buildUserMessage(prompt, historial, documentHint);
         log.info("=== INTENT ROUTER — mensaje a Gemini ===\n{}\n========================================", userMessage);
         try {
             String raw = chatClient.prompt()
@@ -120,13 +124,14 @@ public class IntentRouterService {
         }
     }
 
-    private String buildUserMessage(String prompt, List<MensajeHistorial> historial) {
+    private String buildUserMessage(String prompt, List<MensajeHistorial> historial, String documentHint) {
+        String base = documentHint != null ? documentHint + "\n" + prompt : prompt;
         if (historial == null || historial.isEmpty()) {
-            return prompt;
+            return base;
         }
         String contexto = historial.stream()
                 .map(m -> m.rol().toUpperCase() + ": " + m.contenido())
                 .collect(Collectors.joining("\n"));
-        return "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL: " + prompt;
+        return "CONVERSACIÓN PREVIA:\n" + contexto + "\n\nMENSAJE ACTUAL: " + base;
     }
 }

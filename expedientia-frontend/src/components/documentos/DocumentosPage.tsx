@@ -324,7 +324,7 @@ export function DocumentosPage() {
                   archivoOrigen={state.archivoOrigen[idx]}
                   isActiveFile={state.archivoOrigen[idx] === selectedFile?.name}
                   isSelected={selectedIndexes.has(idx)}
-                  defaultOpen={idx === 0}
+                  defaultOpen
                   createdExpedienteId={createdIds[idx]}
                   onFormChange={(f) => handleFormChange(idx, f)}
                   onToggleSelect={() => handleToggleSelect(idx)}

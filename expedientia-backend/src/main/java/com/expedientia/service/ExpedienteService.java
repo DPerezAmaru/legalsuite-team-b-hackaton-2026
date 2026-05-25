@@ -7,6 +7,7 @@ import com.expedientia.entity.Expediente;
 import com.expedientia.entity.Parte;
 import com.expedientia.exception.AppException;
 import com.expedientia.exception.ResourceNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.expedientia.repository.DocumentoRepository;
 import com.expedientia.repository.ExpedienteRepository;
 import com.expedientia.repository.ParteRepository;
@@ -58,7 +59,13 @@ public class ExpedienteService {
             documentoRepo.findById(req.documentoOrigenId()).ifPresent(exp::setDocumentoOrigen);
         }
 
-        Expediente saved = expedienteRepo.save(exp);
+        Expediente saved;
+        try {
+            saved = expedienteRepo.save(exp);
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(AppException.Code.DUPLICATE_RADICADO,
+                    "Ya existe un expediente con el radicado '" + req.radicado() + "'.");
+        }
 
         if (req.partes() != null) {
             req.partes().forEach(p -> {
@@ -135,7 +142,13 @@ public class ExpedienteService {
             return exp;
         }).toList();
 
-        List<Expediente> savedExps = expedienteRepo.saveAll(expedientes);
+        List<Expediente> savedExps;
+        try {
+            savedExps = expedienteRepo.saveAll(expedientes);
+        } catch (DataIntegrityViolationException e) {
+            throw new AppException(AppException.Code.DUPLICATE_RADICADO,
+                    "Uno o más expedientes tienen un radicado duplicado.");
+        }
 
         List<Parte> todasPartes = new ArrayList<>();
         for (int i = 0; i < savedExps.size(); i++) {

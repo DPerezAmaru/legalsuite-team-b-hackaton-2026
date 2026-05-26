@@ -135,24 +135,6 @@ String respuesta = chatClient.prompt()
 └─────────────────────┘       └──────────────────────────────┘
 ```
 
-### Flujo del chat — el pipeline completo
-
-```mermaid
-flowchart TD
-    A["POST /api/chat\nprompt · historial · archivos"] --> B["PromptSanitizerService\n@Service\nnull bytes · control chars · NFKC · strip HTML\nblacklist 21 patrones · max 3000 chars"]
-    B -->|prompt limpio| C{"Safety net\nJava puro\n¿confirma eliminación?"}
-    C -->|sí — sin Gemini| D["Ejecutar eliminación directa\nextraerExpedienteIdDeHistorial()"]
-    C -->|no| E["IntentRouterService.classify()\n@Service\nGEMINI CALL #1\nClasifica intent + extrae parámetros\nRecibe: prompt + historial + hint de archivos"]
-    E --> F{"switch intent.accion()\n20 casos"}
-    F -->|LISTAR · BUSCAR · ALERTAS\nELIMINAR · CREAR_USUARIO| G["Ejecutar en BD\n@Transactional\nSpring Data JPA Repositories"]
-    F -->|ASISTENTE_CREACION\nCREAR_TAREAS · SUGERIR| H["AIService\n@Service\nGEMINI CALL #2\nExtracción estructurada JSON"]
-    F -->|CONVERSACION_LIBRE\nSUGERENCIA_JUDICIAL\nANALISIS_CONTEXTUAL| I["AIService / ChatAnalysisService\nGEMINI CALL #2\nRespuesta larga con datos de BD"]
-    G --> J["ChatResponse\n{accion, mensaje, datos, esperaRespuesta}"]
-    H --> J
-    I --> J
-    D --> J
-```
-
 ### Las dos llamadas a Gemini
 
 | | Gemini Call #1 | Gemini Call #2 |
